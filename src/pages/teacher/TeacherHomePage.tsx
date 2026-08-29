@@ -9,7 +9,9 @@ import {
   TodayHeroCard,
   useDashboard,
   usePinnedPost,
+  usePinnedTodo,
 } from '@/features/dashboard'
+import { MyTodoCard } from '@/features/todo'
 import { formatDate } from '@/lib/date'
 
 /**
@@ -19,6 +21,7 @@ import { formatDate } from '@/lib/date'
 export function TeacherHomePage() {
   const { data, isPending, isError, error, refetch } = useDashboard()
   const { pinnedId } = usePinnedPost()
+  const { pinnedId: pinnedTodoId } = usePinnedTodo()
 
   if (isPending) {
     return (
@@ -65,6 +68,9 @@ export function TeacherHomePage() {
             <Blank message="등록된 과제가 없어요." to={ROUTES.teacher.noticeNew} cta="과제 등록하기" />
           )}
         </Section>
+
+        {/* 홈에 고정한 내 할일 (핑크 핀) */}
+        {pinnedTodoId && <MyTodoCard todoId={pinnedTodoId} />}
 
         {/* 공지 */}
         <Section title="공지" action={{ to: ROUTES.teacher.noticeNew, label: '쓰기' }}>

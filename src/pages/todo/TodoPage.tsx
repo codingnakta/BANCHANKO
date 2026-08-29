@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
  * 할일 탭 (역할 공통).
  *
  * 다가오는 일정과 학급 과제를 모아 보여준다.
- * 교사에게는 맨 위에 작성 링크를, 학생에게는 스스로 적는 '내 할일'을 더한다.
+ * 교사에게는 맨 위에 작성 링크가 더 붙고, '내 할일'은 두 역할 모두 쓴다.
  */
 export function TodoPage() {
   const isTeacher = useIsTeacher()
@@ -111,8 +111,8 @@ export function TodoPage() {
           )}
         </section>
 
-        {/* 내 할일 — 학생이 스스로 적는다 */}
-        {!isTeacher && <MyTodoList />}
+        {/* 내 할일 — 교사·학생 모두 스스로 적는다 */}
+        <MyTodoList />
       </div>
     </>
   )
