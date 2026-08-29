@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import type { ReactNode } from 'react'
 import { AppHeader } from '@/components/layout'
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { Card, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import {
@@ -17,6 +18,7 @@ import { formatDate } from '@/lib/date'
  * 학생 홈과 같은 구성·같은 컴포넌트를 쓰고, 각 묶음에 관리 화면으로 가는 링크만 더한다.
  */
 export function TeacherHomePage() {
+  const teacherName = useCurrentUser()?.name ?? ''
   const { data, isPending, isError, error, refetch } = useDashboard()
   const { unreadCount } = useNotifications()
 
@@ -48,7 +50,10 @@ export function TeacherHomePage() {
 
   return (
     <>
-      <AppHeader classroomName={data.classroomName} hasUnreadNotification={unreadCount > 0} />
+      <AppHeader
+        heading={`${teacherName} 선생님 안녕하세요`}
+        hasUnreadNotification={unreadCount > 0}
+      />
 
       <div className="flex flex-col gap-6">
         <TodayHeroCard tasks={data.todayTasks} />

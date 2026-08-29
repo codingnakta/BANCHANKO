@@ -4,14 +4,15 @@ import heartIcon from '@/assets/icons/heart.svg'
 import { ROUTES } from '@/constants'
 
 interface AppHeaderProps {
-  classroomName?: string
-  /** 학급명 대신 쓸 인사말 (할일 탭 등) */
+  /** 하트 로고와 함께 크게 보여줄 문구 — 학급명이나 인사말 */
+  heading?: string
+  /** 로고 없이 제목만 보여줄 때 (할일·더보기 탭 등) */
   title?: string
   hasUnreadNotification?: boolean
 }
 
 /** 상단 헤더 — 하트 로고 + 학급명, 우측 알림 벨(미확인 시 점 표시). */
-export function AppHeader({ classroomName, title, hasUnreadNotification }: AppHeaderProps) {
+export function AppHeader({ heading, title, hasUnreadNotification }: AppHeaderProps) {
   return (
     <header className="mb-5 flex items-center gap-2.5">
       {title ? (
@@ -19,7 +20,7 @@ export function AppHeader({ classroomName, title, hasUnreadNotification }: AppHe
       ) : (
         <>
           <img src={heartIcon} alt="" className="h-5 w-auto shrink-0" draggable={false} />
-          <h1 className="text-xl font-semibold text-ink-900">{classroomName}</h1>
+          <h1 className="text-xl font-semibold text-ink-900">{heading}</h1>
         </>
       )}
 

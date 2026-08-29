@@ -46,7 +46,7 @@ export function StudentHomePage() {
   return (
     <>
       <AppHeader
-        classroomName={data.classroomName}
+        heading={data.classroomName}
         hasUnreadNotification={unreadCount > 0}
       />
 
