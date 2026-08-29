@@ -19,6 +19,7 @@ import {
   type TimetableGrid,
 } from '@/features/teacher/api/timetable'
 import { useMyClassroomRow } from '@/features/teacher/hooks/useMyClassroomRow'
+import { getNow } from '@/lib/date'
 
 /**
  * 시간표·급식 검수 (F-OHHQTM).
@@ -51,7 +52,7 @@ export function TimetableReviewPage() {
   }
 
   const importMutation = useMutation({
-    mutationFn: () => fetchNeisWeek(classroom!, mondayOf(new Date())),
+    mutationFn: () => fetchNeisWeek(classroom!, mondayOf(getNow())),
     onSuccess: (imported) => setGrid(imported),
   })
 
@@ -166,7 +167,7 @@ export function TimetableReviewPage() {
         <Card className="p-5">
           <h2 className="flex items-center gap-2 text-base font-semibold text-ink-900">
             <Utensils className="size-4 text-brand-700" />
-            오늘 급식 ({format(new Date(), 'M월 d일')})
+            오늘 급식 ({format(getNow(), 'M월 d일')})
           </h2>
           {dashboard?.meal ? (
             <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1">

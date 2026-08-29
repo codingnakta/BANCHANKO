@@ -1,5 +1,6 @@
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase'
+import { getNow } from '@/lib/date'
 import { fetchMyClassroom } from '@/features/classroom/api/myClassroom'
 import type { ClassroomRow, PostRow } from '@/lib/supabase/database.types'
 import type {
@@ -105,7 +106,7 @@ export async function fetchNeis(
  * 공지·과제·청소 당번은 학급 데이터에서 읽는다.
  * 학급 행사는 아직 테이블이 없어 항상 빈 배열이다.
  */
-export async function fetchDashboard(now: Date = new Date()): Promise<DashboardSummary> {
+export async function fetchDashboard(now: Date = getNow()): Promise<DashboardSummary> {
   const classroom = await fetchMyClassroom()
   if (!classroom) {
     throw new Error('소속된 학급이 없어요.')

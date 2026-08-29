@@ -1,5 +1,6 @@
 import { addDays, format } from 'date-fns'
 import { supabase } from '@/lib/supabase'
+import { getNow } from '@/lib/date'
 import { fetchNeis, toNotice } from '@/features/dashboard/api/dashboard'
 import { fetchMyClassroom } from './myClassroom'
 import type { CleaningDuty, MealMenu, Notice, TimetableEntry } from '@/types'
@@ -50,7 +51,7 @@ const WEEKDAY_ORDER = [1, 2, 3, 4, 5]
  * 아직 공개하지 않았으면 비워 둔다. 오늘 시간표·급식은 나이스에서 그대로 읽는다.
  * 학사일정은 나이스 것과 교사가 등록한 행사를 한 줄로 합친다.
  */
-export async function fetchClassroomBoard(now: Date = new Date()): Promise<ClassroomBoard> {
+export async function fetchClassroomBoard(now: Date = getNow()): Promise<ClassroomBoard> {
   const classroom = await fetchMyClassroom()
   if (!classroom) throw new Error('소속된 학급이 없어요.')
 

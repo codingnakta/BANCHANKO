@@ -1,6 +1,7 @@
 import { format } from 'date-fns'
 import dogMascot from '@/assets/mascots/dog.png'
 import type { TodayTask } from '@/types'
+import { getNow } from '@/lib/date'
 
 interface TodayHeroCardProps {
   tasks: TodayTask[]
@@ -14,7 +15,7 @@ interface TodayHeroCardProps {
  * 시안에는 우측에 할일 탭으로 가는 파란 원형 버튼이 있었지만, 할일은 이미
  * 하단 탭바에 있어 중복이고 AI 챗봇 FAB와 모양·색이 겹쳐서 뺐다.
  */
-export function TodayHeroCard({ tasks, date = new Date() }: TodayHeroCardProps) {
+export function TodayHeroCard({ tasks, date = getNow() }: TodayHeroCardProps) {
   return (
     <section className="relative overflow-hidden rounded-card bg-brand-100 px-5 py-5">
       <div className="flex items-start justify-between gap-3">

@@ -1,12 +1,11 @@
-import { format } from 'date-fns'
 import { ROUTES } from '@/constants'
-import { formatDate } from '@/lib/date'
+import { formatDate, getTodayIso } from '@/lib/date'
 import { cn } from '@/lib/utils'
 import { Blank, ClassroomSectionShell } from './ClassroomSectionShell'
 
 /** 우리반 › 학사일정 — 나이스 일정과 학급 행사를 합쳐 다가오는 순서로. */
 export function ScheduleSectionPage() {
-  const todayIso = format(new Date(), 'yyyy-MM-dd')
+  const todayIso = getTodayIso()
 
   return (
     <ClassroomSectionShell

@@ -1,10 +1,9 @@
-import { format } from 'date-fns'
-import { formatDate } from '@/lib/date'
+import { formatDate, getTodayIso } from '@/lib/date'
 import { Blank, ClassroomSectionShell } from './ClassroomSectionShell'
 
 /** 우리반 › 급식 — 오늘 급식 메뉴. */
 export function MealSectionPage() {
-  const today = format(new Date(), 'yyyy-MM-dd')
+  const today = getTodayIso()
 
   return (
     <ClassroomSectionShell title="급식" description={formatDate(`${today}T00:00:00`, 'M월 d일 (E)')}>

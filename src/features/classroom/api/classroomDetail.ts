@@ -1,5 +1,6 @@
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase'
+import { getNow } from '@/lib/date'
 import { fetchNeis, toNotice } from '@/features/dashboard/api/dashboard'
 import { fetchMyClassroom } from './myClassroom'
 import type { CleaningDuty, ClassroomDetail } from '@/types'
@@ -10,7 +11,7 @@ import type { CleaningDuty, ClassroomDetail } from '@/types'
  * 홈과 같은 학급 데이터를 보지만, 홈이 '오늘·임박'만 추리는 것과 달리
  * 여기서는 공개된 전체 목록을 보여준다.
  */
-export async function fetchClassroomDetail(now: Date = new Date()): Promise<ClassroomDetail> {
+export async function fetchClassroomDetail(now: Date = getNow()): Promise<ClassroomDetail> {
   const classroom = await fetchMyClassroom()
   if (!classroom) {
     throw new Error('소속된 학급이 없어요.')

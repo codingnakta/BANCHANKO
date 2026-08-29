@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { format } from 'date-fns'
 import { History } from 'lucide-react'
 import { TeacherPageShell } from '@/components/layout'
 import { Card, EmptyState, Input, Spinner } from '@/components/ui'
@@ -14,7 +13,7 @@ import {
   STATUS_LABEL,
   type AttendanceRecord,
 } from '@/features/teacher/api/attendance'
-import { formatDate } from '@/lib/date'
+import { formatDate, getTodayIso } from '@/lib/date'
 import { cn } from '@/lib/utils'
 import type { AttendanceStatus } from '@/lib/supabase/database.types'
 
@@ -24,7 +23,7 @@ export function AttendancePage() {
   const classroomId = user?.classroomId ?? ''
   const queryClient = useQueryClient()
 
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [date, setDate] = useState(getTodayIso())
   const [openHistory, setOpenHistory] = useState<string | null>(null)
 
   const { data: records, isPending } = useQuery({

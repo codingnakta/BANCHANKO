@@ -1,11 +1,11 @@
 import { Link } from 'react-router'
-import { format } from 'date-fns'
 import { ChevronRight } from 'lucide-react'
 import { AppHeader } from '@/components/layout'
 import { Card, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import { useClassroomBoard } from '@/features/classroom'
 import type { ClassroomBoard } from '@/features/classroom/api/classroomBoard'
+import { getTodayIso } from '@/lib/date'
 
 interface BoardMenuItem {
   label: string
@@ -76,7 +76,7 @@ export function ClassroomBoardPage() {
 
 /** 목록에 쓸 항목과 요약. 요약은 안에 무엇이 들어 있는지만 알려 준다. */
 function menuItems(data: ClassroomBoard): BoardMenuItem[] {
-  const todayIso = format(new Date(), 'yyyy-MM-dd')
+  const todayIso = getTodayIso()
   const dutyAreas = new Set(data.duties.map((duty) => duty.area)).size
   const hasTodayEvent = data.schedule.some((item) => item.date === todayIso)
 

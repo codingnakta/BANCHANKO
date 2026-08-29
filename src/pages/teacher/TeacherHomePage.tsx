@@ -1,5 +1,4 @@
 import { Link } from 'react-router'
-import { format } from 'date-fns'
 import type { ReactNode } from 'react'
 import { AppHeader } from '@/components/layout'
 import { Card, Spinner } from '@/components/ui'
@@ -10,7 +9,7 @@ import {
   TodayHeroCard,
   useDashboard,
 } from '@/features/dashboard'
-import { formatDate, relativeDayLabel } from '@/lib/date'
+import { formatDate, relativeDayLabel, getTodayIso } from '@/lib/date'
 import { cn } from '@/lib/utils'
 
 /**
@@ -45,7 +44,7 @@ export function TeacherHomePage() {
     )
   }
 
-  const todayIso = format(new Date(), 'yyyy-MM-dd')
+  const todayIso = getTodayIso()
   const todayEvents = data.upcomingEvents.filter((e) => e.startAt.slice(0, 10) === todayIso)
   const shownEvents = todayEvents.length > 0 ? todayEvents : data.upcomingEvents.slice(0, 3)
 
