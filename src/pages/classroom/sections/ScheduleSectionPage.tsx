@@ -31,11 +31,9 @@ export function ScheduleSectionPage() {
                   {formatDate(`${item.date}T00:00:00`, 'M/d(E)')}
                 </span>
                 <span className="min-w-0 flex-1 truncate text-sm text-ink-900">{item.title}</span>
-                {item.isClassEvent ? (
-                  <span className="shrink-0 text-xs text-brand-700">학급</span>
-                ) : item.isHoliday ? (
-                  <span className="shrink-0 text-xs text-ink-400">휴업</span>
-                ) : null}
+                {/* 나이스가 준 휴업 여부는 학교마다 채우는 방식이 달라 믿기 어렵고,
+                    '여름방학'처럼 제목만 봐도 알 수 있어 표시하지 않는다 */}
+                {item.isClassEvent && <span className="shrink-0 text-xs text-brand-700">학급</span>}
               </li>
             ))}
           </ul>
