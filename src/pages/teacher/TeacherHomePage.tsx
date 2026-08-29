@@ -9,6 +9,7 @@ import {
   TodayHeroCard,
   useDashboard,
 } from '@/features/dashboard'
+import { useNotifications } from '@/features/notifications'
 import { formatDate } from '@/lib/date'
 
 /**
@@ -17,6 +18,7 @@ import { formatDate } from '@/lib/date'
  */
 export function TeacherHomePage() {
   const { data, isPending, isError, error, refetch } = useDashboard()
+  const { unreadCount } = useNotifications()
 
   if (isPending) {
     return (
@@ -46,7 +48,7 @@ export function TeacherHomePage() {
 
   return (
     <>
-      <AppHeader classroomName={data.classroomName} />
+      <AppHeader classroomName={data.classroomName} hasUnreadNotification={unreadCount > 0} />
 
       <div className="flex flex-col gap-6">
         <TodayHeroCard tasks={data.todayTasks} />

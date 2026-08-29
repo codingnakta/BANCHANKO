@@ -1,55 +1,52 @@
 import { useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
+import {
+  fetchNotifications,
+  fetchNotificationsReadAt,
+  markNotificationsRead,
+} from '../api/notifications'
 import type { AppNotification } from '@/types'
 
 export const notificationKeys = {
   all: ['notifications'] as const,
   list: (userId: string) => [...notificationKeys.all, 'list', userId] as const,
+  readAt: (userId: string) => [...notificationKeys.all, 'readAt', userId] as const,
 }
 
 /**
- * 인앱 알림 목록 (F-IAXPMY).
+ * 인앱 알림 (F-IAXPMY).
  *
- * 읽음 상태를 여러 화면(더보기 배지, 알림 목록, 헤더 벨)이 함께 봐야 하므로
- * 로컬 state 대신 React Query 캐시에 담아 공유한다.
- *
- * 알림 테이블이 아직 없어(해커톤 MVP 범위 밖) 항상 빈 목록이다.
- * 있지도 않은 공지를 알림으로 보여주지 않도록 목업을 걷어냈다.
- *
- * TODO: notifications 테이블을 만들면 queryFn 을 실제 쿼리로 교체한다.
- *       학생은 자신에게 생성된 알림만 조회·읽음 처리할 수 있어야 한다(RLS).
- *       알림 기록은 생성일로부터 90일 보관 후 식별 정보를 삭제한다(F-ETJOMB).
+ * 교사가 올린 공지·과제가 그대로 알림이 된다. 마지막으로 확인한 시각 뒤에
+ * 올라온 것이 안 읽은 알림이고, 목록을 열면 다 본 것으로 표시한다.
  */
 export function useNotifications() {
-  const queryClient = useQueryClient()
   const user = useCurrentUser()
-  const queryKey = notificationKeys.list(user?.id ?? 'none')
+  const userId = user?.id ?? ''
+  const classroomId = user?.classroomId ?? ''
+  const queryClient = useQueryClient()
 
-  const { data: notifications = [] } = useQuery<AppNotification[]>({
-    queryKey,
-    queryFn: async () => [],
-    staleTime: Infinity,
+  const { data: readAt = null } = useQuery({
+    queryKey: notificationKeys.readAt(userId),
+    queryFn: () => fetchNotificationsReadAt(userId),
+    enabled: Boolean(userId),
+    staleTime: 30_000,
   })
 
-  const unreadCount = notifications.filter((n) => !n.readAt).length
+  const { data: notifications = [] } = useQuery<AppNotification[]>({
+    queryKey: [...notificationKeys.list(userId), readAt],
+    queryFn: () => fetchNotifications(classroomId, readAt),
+    enabled: Boolean(userId && classroomId),
+    staleTime: 30_000,
+  })
 
-  /** 알림을 열면 읽음 상태를 갱신한다 */
-  const markAsRead = useCallback(
-    (id: string) => {
-      queryClient.setQueryData<AppNotification[]>(queryKey, (prev) =>
-        prev?.map((n) => (n.id === id && !n.readAt ? { ...n, readAt: new Date().toISOString() } : n)),
-      )
-    },
-    [queryClient, queryKey],
-  )
+  const unreadCount = notifications.filter((notification) => !notification.readAt).length
 
-  const markAllAsRead = useCallback(() => {
-    const now = new Date().toISOString()
-    queryClient.setQueryData<AppNotification[]>(queryKey, (prev) =>
-      prev?.map((n) => (n.readAt ? n : { ...n, readAt: now })),
-    )
-  }, [queryClient, queryKey])
+  const markAllAsRead = useCallback(async () => {
+    if (!userId || unreadCount === 0) return
+    await markNotificationsRead(userId)
+    await queryClient.invalidateQueries({ queryKey: notificationKeys.all })
+  }, [queryClient, unreadCount, userId])
 
-  return { notifications, unreadCount, markAsRead, markAllAsRead }
+  return { notifications, unreadCount, markAllAsRead }
 }

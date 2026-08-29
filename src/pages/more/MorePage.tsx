@@ -55,7 +55,7 @@ export function MorePage() {
       <div className="flex flex-col gap-7">
         <Group title="알림">
           <MenuRow
-            label="공지사항"
+            label="새 소식"
             to={ROUTES.notifications}
             meta={unreadCount > 0 ? `새 소식 ${unreadCount}` : '없음'}
           />

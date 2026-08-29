@@ -7,6 +7,7 @@ import {
   UnreadNoticeCard,
   useDashboard,
 } from '@/features/dashboard'
+import { useNotifications } from '@/features/notifications'
 
 /**
  * 홈 탭 — 오늘의 학급 정보 대시보드 (F-ZTJSNU).
@@ -15,6 +16,7 @@ import {
  */
 export function StudentHomePage() {
   const { data, isPending, isError, error, refetch } = useDashboard()
+  const { unreadCount } = useNotifications()
 
   if (isPending) {
     return (
@@ -45,7 +47,7 @@ export function StudentHomePage() {
     <>
       <AppHeader
         classroomName={data.classroomName}
-        hasUnreadNotification={data.hasUnreadNotification}
+        hasUnreadNotification={unreadCount > 0}
       />
 
       <div className="flex flex-col gap-4">

@@ -4,6 +4,7 @@ import { EmptyState, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import { useIsTeacher } from '@/features/auth/hooks/useCurrentUser'
 import { DdayCard, useDashboard, usePinnedPost } from '@/features/dashboard'
+import { useNotifications } from '@/features/notifications'
 import { MyTodoList } from '@/features/todo'
 import { getTodayIso, relativeDayLabel } from '@/lib/date'
 import { cn } from '@/lib/utils'
@@ -18,6 +19,7 @@ export function TodoPage() {
   const isTeacher = useIsTeacher()
   const { pinnedId } = usePinnedPost()
   const { data, isPending } = useDashboard()
+  const { unreadCount } = useNotifications()
 
   if (isPending) {
     return (
@@ -36,7 +38,7 @@ export function TodoPage() {
 
   return (
     <>
-      <AppHeader title="할일" hasUnreadNotification={data?.hasUnreadNotification} />
+      <AppHeader title="할일" hasUnreadNotification={unreadCount > 0} />
 
       <div className="flex flex-col gap-7">
         {/* 교사만 — 공지사항·과제 작성 */}
