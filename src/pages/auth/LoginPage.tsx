@@ -3,6 +3,7 @@ import { Navigate } from 'react-router'
 import { BanchankoLogo } from '@/features/auth/components/BanchankoLogo'
 import { GoogleButton } from '@/features/auth/components/GoogleButton'
 import { useAuth } from '@/features/auth/hooks/useCurrentUser'
+import { TermsLink } from '@/features/legal'
 import { ROUTES } from '@/constants'
 import { supabase } from '@/lib/supabase'
 
@@ -46,7 +47,8 @@ export function LoginPage() {
           </p>
         )}
         <p className="mt-5 text-center text-xs leading-relaxed text-ink-500">
-          로그인하면 이용약관과 개인정보 처리방침에
+          로그인하면 <TermsLink className="font-medium text-brand-600 underline underline-offset-2" />
+          과 개인정보 처리방침에
           <br />
           동의한 것으로 간주합니다.
         </p>

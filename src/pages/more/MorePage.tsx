@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router'
 import {
   Bell,
@@ -14,6 +15,7 @@ import { ROUTES } from '@/constants'
 import { useAuth } from '@/features/auth/hooks/useCurrentUser'
 import { useClassroom } from '@/features/classroom'
 import { useNotifications } from '@/features/notifications'
+import { LegalDialog, termsText } from '@/features/legal'
 import type { UserRole } from '@/types'
 
 const ROLE_LABEL: Record<UserRole, string> = {
@@ -24,7 +26,9 @@ const ROLE_LABEL: Record<UserRole, string> = {
 interface MenuItem {
   label: string
   description?: string
-  to: string
+  /** 이동할 화면. 팝업으로 여는 항목은 대신 onClick 을 준다 */
+  to?: string
+  onClick?: () => void
   icon: typeof Bell
   /** 우측 배지 (미확인 알림 수 등) */
   badge?: number
@@ -37,6 +41,7 @@ interface MenuItem {
  */
 export function MorePage() {
   const { profile: user, signOut } = useAuth()
+  const [terms, setTerms] = useState(false)
   const { data: classroom } = useClassroom()
   const { unreadCount } = useNotifications()
 
@@ -73,7 +78,7 @@ export function MorePage() {
     {
       title: '서비스 안내',
       items: [
-        { label: '이용약관', to: ROUTES.about, icon: FileText },
+        { label: '이용약관', onClick: () => setTerms(true), icon: FileText },
         { label: '반창고 소개', to: ROUTES.about, icon: Info },
       ],
     },
@@ -108,26 +113,7 @@ export function MorePage() {
             <ul className="flex flex-col gap-2">
               {group.items.map((item) => (
                 <li key={item.label}>
-                  <Link
-                    to={item.to}
-                    className="flex items-center gap-3.5 rounded-card bg-white px-4 py-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-colors hover:bg-brand-50"
-                  >
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700">
-                      <item.icon className="size-5" strokeWidth={2} aria-hidden />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-medium text-ink-900">{item.label}</p>
-                      {item.description && (
-                        <p className="mt-0.5 text-xs text-ink-500">{item.description}</p>
-                      )}
-                    </div>
-                    {!!item.badge && item.badge > 0 && (
-                      <span className="flex min-w-5 shrink-0 items-center justify-center rounded-full bg-brand-500 px-1.5 text-xs font-bold text-white">
-                        {item.badge}
-                      </span>
-                    )}
-                    <ChevronRight className="size-5 shrink-0 text-ink-300" aria-hidden />
-                  </Link>
+                  <MenuRow item={item} />
                 </li>
               ))}
             </ul>
@@ -145,6 +131,48 @@ export function MorePage() {
 
         <p className="text-center text-xs text-ink-400">반창고 v0.1.0</p>
       </div>
+
+      {terms && (
+        <LegalDialog title="이용약관" text={termsText()} onClose={() => setTerms(false)} />
+      )}
     </>
+  )
+}
+
+/** 화면으로 이동하는 줄과 팝업을 여는 줄을 같은 모양으로 그린다. */
+function MenuRow({ item }: { item: MenuItem }) {
+  const className =
+    'flex w-full items-center gap-3.5 rounded-card bg-white px-4 py-3.5 text-left shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-colors hover:bg-brand-50'
+
+  const inner = (
+    <>
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700">
+        <item.icon className="size-5" strokeWidth={2} aria-hidden />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[15px] font-medium text-ink-900">{item.label}</p>
+        {item.description && <p className="mt-0.5 text-xs text-ink-500">{item.description}</p>}
+      </div>
+      {!!item.badge && item.badge > 0 && (
+        <span className="flex min-w-5 shrink-0 items-center justify-center rounded-full bg-brand-500 px-1.5 text-xs font-bold text-white">
+          {item.badge}
+        </span>
+      )}
+      <ChevronRight className="size-5 shrink-0 text-ink-300" aria-hidden />
+    </>
+  )
+
+  if (item.to) {
+    return (
+      <Link to={item.to} className={className}>
+        {inner}
+      </Link>
+    )
+  }
+
+  return (
+    <button type="button" onClick={item.onClick} className={className}>
+      {inner}
+    </button>
   )
 }
