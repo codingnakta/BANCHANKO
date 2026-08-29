@@ -69,6 +69,26 @@ export function ClassroomBoardPage() {
 
       <div className="flex flex-col gap-7">
         {/* 학교에서 정해져 내려오는 것 */}
+        {/* 누가 무엇을 맡았는지 */}
+        <Group title="우리 반 사람들">
+          <MenuRow
+            label="1인1역"
+            to={ROUTES.classroomSection.roles}
+            meta={count(data.roles.length, '명')}
+          />
+          {isTeacher && (
+            <MenuRow
+              label="학생 명단"
+              to={ROUTES.teacher.students}
+              meta={
+                roster
+                  ? `${roster.filter((member) => member.joined).length}/${roster.length}명`
+                  : '등록'
+              }
+            />
+          )}
+        </Group>
+
         <Group title="소식">
           <MenuRow
             label="공지사항"
@@ -111,26 +131,6 @@ export function ClassroomBoardPage() {
             to={ROUTES.classroomSection.rules}
             meta={count(data.rules.length, '개')}
           />
-        </Group>
-
-        {/* 누가 무엇을 맡았는지 */}
-        <Group title="우리 반 사람들">
-          <MenuRow
-            label="1인1역"
-            to={ROUTES.classroomSection.roles}
-            meta={count(data.roles.length, '명')}
-          />
-          {isTeacher && (
-            <MenuRow
-              label="학생 명단"
-              to={ROUTES.teacher.students}
-              meta={
-                roster
-                  ? `${roster.filter((member) => member.joined).length}/${roster.length}명`
-                  : '등록'
-              }
-            />
-          )}
         </Group>
 
       </div>

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, Download, FileSpreadsheet, Plus, Trash2, X } from 'lucide-react'
 import { TeacherPageShell } from '@/components/layout'
-import { Button, Card, EmptyState, Field, Input, Spinner } from '@/components/ui'
+import { Button, EmptyState, Field, Input, Modal, Spinner } from '@/components/ui'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { downloadRosterTemplate, parseRosterFile } from '@/features/classroom/api/rosterFile'
 import {
@@ -33,6 +33,8 @@ export function StudentsPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   /** 1인1역을 고치는 중인 학생의 이메일 */
+  /** 등록 팝업 */
+  const [adding, setAdding] = useState(false)
   const [editingRole, setEditingRole] = useState<string | null>(null)
   const [roleInput, setRoleInput] = useState('')
 
@@ -64,6 +66,7 @@ export function StudentsPage() {
         parentPhone: '',
         classRole: '',
       })
+      setAdding(false)
     },
     onError: (e: Error) => setError(e.message),
   })
@@ -115,116 +118,13 @@ export function StudentsPage() {
     <TeacherPageShell
       title="학생 관리"
       description="학생 정보를 등록하고 1인1역을 정해요"
+      action={
+        <Button size="md" onClick={() => setAdding(true)}>
+          <Plus className="size-4" />
+          추가
+        </Button>
+      }
     >
-      {/* 명단 추가 */}
-      <Card className="mb-5 p-5">
-        <h2 className="mb-1 text-base font-semibold text-ink-900">학생 정보 등록</h2>
-        <p className="mb-3 text-xs text-ink-500">
-          연락처는 담임인 나만 볼 수 있어요. 학생·학부모에게는 보이지 않아요.
-        </p>
-
-        <div className="flex flex-col gap-3">
-          <div className="flex gap-2">
-            <Field label="학번" htmlFor="studentNo">
-              <Input
-                id="studentNo"
-                value={newStudent.studentNo}
-                onChange={(e) => setNewStudent({ ...newStudent, studentNo: e.target.value })}
-                placeholder="10101"
-                className="w-24"
-              />
-            </Field>
-            <Field label="이름" htmlFor="studentName">
-              <Input
-                id="studentName"
-                value={newStudent.name}
-                onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
-                placeholder="홍길동"
-              />
-            </Field>
-          </div>
-
-          <Field label="구글 계정 이메일" htmlFor="studentEmail">
-            <Input
-              id="studentEmail"
-              type="email"
-              value={newStudent.email}
-              onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
-              placeholder="hong@e-mirim.hs.kr"
-            />
-          </Field>
-
-          <div className="flex gap-2">
-            <Field label="전화번호" htmlFor="studentPhone">
-              <Input
-                id="studentPhone"
-                type="tel"
-                inputMode="tel"
-                value={newStudent.phone}
-                onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value })}
-                placeholder="010-1234-5678"
-              />
-            </Field>
-            <Field label="학부모 전화번호" htmlFor="parentPhone">
-              <Input
-                id="parentPhone"
-                type="tel"
-                inputMode="tel"
-                value={newStudent.parentPhone}
-                onChange={(e) => setNewStudent({ ...newStudent, parentPhone: e.target.value })}
-                placeholder="010-8765-4321"
-              />
-            </Field>
-          </div>
-
-          <Field label="1인1역" htmlFor="classRole">
-            <Input
-              id="classRole"
-              value={newStudent.classRole}
-              onChange={(e) => setNewStudent({ ...newStudent, classRole: e.target.value })}
-              placeholder="칠판 담당"
-            />
-          </Field>
-
-          <Button onClick={addOne} disabled={addMutation.isPending}>
-            <Plus className="size-4" />
-            추가
-          </Button>
-        </div>
-
-        <div className="mt-4 flex gap-2 border-t border-ink-100 pt-4">
-          <Button
-            variant="secondary"
-            size="md"
-            className="flex-1"
-            onClick={() => downloadRosterTemplate()}
-          >
-            <Download className="size-4" />
-            양식 받기
-          </Button>
-          <Button
-            variant="secondary"
-            size="md"
-            className="flex-1"
-            onClick={() => fileRef.current?.click()}
-            disabled={addMutation.isPending}
-          >
-            <FileSpreadsheet className="size-4" />
-            엑셀로 한번에
-          </Button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".xlsx,.csv"
-            hidden
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) void handleFile(file)
-            }}
-          />
-        </div>
-      </Card>
-
       {message && (
         <p className="mb-3 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-800">{message}</p>
       )}
@@ -346,6 +246,120 @@ export function StudentsPage() {
             ))}
           </ul>
         </section>
+      )}
+      {adding && (
+        <Modal title="학생 정보 등록" onClose={() => setAdding(false)}>
+        <p className="mb-3 text-xs text-ink-500">
+          연락처는 담임인 나만 볼 수 있어요. 학생·학부모에게는 보이지 않아요.
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-2">
+            <Field label="학번" htmlFor="studentNo">
+              <Input
+                id="studentNo"
+                value={newStudent.studentNo}
+                onChange={(e) => setNewStudent({ ...newStudent, studentNo: e.target.value })}
+                placeholder="10101"
+                className="w-24"
+              />
+            </Field>
+            <Field label="이름" htmlFor="studentName">
+              <Input
+                id="studentName"
+                value={newStudent.name}
+                onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                placeholder="홍길동"
+              />
+            </Field>
+          </div>
+
+          <Field label="구글 계정 이메일" htmlFor="studentEmail">
+            <Input
+              id="studentEmail"
+              type="email"
+              value={newStudent.email}
+              onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
+              placeholder="hong@e-mirim.hs.kr"
+            />
+          </Field>
+
+          <div className="flex gap-2">
+            <Field label="전화번호" htmlFor="studentPhone">
+              <Input
+                id="studentPhone"
+                type="tel"
+                inputMode="tel"
+                value={newStudent.phone}
+                onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value })}
+                placeholder="010-1234-5678"
+              />
+            </Field>
+            <Field label="학부모 전화번호" htmlFor="parentPhone">
+              <Input
+                id="parentPhone"
+                type="tel"
+                inputMode="tel"
+                value={newStudent.parentPhone}
+                onChange={(e) => setNewStudent({ ...newStudent, parentPhone: e.target.value })}
+                placeholder="010-8765-4321"
+              />
+            </Field>
+          </div>
+
+          <Field label="1인1역" htmlFor="classRole">
+            <Input
+              id="classRole"
+              value={newStudent.classRole}
+              onChange={(e) => setNewStudent({ ...newStudent, classRole: e.target.value })}
+              placeholder="칠판 담당"
+            />
+          </Field>
+
+          {error && (
+            <p role="alert" className="rounded-xl bg-danger/5 px-4 py-3 text-sm text-danger">
+              {error}
+            </p>
+          )}
+
+          <Button onClick={addOne} disabled={addMutation.isPending}>
+            <Plus className="size-4" />
+            추가
+          </Button>
+        </div>
+
+        <div className="mt-4 flex gap-2 border-t border-ink-100 pt-4">
+          <Button
+            variant="secondary"
+            size="md"
+            className="flex-1"
+            onClick={() => downloadRosterTemplate()}
+          >
+            <Download className="size-4" />
+            양식 받기
+          </Button>
+          <Button
+            variant="secondary"
+            size="md"
+            className="flex-1"
+            onClick={() => fileRef.current?.click()}
+            disabled={addMutation.isPending}
+          >
+            <FileSpreadsheet className="size-4" />
+            엑셀로 한번에
+          </Button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".xlsx,.csv"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) void handleFile(file)
+            }}
+          />
+        </div>
+        </Modal>
       )}
     </TeacherPageShell>
   )
