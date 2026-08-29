@@ -60,12 +60,12 @@ export function TodoPage() {
           {events.length === 0 ? (
             <EmptyState message="예정된 일정이 없습니다." />
           ) : (
-            <ul className="flex flex-col gap-2">
+            <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
               {events.map((event) => (
-                <li key={event.id}>
+                <li key={event.id} className="border-b border-ink-100 last:border-0">
                   <Link
                     to={ROUTES.noticeDetail(event.id)}
-                    className="flex items-center gap-3 rounded-card bg-white px-4 py-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-colors hover:bg-brand-50"
+                    className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-brand-50"
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[15px] font-medium text-ink-900">
@@ -98,10 +98,10 @@ export function TodoPage() {
           {assignments.length === 0 ? (
             <EmptyState message="지금 확인할 과제가 없습니다." />
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
               {assignments.map((assignment) => (
-                <li key={assignment.id}>
-                  <DdayCard assignment={assignment} />
+                <li key={assignment.id} className="border-b border-ink-100 last:border-0">
+                  <DdayCard assignment={assignment} inList />
                 </li>
               ))}
             </ul>
