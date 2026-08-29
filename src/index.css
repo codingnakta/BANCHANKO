@@ -1,0 +1,65 @@
+@import 'tailwindcss';
+
+/* ── 디자인 토큰 (Tailwind v4 @theme) ─────────────────────────────
+   docs/ 의 Figma 시안에서 추출한 실제 색상값 기준. */
+@theme {
+  --font-sans:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Segoe UI', system-ui, sans-serif;
+
+  /* 브랜드 블루 — 500이 포인트 색(불릿·활성 밑줄), 700이 로고 딥블루 */
+  --color-brand-50: #f2f8ff;
+  --color-brand-100: #e7f3ff; /* 강조 카드 배경 */
+  --color-brand-200: #cfe6ff;
+  --color-brand-300: #a8d3ff;
+  --color-brand-400: #67b4ff; /* 원형 CTA 버튼 */
+  --color-brand-500: #2493ff; /* 포인트 — 불릿, 활성 밑줄 */
+  --color-brand-600: #5caeff; /* 다크 배경 위 활성 탭 */
+  --color-brand-700: #256cc4; /* 로고 딥블루, 현재 교시 강조 */
+  --color-brand-800: #1d559b;
+  --color-brand-900: #163f74;
+
+  /* 중립 — 시안의 텍스트·배경 계조 */
+  --color-ink-0: #ffffff;
+  --color-ink-50: #fafafa; /* 페이지 배경 */
+  --color-ink-100: #f2f2f2;
+  --color-ink-200: #e5e5e5;
+  --color-ink-300: #cacaca;
+  --color-ink-400: #bfbfbf;
+  --color-ink-500: #909090;
+  --color-ink-600: #606060; /* 보조 텍스트 */
+  --color-ink-700: #404040;
+  --color-ink-800: #2c2e30;
+  --color-ink-900: #202020; /* 본문 텍스트 */
+
+  /* 내비게이션 다크 바 */
+  --color-nav: #2b2b2b;
+  --color-nav-muted: #909090;
+
+  /* 상태 */
+  --color-success: #22a06b;
+  --color-warning: #e8a33d;
+  --color-danger: #e5484d;
+
+  /* 레이아웃 */
+  --spacing-tabbar: 5rem;
+  --radius-card: 1.25rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-ink-50 text-ink-900 font-sans antialiased;
+  }
+
+  #root {
+    min-height: 100dvh;
+  }
+}
+
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
