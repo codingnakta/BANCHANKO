@@ -4,8 +4,16 @@
 export const SUGGESTED_QUESTIONS = [
   '오늘 과제는 뭐야?',
   '내일 청소 당번은 누구야?',
-  '이번 주 행사와 준비물 알려줘',
+  '이번 주 일정과 준비물 알려줘',
   '오늘 급식 뭐 나와?',
+]
+
+/** 교사에게 보여주는 추천 — 등록까지 부탁할 수 있다는 걸 알린다 */
+export const TEACHER_SUGGESTED_QUESTIONS = [
+  '다음 주 수요일 현장체험학습 공지로 등록해줘',
+  '금요일까지 수학 익힘책 32~35쪽 과제로 올려줘',
+  '오늘 청소 당번 누구야?',
+  '이번 주 일정 정리해줘',
 ]
 
 /** 대화 중에도 입력창 위에 계속 띄우는 키워드 칩 */
@@ -22,7 +30,7 @@ export const SUGGESTION_CHIPS: SuggestionChip[] = [
   { keyword: '청소 당번', question: '청소 당번은 누구야?' },
   { keyword: '과제', question: '과제 뭐 있어?' },
   { keyword: '공지', question: '새로운 공지 알려줘' },
-  { keyword: '행사', question: '다가오는 행사와 준비물 알려줘' },
+  { keyword: '일정', question: '다가오는 일정과 준비물 알려줘' },
 ]
 
 /* ── 마스코트 역할 분담 ──────────────────────────────────────── */

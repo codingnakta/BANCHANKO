@@ -178,12 +178,28 @@ export interface ChatSource {
  */
 export type ChatAnswerStatus = 'answered' | 'no_evidence' | 'out_of_scope'
 
+/**
+ * 교사가 "~ 공지로 등록해줘"라고 했을 때 AI 가 만들어 오는 초안.
+ * 제안일 뿐이라 교사가 화면에서 확인하고 눌러야 실제로 등록된다.
+ */
+export interface ChatDraft {
+  type: 'notice' | 'assignment'
+  title: string
+  body: string
+  /** yyyy-MM-dd. 공지는 일정 날짜, 과제는 마감일 */
+  date: string | null
+  /** 과제일 때의 과목 */
+  subject: string | null
+}
+
 export interface ChatAnswer {
   status: ChatAnswerStatus
   text: string
   sources: ChatSource[]
   /** 이 답변을 맡은 마스코트 (주제별로 달라진다) */
   mascot: 'dog' | 'bunny' | 'cat'
+  /** 교사에게만 — 등록 제안 */
+  draft?: ChatDraft
 }
 
 export interface ChatMessage {
@@ -195,6 +211,8 @@ export interface ChatMessage {
   status?: ChatAnswerStatus
   sources?: ChatSource[]
   mascot?: 'dog' | 'bunny' | 'cat'
+  /** 교사에게만 — 등록 제안 */
+  draft?: ChatDraft
 }
 
 /* ── 학급 (F-RONORQ) ─────────────────────────────────────────── */

@@ -25,11 +25,11 @@ export const ROUTES = {
   // ── 학생 ────────────────────────────────────────────────
   student: {
     home: '/student',
-    chatbot: '/student/chat',
   },
 
-  /** 할일·우리반·공지 상세는 두 역할이 같은 화면을 본다 */
+  /** 할일·우리반·공지 상세·챗봇은 두 역할이 같은 화면을 본다 */
   todo: '/todo',
+  chat: '/chat',
   classroom: '/classroom',
   /** 우리반 목록에서 하나씩 눌러 들어가는 화면들 */
   classroomSection: {

@@ -1,3 +1,5 @@
+import { supabase } from '@/lib/supabase'
+import { getTodayIso } from '@/lib/date'
 import {
   DEFAULT_MASCOT,
   MASCOT_BY_TOPIC,
@@ -5,7 +7,7 @@ import {
   type MascotKey,
 } from '../constants'
 import { retrieveContext, type Topic } from './retrieveContext'
-import type { ChatAnswer, DashboardSummary } from '@/types'
+import type { ChatAnswer, ChatDraft, DashboardSummary, UserRole } from '@/types'
 
 /**
  * 질문 주제에 따라 답변을 맡을 마스코트를 고른다.
@@ -17,14 +19,16 @@ export function pickMascot(topics: Topic[]): MascotKey {
 }
 
 /**
- * 학생 질문에 대한 답변을 만든다 (F-CCZIQT).
+ * 질문에 대한 답변을 만든다 (F-CCZIQT).
  *
- * ⚠ 지금은 규칙 기반 임시 구현이다. 실제 답변은 Upstage Solar API 로 생성해야 하는데,
- *    API 키를 프론트엔드에 둘 수 없으므로 Supabase Edge Function 을 거쳐야 한다.
+ * 근거는 앱이 직접 뽑는다(retrieveContext). 그 근거만 들려 보내고
+ * 문장은 업스테이지 Solar 가 만든다 — API 키를 브라우저에 둘 수 없어
+ * Supabase Edge Function('chat')을 거친다.
  *
- *    교체 지점은 이 함수 하나다. 아래처럼 바뀐다:
- *      const { data } = await supabase.functions.invoke('chat', { body: { question } })
- *    근거 검색(retrieveContext)과 마스코트 선택(pickMascot)은 그대로 재사용한다.
+ * 교사가 "~ 공지로 등록해줘"라고 하면 등록 초안(draft)이 함께 온다.
+ * 초안은 제안일 뿐이고, 실제 등록은 교사가 화면에서 눌러야 일어난다.
+ *
+ * 함수가 없거나(미배포) 키가 없으면 근거를 그대로 나열하는 방식으로 되돌아간다.
  *
  * 지키는 규칙:
  *  - 근거가 없으면 추정하지 않고 답변 가능 범위를 안내한다.
@@ -35,11 +39,21 @@ export function pickMascot(topics: Topic[]): MascotKey {
 export async function answerQuestion(
   question: string,
   summary: DashboardSummary,
+  role: UserRole | null = 'student',
 ): Promise<ChatAnswer> {
-  // 실제 호출의 지연을 흉내내 로딩 UI 를 확인할 수 있게 한다
-  await new Promise((resolve) => setTimeout(resolve, 600))
-
   const { topics, facts, sources } = retrieveContext(question, summary)
+
+  // 교사의 등록 요청은 주제 판정에 걸리지 않아도 모델에게 넘긴다
+  const generated = await generate(question, facts, role)
+  if (generated) {
+    return {
+      status: facts.length > 0 ? 'answered' : 'no_evidence',
+      text: generated.reply,
+      sources: facts.length > 0 ? sources : [],
+      mascot: pickMascot(topics),
+      draft: generated.draft ?? undefined,
+    }
+  }
 
   // 학급 데이터와 무관한 질문
   if (topics.length === 0) {
@@ -66,5 +80,27 @@ export async function answerQuestion(
     text: facts.join('\n'),
     sources,
     mascot: pickMascot(topics),
+  }
+}
+
+/** 업스테이지 Solar 호출. 실패하면 null 을 돌려 규칙 기반 답변으로 넘긴다. */
+async function generate(
+  question: string,
+  facts: string[],
+  role: UserRole | null,
+): Promise<{ reply: string; draft: ChatDraft | null } | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke<{
+      reply?: string
+      draft?: ChatDraft | null
+    }>('chat', {
+      body: { question, role: role ?? 'student', facts, today: getTodayIso() },
+    })
+
+    if (error || !data?.reply) return null
+    return { reply: data.reply, draft: data.draft ?? null }
+  } catch {
+    // 함수 미배포·네트워크 오류 — 조용히 규칙 기반으로 되돌아간다
+    return null
   }
 }

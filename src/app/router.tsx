@@ -25,7 +25,7 @@ import { TimetableSectionPage } from '@/pages/classroom/sections/TimetableSectio
 import { MealSectionPage } from '@/pages/classroom/sections/MealSectionPage'
 import { ScheduleSectionPage } from '@/pages/classroom/sections/ScheduleSectionPage'
 import { RulesSectionPage } from '@/pages/classroom/sections/RulesSectionPage'
-import { ChatbotPage } from '@/pages/student/ChatbotPage'
+import { ChatbotPage } from '@/pages/chat/ChatbotPage'
 // 공통
 import { TodoPage } from '@/pages/todo/TodoPage'
 import { MorePage } from '@/pages/more/MorePage'
@@ -85,7 +85,7 @@ export function AppRouter() {
             <Route path={ROUTES.classroomSection.schedule} element={<ScheduleSectionPage />} />
             <Route path={ROUTES.classroomSection.rules} element={<RulesSectionPage />} />
 
-            <Route path={ROUTES.student.chatbot} element={<ChatbotPage />} />
+            <Route path={ROUTES.chat} element={<ChatbotPage />} />
             <Route path={ROUTES.notifications} element={<NotificationsPage />} />
             <Route
               path={ROUTES.account}

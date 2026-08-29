@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { useDashboard } from '@/features/dashboard'
 import { answerQuestion } from '../api/answerQuestion'
 import { DEFAULT_MASCOT } from '../constants'
@@ -14,6 +15,7 @@ const nextId = () => `m${++counter}`
  *       (AI 질의 기록은 생성일로부터 90일 보관 — F-ETJOMB)
  */
 export function useChat() {
+  const role = useCurrentUser()?.role ?? null
   const { data: summary } = useDashboard()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isAnswering, setIsAnswering] = useState(false)
@@ -30,7 +32,7 @@ export function useChat() {
       setIsAnswering(true)
 
       try {
-        const answer = await answerQuestion(question, summary)
+        const answer = await answerQuestion(question, summary, role)
         setMessages((prev) => [
           ...prev,
           {
@@ -40,6 +42,7 @@ export function useChat() {
             status: answer.status,
             sources: answer.sources,
             mascot: answer.mascot,
+            draft: answer.draft,
             createdAt: new Date().toISOString(),
           },
         ])
@@ -60,7 +63,7 @@ export function useChat() {
         setIsAnswering(false)
       }
     },
-    [isAnswering, summary],
+    [isAnswering, role, summary],
   )
 
   return { messages, isAnswering, send, isReady: !!summary }
