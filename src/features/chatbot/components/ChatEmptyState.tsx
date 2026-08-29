@@ -18,7 +18,7 @@ export function ChatEmptyState({ onPick }: ChatEmptyStateProps) {
         <p className="text-lg font-semibold text-ink-900">무엇이 궁금한가요?</p>
         <p className="mt-1.5 text-sm text-ink-500">
           {isTeacher
-            ? '우리 반 정보를 알려드리고, 공지·과제 초안도 만들어 드려요.'
+            ? '우리 반 정보를 알려드리고, 공지·과제·청소당번·1인1역·규칙도 대신 정리해 드려요.'
             : '우리 반의 시간표·급식·청소 당번·과제·공지·일정을 알려드려요.'}
         </p>
       </div>

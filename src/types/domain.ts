@@ -179,18 +179,29 @@ export interface ChatSource {
 export type ChatAnswerStatus = 'answered' | 'no_evidence' | 'out_of_scope'
 
 /**
- * 교사가 "~ 공지로 등록해줘"라고 했을 때 AI 가 만들어 오는 초안.
- * 제안일 뿐이라 교사가 화면에서 확인하고 눌러야 실제로 등록된다.
+ * 교사가 "~ 해줘"라고 했을 때 AI 가 만들어 오는 작업 제안.
+ *
+ * 제안일 뿐이라 교사가 화면에서 확인하고 눌러야 실제로 반영된다.
+ * AI 는 데이터를 직접 건드리지 않는다.
  */
-export interface ChatDraft {
-  type: 'notice' | 'assignment'
-  title: string
-  body: string
-  /** yyyy-MM-dd. 공지는 일정 날짜, 과제는 마감일 */
-  date: string | null
-  /** 과제일 때의 과목 */
-  subject: string | null
-}
+export type ChatAction =
+  /** 공지·과제 등록 */
+  | {
+      kind: 'post'
+      type: 'notice' | 'assignment'
+      title: string
+      body: string
+      /** yyyy-MM-dd. 공지는 일정 날짜, 과제는 마감일 */
+      date: string | null
+      /** 과제일 때의 과목 */
+      subject: string | null
+    }
+  /** 청소당번 — 한 요일, 한 구역의 담당 학생을 정한다 */
+  | { kind: 'duty'; weekday: number; area: string; students: string[] }
+  /** 1인1역 — 학생 한 명의 역할을 정한다 */
+  | { kind: 'role'; student: string; role: string }
+  /** 학급규칙 추가 */
+  | { kind: 'rule'; rules: string[] }
 
 export interface ChatAnswer {
   status: ChatAnswerStatus
@@ -198,8 +209,8 @@ export interface ChatAnswer {
   sources: ChatSource[]
   /** 이 답변을 맡은 마스코트 (주제별로 달라진다) */
   mascot: 'dog' | 'bunny' | 'cat'
-  /** 교사에게만 — 등록 제안 */
-  draft?: ChatDraft
+  /** 교사에게만 — 실행 제안 */
+  action?: ChatAction
 }
 
 export interface ChatMessage {
@@ -211,8 +222,8 @@ export interface ChatMessage {
   status?: ChatAnswerStatus
   sources?: ChatSource[]
   mascot?: 'dog' | 'bunny' | 'cat'
-  /** 교사에게만 — 등록 제안 */
-  draft?: ChatDraft
+  /** 교사에게만 — 실행 제안 */
+  action?: ChatAction
 }
 
 /* ── 학급 (F-RONORQ) ─────────────────────────────────────────── */

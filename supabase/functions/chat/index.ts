@@ -11,11 +11,12 @@
  *   { question, role: 'teacher'|'student', facts: string[], today: 'yyyy-MM-dd' }
  *
  * 응답:
- *   { reply, draft }  draft 는 교사가 "~ 공지로 등록해줘" 라고 했을 때만 채워진다.
+ *   { reply, action }  action 은 교사가 "~ 해줘" 라고 했을 때만 채워진다.
+ *                      (공지·과제 등록 / 청소당번 / 1인1역 / 학급규칙)
  *
  * 규칙
  *  - 답은 facts(학급 데이터에서 뽑아 보낸 근거)만 가지고 만든다. 없으면 모른다고 한다.
- *  - draft 는 '등록 제안'일 뿐이고, 실제 저장은 교사가 화면에서 눌러야 일어난다.
+ *  - action 은 '제안'일 뿐이고, 실제 저장은 교사가 화면에서 눌러야 일어난다.
  *    (이 함수는 DB 에 쓰지 않는다. 쓰기 권한은 여전히 RLS 가 쥔다)
  */
 
@@ -35,16 +36,21 @@ interface ChatRequest {
   today?: string
 }
 
-/** 교사가 등록을 부탁했을 때 모델이 채워 오는 초안 */
-interface Draft {
-  type: 'notice' | 'assignment'
-  title: string
-  body: string
-  /** yyyy-MM-dd, 없으면 null */
-  date: string | null
-  /** 과제일 때만 */
-  subject: string | null
-}
+/** 교사가 부탁한 일을 모델이 채워 오는 제안 */
+type Action =
+  | {
+      kind: 'post'
+      type: 'notice' | 'assignment'
+      title: string
+      body: string
+      /** yyyy-MM-dd, 없으면 null */
+      date: string | null
+      /** 과제일 때만 */
+      subject: string | null
+    }
+  | { kind: 'duty'; weekday: number; area: string; students: string[] }
+  | { kind: 'role'; student: string; role: string }
+  | { kind: 'rule'; rules: string[] }
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -71,58 +77,112 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
   if (role === 'teacher') {
     common.push(
       '',
-      '이 사용자는 담임 교사다.',
-      '교사가 공지나 과제를 "등록해줘 / 올려줘 / 써줘"라고 하면 draft 를 채운다.',
-      '- 날짜가 있는 안내(체육대회, 현장학습, 학부모 총회 등)는 type="notice" 로 하고 date 를 채운다.',
-      '- 제출 기한이 있는 학습 과제는 type="assignment" 로 하고 date 에 마감일, subject 에 과목을 넣는다.',
-      '- "다음 주 화요일"처럼 말한 날짜는 오늘을 기준으로 yyyy-MM-dd 로 바꾼다.',
-      '- 제목은 20자 안쪽으로 짧게, 내용(body)은 학생이 읽을 안내문으로 두세 문장 쓴다.',
-      '- 등록을 부탁한 게 아니면 draft 는 null 로 둔다.',
-      'reply 에는 무엇을 만들었는지 한두 문장으로 말하고, 확인 후 등록 버튼을 눌러 달라고 안내한다.',
+      '이 사용자는 담임 교사다. 교사가 무언가를 바꿔 달라고 하면 action 을 채운다.',
+      '고를 수 있는 action 은 네 가지다.',
+      '',
+      '1) 공지·과제 등록 — "등록해줘 / 올려줘 / 써줘"',
+      '   {"kind":"post","type":"notice"|"assignment","title":"","body":"","date":"yyyy-MM-dd"|null,"subject":null}',
+      '   - 날짜가 있는 안내(체육대회, 현장학습, 학부모 총회)는 type="notice" 에 date 를 채운다.',
+      '   - 제출 기한이 있는 학습 과제는 type="assignment", date 에 마감일, subject 에 과목.',
+      '   - 제목은 20자 안쪽, body 는 학생이 읽을 안내문으로 두세 문장.',
+      '',
+      '2) 청소당번 — "월요일 복도 청소 김영우로 바꿔줘"',
+      '   {"kind":"duty","weekday":1,"area":"복도","students":["김영우"]}',
+      '   - weekday 는 월=1 … 금=5.',
+      '   - area 는 [학급 정보]의 청소 구역 이름을 그대로 쓴다. 없는 구역이면 새로 만든다.',
+      '   - students 는 그 구역을 그 요일에 맡을 학생 전체다. "김영우도 넣어줘"처럼 추가를',
+      '     부탁하면 기존 담당에 더한 전체 명단을 적는다.',
+      '',
+      '3) 1인1역 — "김영우 칠판 담당으로 해줘"',
+      '   {"kind":"role","student":"김영우","role":"칠판 담당"}',
+      '   - student 는 [학급 정보]의 학생 명단에 있는 이름을 그대로 쓴다.',
+      '',
+      '4) 학급규칙 추가 — "복도에서 뛰지 않기 규칙 넣어줘"',
+      '   {"kind":"rule","rules":["복도에서 뛰지 않기"]}',
+      '',
+      '- 이름·구역이 [학급 정보]에 없어 헷갈리면 action 을 null 로 두고 reply 로 되묻는다.',
+      '- 그냥 묻기만 한 것이면 action 은 null 이다.',
+      'action 을 채웠으면 reply 에 무엇을 할 것인지 한두 문장으로 말하고,',
+      '확인 후 버튼을 눌러 달라고 안내한다.',
     )
   } else {
-    common.push('', '이 사용자는 학생이다. draft 는 항상 null 로 둔다.')
+    common.push('', '이 사용자는 학생이다. action 은 항상 null 로 둔다.')
   }
 
   common.push(
     '',
     '반드시 아래 형태의 JSON 하나만 출력한다. 다른 말은 붙이지 않는다.',
-    '{"reply": "답변", "draft": null}',
+    '{"reply": "답변", "action": null}',
     '또는',
-    '{"reply": "답변", "draft": {"type": "notice", "title": "...", "body": "...", "date": "2026-09-01", "subject": null}}',
+    '{"reply": "답변", "action": { 위 네 가지 중 하나 }}',
   )
 
   return common.join('\n')
 }
 
 /** 모델이 코드블록이나 군더더기를 붙여도 JSON 만 건져낸다. */
-function parseReply(raw: string): { reply: string; draft: Draft | null } {
+function parseReply(raw: string): { reply: string; action: Action | null } {
   const stripped = raw.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()
   const start = stripped.indexOf('{')
   const end = stripped.lastIndexOf('}')
 
-  if (start !== -1 && end > start) {
-    try {
-      const parsed = JSON.parse(stripped.slice(start, end + 1))
-      const draft = parsed.draft
-      return {
-        reply: typeof parsed.reply === 'string' ? parsed.reply : stripped,
-        draft:
-          draft && typeof draft.title === 'string' && draft.title.trim()
-            ? {
-                type: draft.type === 'assignment' ? 'assignment' : 'notice',
-                title: String(draft.title).trim(),
-                body: typeof draft.body === 'string' ? draft.body.trim() : '',
-                date: /^\d{4}-\d{2}-\d{2}$/.test(draft.date ?? '') ? draft.date : null,
-                subject: typeof draft.subject === 'string' ? draft.subject.trim() || null : null,
-              }
-            : null,
-      }
-    } catch {
-      // JSON 이 아니면 그냥 말로 온 것으로 본다
+  if (start === -1 || end <= start) return { reply: stripped, action: null }
+
+  try {
+    const parsed = JSON.parse(stripped.slice(start, end + 1))
+    return {
+      reply: typeof parsed.reply === 'string' ? parsed.reply : stripped,
+      action: toAction(parsed.action),
     }
+  } catch {
+    // JSON 이 아니면 그냥 말로 온 것으로 본다
+    return { reply: stripped, action: null }
   }
-  return { reply: stripped, draft: null }
+}
+
+const text = (value: unknown): string => (typeof value === 'string' ? value.trim() : '')
+
+/** 모델이 준 action 을 앱이 아는 모양으로만 통과시킨다. 이상하면 null. */
+function toAction(raw: unknown): Action | null {
+  if (!raw || typeof raw !== 'object') return null
+  const value = raw as Record<string, unknown>
+
+  switch (value.kind) {
+    case 'post': {
+      const title = text(value.title)
+      if (!title) return null
+      const date = text(value.date)
+      return {
+        kind: 'post',
+        type: value.type === 'assignment' ? 'assignment' : 'notice',
+        title,
+        body: text(value.body),
+        date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null,
+        subject: text(value.subject) || null,
+      }
+    }
+    case 'duty': {
+      const weekday = Number(value.weekday)
+      const area = text(value.area)
+      if (!area || !(weekday >= 1 && weekday <= 5)) return null
+      const students = Array.isArray(value.students)
+        ? value.students.map(text).filter(Boolean)
+        : []
+      return { kind: 'duty', weekday, area, students }
+    }
+    case 'role': {
+      const student = text(value.student)
+      if (!student) return null
+      return { kind: 'role', student, role: text(value.role) }
+    }
+    case 'rule': {
+      const rules = Array.isArray(value.rules) ? value.rules.map(text).filter(Boolean) : []
+      if (rules.length === 0) return null
+      return { kind: 'rule', rules }
+    }
+    default:
+      return null
+  }
 }
 
 Deno.serve(async (request) => {
@@ -183,9 +243,9 @@ Deno.serve(async (request) => {
       return json({ error: '답변이 비어 있습니다.' }, 502)
     }
 
-    const { reply, draft } = parseReply(content)
-    // 학생에게는 등록 초안을 절대 내려보내지 않는다
-    return json({ reply, draft: role === 'teacher' ? draft : null })
+    const { reply, action } = parseReply(content)
+    // 학생에게는 실행 제안을 절대 내려보내지 않는다
+    return json({ reply, action: role === 'teacher' ? action : null })
   } catch (error) {
     console.error('[chat] 오류', error)
     return json({ error: '답변을 만들지 못했습니다.' }, 500)

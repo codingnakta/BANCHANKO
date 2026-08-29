@@ -1,7 +1,9 @@
 import { useCallback, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { useDashboard } from '@/features/dashboard'
 import { answerQuestion } from '../api/answerQuestion'
+import { fetchTeacherFacts, teacherContextKeys } from '../api/teacherContext'
 import { DEFAULT_MASCOT } from '../constants'
 import type { ChatMessage } from '@/types'
 
@@ -15,8 +17,18 @@ const nextId = () => `m${++counter}`
  *       (AI 질의 기록은 생성일로부터 90일 보관 — F-ETJOMB)
  */
 export function useChat() {
-  const role = useCurrentUser()?.role ?? null
+  const user = useCurrentUser()
+  const role = user?.role ?? null
+  const classroomId = user?.classroomId ?? ''
   const { data: summary } = useDashboard()
+
+  // 교사에게만 — 청소 구역·학생 명단·학급규칙까지 근거에 넣는다
+  const { data: teacherFacts } = useQuery({
+    queryKey: teacherContextKeys.detail(classroomId),
+    queryFn: () => fetchTeacherFacts(classroomId),
+    enabled: role === 'teacher' && Boolean(classroomId),
+    staleTime: 30_000,
+  })
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isAnswering, setIsAnswering] = useState(false)
 
@@ -32,7 +44,7 @@ export function useChat() {
       setIsAnswering(true)
 
       try {
-        const answer = await answerQuestion(question, summary, role)
+        const answer = await answerQuestion(question, summary, role, teacherFacts ?? [])
         setMessages((prev) => [
           ...prev,
           {
@@ -42,7 +54,7 @@ export function useChat() {
             status: answer.status,
             sources: answer.sources,
             mascot: answer.mascot,
-            draft: answer.draft,
+            action: answer.action,
             createdAt: new Date().toISOString(),
           },
         ])
@@ -63,7 +75,7 @@ export function useChat() {
         setIsAnswering(false)
       }
     },
-    [isAnswering, role, summary],
+    [isAnswering, role, summary, teacherFacts],
   )
 
   return { messages, isAnswering, send, isReady: !!summary }

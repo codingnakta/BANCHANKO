@@ -3,7 +3,7 @@ import { formatDate, formatTime } from '@/lib/date'
 import { cn } from '@/lib/utils'
 import { DEFAULT_MASCOT } from '../constants'
 import { MASCOT_IMAGE, MASCOT_NAME } from '../mascots'
-import { DraftCard } from './DraftCard'
+import { ActionCard } from './ActionCard'
 import type { ChatMessage } from '@/types'
 
 interface MessageBubbleProps {
@@ -44,8 +44,8 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           {message.text}
         </div>
 
-        {/* 교사가 등록을 부탁했을 때의 초안 — 눌러야 실제로 등록된다 */}
-        {message.draft && <DraftCard draft={message.draft} />}
+        {/* 교사가 부탁한 일의 제안 — 눌러야 실제로 반영된다 */}
+        {message.action && <ActionCard action={message.action} />}
 
         {/* 답변 근거의 출처와 최종 갱신 시각을 함께 표시한다 (F-CCZIQT) */}
         {message.sources && message.sources.length > 0 && (

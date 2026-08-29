@@ -7,7 +7,7 @@ import {
   type MascotKey,
 } from '../constants'
 import { retrieveContext, type Topic } from './retrieveContext'
-import type { ChatAnswer, ChatDraft, DashboardSummary, UserRole } from '@/types'
+import type { ChatAction, ChatAnswer, DashboardSummary, UserRole } from '@/types'
 
 /**
  * 질문 주제에 따라 답변을 맡을 마스코트를 고른다.
@@ -25,8 +25,8 @@ export function pickMascot(topics: Topic[]): MascotKey {
  * 문장은 업스테이지 Solar 가 만든다 — API 키를 브라우저에 둘 수 없어
  * Supabase Edge Function('chat')을 거친다.
  *
- * 교사가 "~ 공지로 등록해줘"라고 하면 등록 초안(draft)이 함께 온다.
- * 초안은 제안일 뿐이고, 실제 등록은 교사가 화면에서 눌러야 일어난다.
+ * 교사가 "~ 해줘"라고 하면 실행 제안(action)이 함께 온다.
+ * 제안일 뿐이고, 실제 반영은 교사가 화면에서 눌러야 일어난다.
  *
  * 함수가 없거나(미배포) 키가 없으면 근거를 그대로 나열하는 방식으로 되돌아간다.
  *
@@ -40,18 +40,20 @@ export async function answerQuestion(
   question: string,
   summary: DashboardSummary,
   role: UserRole | null = 'student',
+  /** 교사 대화에만 더해지는 근거 (청소 구역·명단·규칙) */
+  extraFacts: string[] = [],
 ): Promise<ChatAnswer> {
   const { topics, facts, sources } = retrieveContext(question, summary)
 
-  // 교사의 등록 요청은 주제 판정에 걸리지 않아도 모델에게 넘긴다
-  const generated = await generate(question, facts, role)
+  // 교사의 요청은 주제 판정에 걸리지 않아도 모델에게 넘긴다
+  const generated = await generate(question, [...facts, ...extraFacts], role)
   if (generated) {
     return {
       status: facts.length > 0 ? 'answered' : 'no_evidence',
       text: generated.reply,
       sources: facts.length > 0 ? sources : [],
       mascot: pickMascot(topics),
-      draft: generated.draft ?? undefined,
+      action: generated.action ?? undefined,
     }
   }
 
@@ -88,17 +90,17 @@ async function generate(
   question: string,
   facts: string[],
   role: UserRole | null,
-): Promise<{ reply: string; draft: ChatDraft | null } | null> {
+): Promise<{ reply: string; action: ChatAction | null } | null> {
   try {
     const { data, error } = await supabase.functions.invoke<{
       reply?: string
-      draft?: ChatDraft | null
+      action?: ChatAction | null
     }>('chat', {
       body: { question, role: role ?? 'student', facts, today: getTodayIso() },
     })
 
     if (error || !data?.reply) return null
-    return { reply: data.reply, draft: data.draft ?? null }
+    return { reply: data.reply, action: data.action ?? null }
   } catch {
     // 함수 미배포·네트워크 오류 — 조용히 규칙 기반으로 되돌아간다
     return null
