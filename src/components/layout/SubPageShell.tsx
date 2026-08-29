@@ -43,9 +43,9 @@ export function SubPageShell({
   )
 }
 
-/** 교사 운영 화면 — 기본 뒤로가기만 '학급 운영'으로 다른 하위 화면. */
+/** 교사 운영 화면 — 뒤로가면 기본적으로 우리반으로 돌아간다. */
 export function TeacherPageShell({
-  backTo = ROUTES.teacher.manage,
+  backTo = ROUTES.classroom,
   ...props
 }: Omit<SubPageShellProps, 'backTo'> & { backTo?: string }) {
   return <SubPageShell backTo={backTo} {...props} />

@@ -12,8 +12,6 @@ export const ROUTES = {
   // ── 교사 ────────────────────────────────────────────────
   teacher: {
     home: '/teacher',
-    /** 학급 운영 메뉴 모음 */
-    manage: '/teacher/manage',
     students: '/teacher/students',
     settings: '/teacher/settings',
     notices: '/teacher/notices',

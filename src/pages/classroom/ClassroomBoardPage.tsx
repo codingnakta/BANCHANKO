@@ -1,10 +1,13 @@
 import { Link } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 import { ChevronRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { AppHeader } from '@/components/layout'
 import { Card, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
+import { useCurrentUser, useIsTeacher } from '@/features/auth/hooks/useCurrentUser'
 import { useClassroomBoard } from '@/features/classroom'
+import { fetchRoster, rosterKeys } from '@/features/teacher/api/roster'
 import type { ClassroomBoard } from '@/features/classroom/api/classroomBoard'
 import { formatDate, getTodayIso, relativeDayLabel } from '@/lib/date'
 import { cn } from '@/lib/utils'
@@ -15,9 +18,19 @@ const PREVIEW_COUNT = 3
 /**
  * 우리반 — 학급 정보를 설정 화면처럼 목록으로 보여준다.
  * 공지사항·학사일정만 최신 세 줄을 미리 펼쳐 두고, 나머지는 눌러서 들어간다.
+ * 교사에게는 맨 아래에 학급 운영 묶음이 더 붙는다.
  */
 export function ClassroomBoardPage() {
+  const isTeacher = useIsTeacher()
+  const classroomId = useCurrentUser()?.classroomId ?? ''
   const { data, isPending, isError, error, refetch } = useClassroomBoard()
+
+  // 명단 인원은 교사에게만 필요하다
+  const { data: roster } = useQuery({
+    queryKey: rosterKeys.list(classroomId),
+    queryFn: () => fetchRoster(classroomId),
+    enabled: isTeacher && Boolean(classroomId),
+  })
 
   if (isPending) {
     return (
@@ -104,21 +117,49 @@ export function ClassroomBoardPage() {
 
         {/* 나머지는 줄만 */}
         {plainItems(data).map((item) => (
-          <li key={item.label} className="border-b border-ink-100 last:border-0">
-            <Link
-              to={item.to}
-              className="flex items-center gap-3 px-4 py-4 transition-colors hover:bg-brand-50"
-            >
-              <span className="min-w-0 flex-1 text-[15px] font-medium text-ink-900">
-                {item.label}
-              </span>
-              <span className="shrink-0 text-sm text-ink-400">{item.meta}</span>
-              <ChevronRight className="size-5 shrink-0 text-ink-300" aria-hidden />
-            </Link>
-          </li>
+          <MenuRow key={item.label} {...item} />
         ))}
       </ul>
+
+      {/* 학급 운영 — 교사에게만 */}
+      {isTeacher && (
+        <section className="mt-7">
+          <h2 className="mb-3 px-1 text-lg font-bold text-ink-900">학급 운영</h2>
+          <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+            <MenuRow
+              label="학생 관리"
+              to={ROUTES.teacher.students}
+              meta={
+                roster
+                  ? `${roster.filter((member) => member.joined).length}/${roster.length}명`
+                  : '명단 등록, 1인1역'
+              }
+            />
+            <MenuRow
+              label="학급 기본 정보"
+              to={ROUTES.teacher.settings}
+              meta={count(data.rules.length, '개 규칙')}
+            />
+          </ul>
+        </section>
+      )}
     </>
+  )
+}
+
+/** 미리보기 없이 눌러서 들어가는 줄 하나. */
+function MenuRow({ label, to, meta }: { label: string; to: string; meta: string }) {
+  return (
+    <li className="border-b border-ink-100 last:border-0">
+      <Link
+        to={to}
+        className="flex items-center gap-3 px-4 py-4 transition-colors hover:bg-brand-50"
+      >
+        <span className="min-w-0 flex-1 text-[15px] font-medium text-ink-900">{label}</span>
+        <span className="shrink-0 text-sm text-ink-400">{meta}</span>
+        <ChevronRight className="size-5 shrink-0 text-ink-300" aria-hidden />
+      </Link>
+    </li>
   )
 }
 

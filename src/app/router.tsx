@@ -9,7 +9,6 @@ import { WaitingPage } from '@/pages/onboarding/WaitingPage'
 // 교사
 import { CreateClassroomPage } from '@/pages/teacher/CreateClassroomPage'
 import { TeacherHomePage } from '@/pages/teacher/TeacherHomePage'
-import { TeacherManagePage } from '@/pages/teacher/TeacherManagePage'
 import { StudentsPage } from '@/pages/teacher/StudentsPage'
 import { ClassSettingsPage } from '@/pages/teacher/ClassSettingsPage'
 import { NoticesPage } from '@/pages/teacher/NoticesPage'
@@ -62,7 +61,6 @@ export function AppRouter() {
             {/* 교사 */}
             <Route element={<RequireTeacher />}>
               <Route path={ROUTES.teacher.home} element={<TeacherHomePage />} />
-              <Route path={ROUTES.teacher.manage} element={<TeacherManagePage />} />
             </Route>
 
             {/* 학생 */}
