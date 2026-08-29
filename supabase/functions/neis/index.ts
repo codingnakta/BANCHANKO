@@ -295,11 +295,21 @@ async function fetchSchedule(
 
   return rows.flatMap((row) => {
     if (!row.AA_YMD || !row.EVENT_NM) return []
+
     const ymd = row.AA_YMD
+    const title = row.EVENT_NM.trim()
+    // 수업공제일자명. 평범한 수업일에는 아예 비어 오는 학교가 많다.
+    const dayKind = row.SBTR_DD_SC_NM?.trim() ?? ''
+
+    // 토요휴업일은 매주 반복돼 일정 목록을 뒤덮기만 한다
+    if (dayKind === '토요휴업일' || title === '토요휴업일') return []
+
     return [{
       date: `${ymd.slice(0, 4)}-${ymd.slice(4, 6)}-${ymd.slice(6, 8)}`,
-      title: row.EVENT_NM.trim(),
-      isHoliday: row.SBTR_DD_SC_NM !== '수업일',
+      title,
+      // 비어 있는 값을 휴업으로 보면 모든 일정에 '휴업'이 붙는다.
+      // 학교가 휴업일이라고 분명히 적었을 때만 표시한다.
+      isHoliday: dayKind !== '' && dayKind !== '수업일',
     }]
   })
 }

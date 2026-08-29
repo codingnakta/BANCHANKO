@@ -1,22 +1,20 @@
 import { Link } from 'react-router'
 import { ChevronRight } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { AppHeader } from '@/components/layout'
 import { Card, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import { useClassroomBoard } from '@/features/classroom'
 import type { ClassroomBoard } from '@/features/classroom/api/classroomBoard'
-import { getTodayIso } from '@/lib/date'
+import { formatDate, getTodayIso, relativeDayLabel } from '@/lib/date'
+import { cn } from '@/lib/utils'
 
-interface BoardMenuItem {
-  label: string
-  to: string
-  /** 우측에 붙는 한 줄 요약 */
-  meta: string
-}
+/** 미리보기로 보여줄 줄 수 */
+const PREVIEW_COUNT = 3
 
 /**
  * 우리반 — 학급 정보를 설정 화면처럼 목록으로 보여준다.
- * 항목을 누르면 각각의 화면으로 들어가고, 편집 링크는 그 안에서 교사에게만 붙는다.
+ * 공지사항·학사일정만 최신 세 줄을 미리 펼쳐 두고, 나머지는 눌러서 들어간다.
  */
 export function ClassroomBoardPage() {
   const { data, isPending, isError, error, refetch } = useClassroomBoard()
@@ -46,6 +44,10 @@ export function ClassroomBoardPage() {
     )
   }
 
+  const todayIso = getTodayIso()
+  const notices = data.notices.slice(0, PREVIEW_COUNT)
+  const schedule = data.schedule.slice(0, PREVIEW_COUNT)
+
   return (
     <>
       <AppHeader title={data.classroom.name} />
@@ -55,7 +57,53 @@ export function ClassroomBoardPage() {
       </p>
 
       <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-        {menuItems(data).map((item) => (
+        {/* 공지사항 — 최신 세 개 미리보기 */}
+        <Preview
+          label="공지사항"
+          to={ROUTES.classroomSection.notices}
+          blank={notices.length === 0 ? '올라온 공지가 없어요.' : undefined}
+        >
+          {notices.map((notice) => (
+            <li key={notice.id}>
+              <Link
+                to={ROUTES.noticeDetail(notice.id)}
+                className="flex items-center gap-2 py-1.5 transition-colors hover:text-brand-600"
+              >
+                <span className="min-w-0 flex-1 truncate text-sm text-ink-700">{notice.title}</span>
+                <span className="shrink-0 text-xs text-ink-400">
+                  {notice.dueAt
+                    ? relativeDayLabel(notice.dueAt)
+                    : formatDate(notice.publishedAt, 'M월 d일')}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </Preview>
+
+        {/* 학사일정 — 다가오는 세 개 미리보기 */}
+        <Preview
+          label="학사일정"
+          to={ROUTES.classroomSection.schedule}
+          blank={schedule.length === 0 ? '다가오는 일정이 없어요.' : undefined}
+        >
+          {schedule.map((item) => (
+            <li key={`${item.date}-${item.title}`} className="flex items-center gap-2 py-1.5">
+              <span
+                className={cn(
+                  'w-14 shrink-0 text-xs font-semibold',
+                  item.date === todayIso ? 'text-danger' : 'text-brand-700',
+                )}
+              >
+                {formatDate(`${item.date}T00:00:00`, 'M/d(E)')}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-sm text-ink-700">{item.title}</span>
+              {item.isClassEvent && <span className="shrink-0 text-xs text-brand-700">학급</span>}
+            </li>
+          ))}
+        </Preview>
+
+        {/* 나머지는 줄만 */}
+        {plainItems(data).map((item) => (
           <li key={item.label} className="border-b border-ink-100 last:border-0">
             <Link
               to={item.to}
@@ -74,18 +122,44 @@ export function ClassroomBoardPage() {
   )
 }
 
-/** 목록에 쓸 항목과 요약. 요약은 안에 무엇이 들어 있는지만 알려 준다. */
-function menuItems(data: ClassroomBoard): BoardMenuItem[] {
-  const todayIso = getTodayIso()
+/** 제목 줄 + 더보기, 그 아래 미리보기 몇 줄. */
+function Preview({
+  label,
+  to,
+  blank,
+  children,
+}: {
+  label: string
+  to: string
+  /** 보여줄 내용이 없을 때의 안내 문구 */
+  blank?: string
+  children: ReactNode
+}) {
+  return (
+    <li className="border-b border-ink-100">
+      <Link
+        to={to}
+        className="flex items-center gap-2 px-4 pb-1.5 pt-4 transition-colors hover:text-brand-600"
+      >
+        <span className="min-w-0 flex-1 text-[15px] font-medium text-ink-900">{label}</span>
+        <span className="shrink-0 text-sm text-brand-500">더보기</span>
+        <ChevronRight className="size-4 shrink-0 text-brand-500" aria-hidden />
+      </Link>
+
+      {blank ? (
+        <p className="px-4 pb-3.5 text-sm text-ink-400">{blank}</p>
+      ) : (
+        <ul className="px-4 pb-3">{children}</ul>
+      )}
+    </li>
+  )
+}
+
+/** 미리보기 없이 줄 하나로만 두는 항목. 요약은 안에 무엇이 있는지만 알려 준다. */
+function plainItems(data: ClassroomBoard) {
   const dutyAreas = new Set(data.duties.map((duty) => duty.area)).size
-  const hasTodayEvent = data.schedule.some((item) => item.date === todayIso)
 
   return [
-    {
-      label: '공지사항',
-      to: ROUTES.classroomSection.notices,
-      meta: count(data.notices.length, '개'),
-    },
     {
       label: '청소당번',
       to: ROUTES.classroomSection.duties,
@@ -105,11 +179,6 @@ function menuItems(data: ClassroomBoard): BoardMenuItem[] {
       label: '급식',
       to: ROUTES.classroomSection.meal,
       meta: data.meal && data.meal.items.length > 0 ? '오늘 메뉴' : '없음',
-    },
-    {
-      label: '학사일정',
-      to: ROUTES.classroomSection.schedule,
-      meta: hasTodayEvent ? '오늘 일정 있음' : count(data.schedule.length, '건'),
     },
     {
       label: '학급규칙',
