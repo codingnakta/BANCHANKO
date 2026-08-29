@@ -10,7 +10,7 @@ interface AppHeaderProps {
   hasUnreadNotification?: boolean
 }
 
-/** 시안의 상단 헤더 — 하트 로고 + 학급명, 우측 알림 벨(미확인 시 점 표시). */
+/** 상단 헤더 — 하트 로고 + 학급명, 우측 알림 벨(미확인 시 점 표시). */
 export function AppHeader({ classroomName, title, hasUnreadNotification }: AppHeaderProps) {
   return (
     <header className="mb-5 flex items-center gap-2.5">
@@ -19,9 +19,7 @@ export function AppHeader({ classroomName, title, hasUnreadNotification }: AppHe
       ) : (
         <>
           <img src={heartIcon} alt="" className="h-5 w-auto shrink-0" draggable={false} />
-          <h1 className="text-xl font-semibold text-ink-900">
-            멋진 <span className="font-semibold">{classroomName}</span>
-          </h1>
+          <h1 className="text-xl font-semibold text-ink-900">{classroomName}</h1>
         </>
       )}
 
