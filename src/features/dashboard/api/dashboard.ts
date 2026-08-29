@@ -158,13 +158,11 @@ export async function fetchDashboard(
     })
 
   // 일정은 날짜를 넣은 공지다. (예전에 '행사'로 올린 글도 함께 본다)
-  // 지난 일정만 뺀다.
+  // 지난 것도 함께 내려보내고, 홈에서 감출지 목록에서 보여줄지는 화면이 정한다.
   const upcomingEvents = posts
     .filter(
       (post) =>
-        post.type !== 'assignment' &&
-        (post.type === 'event' || Boolean(post.due_date)) &&
-        (!post.due_date || post.due_date >= isoDate),
+        post.type !== 'assignment' && (post.type === 'event' || Boolean(post.due_date)),
     )
     .sort((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'))
     .map((post) => ({

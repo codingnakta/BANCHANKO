@@ -1,4 +1,4 @@
-import { formatDate, relativeDayLabel } from '@/lib/date'
+import { formatDate, isPast, relativeDayLabel } from '@/lib/date'
 import { ROUTES } from '@/constants'
 import type { ChatSource, DashboardSummary } from '@/types'
 
@@ -103,8 +103,10 @@ export function retrieveContext(question: string, summary: DashboardSummary): Re
         break
       }
       case 'event': {
-        if (!summary.upcomingEvents.length) break
-        for (const e of summary.upcomingEvents) {
+        // 지난 일정은 묻는 말과 상관없다
+        const events = summary.upcomingEvents.filter((event) => !isPast(event.startAt))
+        if (!events.length) break
+        for (const e of events) {
           const desc = e.description ? ` — ${e.description}` : ''
           facts.push(`일정 "${e.title}" ${formatDate(e.startAt)} (${relativeDayLabel(e.startAt)})${desc}`)
           sources.push({

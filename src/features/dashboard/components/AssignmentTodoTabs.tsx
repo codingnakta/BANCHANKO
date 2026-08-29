@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { Check } from 'lucide-react'
 import { Button, DateDialog } from '@/components/ui'
 import { ROUTES } from '@/constants'
-import { relativeDayLabel } from '@/lib/date'
+import { isPast, relativeDayLabel } from '@/lib/date'
 import { cn } from '@/lib/utils'
 import { usePersonalTodos } from '@/features/todo'
 import { usePinnedPost, usePinnedTodo } from '../hooks/usePinnedPost'
@@ -31,7 +31,9 @@ export function AssignmentTodoTabs({ assignments }: AssignmentTodoTabsProps) {
   const { pinnedId: pinnedTodoId, toggle: toggleTodoPin } = usePinnedTodo()
   const { todos, toggleDone, setDueDate, remove } = usePersonalTodos()
 
-  const assignment = assignments.find((item) => item.id === pinnedId)
+  // 기한이 지난 것은 홈에 띄우지 않는다. 목록에서는 필터로 볼 수 있다.
+  const pinnedAssignment = assignments.find((item) => item.id === pinnedId)
+  const assignment = pinnedAssignment && !isPast(pinnedAssignment.dueAt) ? pinnedAssignment : null
   const todo = todos.find((item) => item.id === pinnedTodoId)
 
   return (
@@ -50,7 +52,11 @@ export function AssignmentTodoTabs({ assignments }: AssignmentTodoTabsProps) {
           assignment ? (
             <DdayCard assignment={assignment} inList />
           ) : (
-            <Blank>할일에서 파란 핀을 꽂으면 여기에 보여요.</Blank>
+            <Blank>
+              {pinnedAssignment
+                ? '고정한 과제의 기한이 지났어요. 할일에서 다시 골라주세요.'
+                : '할일에서 파란 핀을 꽂으면 여기에 보여요.'}
+            </Blank>
           )
         ) : todo ? (
           <TaskCard

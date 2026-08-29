@@ -11,7 +11,7 @@ import { invalidateClassroomViews } from '@/lib/invalidate'
 import { DdayCard, useDashboard, usePinnedPost } from '@/features/dashboard'
 import { useNotifications } from '@/features/notifications'
 import { MyTodoList } from '@/features/todo'
-import { getTodayIso, relativeDayLabel } from '@/lib/date'
+import { getTodayIso, isPast, relativeDayLabel } from '@/lib/date'
 import { cn } from '@/lib/utils'
 
 /**
@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils'
 export function TodoPage() {
   const isTeacher = useIsTeacher()
   const { pinnedId } = usePinnedPost()
+  const [showPast, setShowPast] = useState(false)
   const { data, isPending } = useDashboard()
   const { unreadCount } = useNotifications()
 
@@ -34,16 +35,44 @@ export function TodoPage() {
     )
   }
 
-  const events = data?.upcomingEvents ?? []
+  // 기한이 지난 것은 기본으로 감추고, 필터를 켜면 함께 보여준다
+  const allEvents = data?.upcomingEvents ?? []
+  const allAssignments = data?.upcomingAssignments ?? []
+  const pastCount =
+    allEvents.filter((event) => isPast(event.startAt)).length +
+    allAssignments.filter((assignment) => isPast(assignment.dueAt)).length
+
+  const events = showPast ? allEvents : allEvents.filter((event) => !isPast(event.startAt))
   // 홈에 고정한 과제는 목록에서도 맨 위에 둔다
-  const assignments = [...(data?.upcomingAssignments ?? [])].sort(
-    (a, b) => Number(b.id === pinnedId) - Number(a.id === pinnedId),
+  const assignments = (
+    showPast ? allAssignments : allAssignments.filter((item) => !isPast(item.dueAt))
   )
+    .slice()
+    .sort((a, b) => Number(b.id === pinnedId) - Number(a.id === pinnedId))
   const todayIso = getTodayIso()
 
   return (
     <>
       <AppHeader title="할일" showBell={!isTeacher} hasUnreadNotification={unreadCount > 0} />
+
+      {/* 지난 것 보기 — 홈에는 안 보이지만 여기서는 켜서 볼 수 있다 */}
+      {pastCount > 0 && (
+        <div className="-mt-2 mb-4 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setShowPast((prev) => !prev)}
+            aria-pressed={showPast}
+            className={cn(
+              'rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+              showPast
+                ? 'border-brand-300 bg-brand-50 text-brand-700'
+                : 'border-ink-200 bg-white text-ink-500 hover:text-ink-700',
+            )}
+          >
+            지난 것도 보기 ({pastCount})
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-col gap-7">
         {/* 교사만 — 공지사항·과제 작성 */}

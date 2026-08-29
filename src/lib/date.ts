@@ -39,6 +39,12 @@ export function isImminent(iso: string, from: Date = getNow()) {
   return days >= 0 && days <= IMMINENT_DAYS
 }
 
+/** 기한이 오늘보다 앞이면 지난 것 */
+export function isPast(iso: string | undefined, from: Date = getNow()): boolean {
+  if (!iso) return false
+  return daysUntil(iso, from) < 0
+}
+
 /** '오늘', '내일', 'D-3', '지남' 형태의 짧은 라벨 */
 export function relativeDayLabel(iso: string, from: Date = getNow()) {
   const days = daysUntil(iso, from)
