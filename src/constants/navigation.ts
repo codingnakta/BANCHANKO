@@ -17,14 +17,15 @@ export interface TabItem {
  */
 const STUDENT_TABS: TabItem[] = [
   { key: 'home', label: '홈', path: ROUTES.student.home, icon: HomeIcon },
-  { key: 'classroom', label: '우리반', path: ROUTES.student.classroom, icon: CatIcon },
+  { key: 'classroom', label: '우리반', path: ROUTES.classroom, icon: CatIcon },
   { key: 'todo', label: '할 일', path: ROUTES.student.todo, icon: ChatIcon },
   { key: 'more', label: '더보기', path: ROUTES.more, icon: BunnyIcon },
 ]
 
 const TEACHER_TABS: TabItem[] = [
   { key: 'home', label: '홈', path: ROUTES.teacher.home, icon: HomeIcon },
-  { key: 'manage', label: '학급 운영', path: ROUTES.teacher.manage, icon: CatIcon },
+  { key: 'classroom', label: '우리반', path: ROUTES.classroom, icon: CatIcon },
+  { key: 'manage', label: '학급 운영', path: ROUTES.teacher.manage, icon: ChatIcon },
   { key: 'more', label: '더보기', path: ROUTES.more, icon: BunnyIcon },
 ]
 

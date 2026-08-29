@@ -256,6 +256,54 @@ async function fetchMeal(office: string, school: string, date: string): Promise<
   }
 }
 
+/* ── 학사일정 ──────────────────────────────────────────────── */
+
+interface ScheduleItem {
+  date: string
+  title: string
+  /** 휴업일·공휴일이면 표시를 달리한다 */
+  isHoliday: boolean
+}
+
+/** 학교가 나이스에 올린 학사일정 (개학식·시험·방학·공휴일 등). */
+async function fetchSchedule(
+  office: string,
+  school: string,
+  from: string,
+  to: string,
+): Promise<ScheduleItem[]> {
+  const apiKey = Deno.env.get('NEIS_API_KEY')
+  const query = new URLSearchParams({
+    Type: 'json',
+    pIndex: '1',
+    pSize: '100',
+    ATPT_OFCDC_SC_CODE: office,
+    SD_SCHUL_CODE: school,
+    AA_FROM_YMD: toNeisDate(from),
+    AA_TO_YMD: toNeisDate(to),
+  })
+  if (apiKey) query.set('KEY', apiKey)
+
+  const response = await fetch(`${NEIS_BASE}/SchoolSchedule?${query}`)
+  if (!response.ok) return []
+
+  const rows = extractRows(await response.json(), 'SchoolSchedule') as Array<{
+    AA_YMD?: string
+    EVENT_NM?: string
+    SBTR_DD_SC_NM?: string
+  }>
+
+  return rows.flatMap((row) => {
+    if (!row.AA_YMD || !row.EVENT_NM) return []
+    const ymd = row.AA_YMD
+    return [{
+      date: `${ymd.slice(0, 4)}-${ymd.slice(4, 6)}-${ymd.slice(6, 8)}`,
+      title: row.EVENT_NM.trim(),
+      isHoliday: row.SBTR_DD_SC_NM !== '수업일',
+    }]
+  })
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS })
@@ -304,6 +352,17 @@ Deno.serve(async (request) => {
       if (!office || !school || !date) return json({ meal: null })
 
       return json({ meal: await fetchMeal(office, school, date) })
+    }
+
+    if (action === 'schedule') {
+      const office = url.searchParams.get('office')
+      const school = url.searchParams.get('school')
+      const from = url.searchParams.get('from')
+      const to = url.searchParams.get('to')
+
+      if (!office || !school || !from || !to) return json({ schedule: [] })
+
+      return json({ schedule: await fetchSchedule(office, school, from, to) })
     }
 
     return json({ error: `알 수 없는 action: ${action ?? '(없음)'}` }, 400)

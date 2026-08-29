@@ -12,7 +12,7 @@ interface PlaceholderPageProps {
 }
 
 /** 아직 만들지 않은 화면의 자리. 실제 화면이 생기면 이 컴포넌트 사용을 지운다. */
-export function PlaceholderPage({ title, feature, backTo = ROUTES.student.classroom }: PlaceholderPageProps) {
+export function PlaceholderPage({ title, feature, backTo = ROUTES.classroom }: PlaceholderPageProps) {
   return (
     <>
       <header className="mb-5 flex items-center gap-1">

@@ -27,12 +27,12 @@ export const ROUTES = {
   // ── 학생 ────────────────────────────────────────────────
   student: {
     home: '/student',
-    classroom: '/student/class',
     todo: '/student/todo',
     chatbot: '/student/chat',
   },
 
-  /** 공지·과제 상세는 두 역할이 같은 화면을 본다 */
+  /** 우리반·공지 상세는 두 역할이 같은 화면을 본다 */
+  classroom: '/classroom',
   noticeDetail: (id: string) => `/notices/${id}`,
 
   // 더보기 (역할 공통)

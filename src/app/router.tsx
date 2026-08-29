@@ -18,7 +18,7 @@ import { TimetableReviewPage } from '@/pages/teacher/TimetableReviewPage'
 import { AttendancePage } from '@/pages/teacher/AttendancePage'
 // 학생
 import { StudentHomePage } from '@/pages/student/StudentHomePage'
-import { StudentClassroomPage } from '@/pages/student/StudentClassroomPage'
+import { ClassroomBoardPage } from '@/pages/classroom/ClassroomBoardPage'
 import { TodoPage } from '@/pages/student/TodoPage'
 import { ChatbotPage } from '@/pages/student/ChatbotPage'
 // 공통
@@ -60,10 +60,10 @@ export function AppRouter() {
 
             {/* 학생 */}
             <Route path={ROUTES.student.home} element={<StudentHomePage />} />
-            <Route path={ROUTES.student.classroom} element={<StudentClassroomPage />} />
             <Route path={ROUTES.student.todo} element={<TodoPage />} />
 
             {/* 공통 */}
+            <Route path={ROUTES.classroom} element={<ClassroomBoardPage />} />
             <Route path={ROUTES.more} element={<MorePage />} />
           </Route>
 
