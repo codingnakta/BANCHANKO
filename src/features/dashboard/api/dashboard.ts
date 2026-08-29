@@ -164,7 +164,7 @@ export async function fetchDashboard(now: Date = new Date()): Promise<DashboardS
     }))
 
   const cleaningDuties: CleaningDuty[] = (dutiesResult.data ?? []).map((duty) => ({
-    id: `duty-${duty.classroom_id}-${duty.weekday}`,
+    id: duty.id,
     area: duty.task ?? '청소',
     studentNames: duty.student_names
       .split(',')

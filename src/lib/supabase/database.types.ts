@@ -261,20 +261,27 @@ export type Database = {
       }
       duties: {
         Row: {
+          id: string
           classroom_id: string
+          /** 1=월 ~ 5=금 */
           weekday: number
           student_names: string
+          /** 청소 구역 */
           task: string | null
+          sort_order: number
         }
         Insert: {
+          id?: string
           classroom_id: string
           weekday: number
           student_names?: string
           task?: string | null
+          sort_order?: number
         }
         Update: {
           student_names?: string
           task?: string | null
+          sort_order?: number
         }
         Relationships: [
           {

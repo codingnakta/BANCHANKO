@@ -32,7 +32,7 @@ export interface ClassroomBoard {
   classroom: ClassroomRow
   teacherName: string
   notices: Notice[]
-  duties: CleaningDuty[]
+  duties: (CleaningDuty & { weekday: number })[]
   roles: ClassRole[]
   weekTimetable: WeekTimetable | null
   todayTimetable: TimetableEntry[] | null
@@ -66,7 +66,12 @@ export async function fetchClassroomBoard(now: Date = new Date()): Promise<Class
         .select('*')
         .eq('classroom_id', classroom.id)
         .order('created_at', { ascending: false }),
-      supabase.from('duties').select('*').eq('classroom_id', classroom.id).order('weekday'),
+      supabase
+        .from('duties')
+        .select('*')
+        .eq('classroom_id', classroom.id)
+        .order('weekday')
+        .order('sort_order'),
       supabase
         .from('classroom_members')
         .select('student_id, helper_subject, profiles(name)')
@@ -116,7 +121,8 @@ export async function fetchClassroomBoard(now: Date = new Date()): Promise<Class
     teacherName: teacherResult.data?.name ?? '',
     notices: posts.filter((post) => post.type !== 'event').map(toNotice),
     duties: (dutiesResult.data ?? []).map((duty) => ({
-      id: `duty-${duty.classroom_id}-${duty.weekday}`,
+      id: duty.id,
+      weekday: duty.weekday,
       area: duty.task ?? '청소',
       studentNames: duty.student_names
         .split(',')

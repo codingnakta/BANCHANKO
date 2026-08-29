@@ -7,13 +7,15 @@ import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { invalidateClassroomViews } from '@/lib/invalidate'
 import { myClassroomKeys } from '@/features/classroom/api/myClassroom'
 import {
+  emptyDutyPlan,
   fetchDuties,
   saveClassroomBasics,
   saveDuties,
   settingsKeys,
-  WEEKDAYS,
-  type DutyInput,
+  toDutyPlan,
+  type DutyPlan,
 } from '@/features/teacher/api/settings'
+import { DutyEditor } from '@/features/teacher/components/DutyEditor'
 import { useMyClassroomRow } from '@/features/teacher/hooks/useMyClassroomRow'
 
 /** 학급 기본 정보 — 학급명, 학급 규칙, 청소 당번 (F-RONORQ). */
@@ -31,7 +33,7 @@ export function ClassSettingsPage() {
 
   const [name, setName] = useState('')
   const [rules, setRules] = useState<string[]>([])
-  const [duties, setDuties] = useState<DutyInput[]>([])
+  const [duties, setDuties] = useState<DutyPlan>(emptyDutyPlan)
   const [saved, setSaved] = useState(false)
 
   // 서버 값이 도착하면 폼을 한 번만 채운다 (이후 교사의 입력이 이긴다)
@@ -45,16 +47,7 @@ export function ClassSettingsPage() {
   const [loadedDuties, setLoadedDuties] = useState<typeof savedDuties>(undefined)
   if (savedDuties && savedDuties !== loadedDuties) {
     setLoadedDuties(savedDuties)
-    setDuties(
-      WEEKDAYS.map((day) => {
-        const found = savedDuties.find((duty) => duty.weekday === day.value)
-        return {
-          weekday: day.value,
-          task: found?.task ?? '',
-          studentNames: found?.student_names ?? '',
-        }
-      }),
-    )
+    setDuties(toDutyPlan(savedDuties))
   }
 
   const mutation = useMutation({
@@ -140,37 +133,8 @@ export function ClassSettingsPage() {
 
         {/* 청소 당번 */}
         <Card className="p-5">
-          <h2 className="mb-1 text-base font-semibold text-ink-900">청소 당번</h2>
-          <p className="mb-3 text-sm text-ink-500">이름은 쉼표로 구분해주세요.</p>
-
-          <div className="flex flex-col gap-3">
-            {duties.map((duty, index) => (
-              <div key={duty.weekday} className="flex items-center gap-2">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-ink-100 text-sm font-medium text-ink-700">
-                  {WEEKDAYS[index]?.label}
-                </span>
-                <Input
-                  value={duty.task}
-                  onChange={(e) => {
-                    const next = [...duties]
-                    next[index] = { ...duty, task: e.target.value }
-                    setDuties(next)
-                  }}
-                  placeholder="구역"
-                  className="w-28"
-                />
-                <Input
-                  value={duty.studentNames}
-                  onChange={(e) => {
-                    const next = [...duties]
-                    next[index] = { ...duty, studentNames: e.target.value }
-                    setDuties(next)
-                  }}
-                  placeholder="홍길동, 김민준"
-                />
-              </div>
-            ))}
-          </div>
+          <h2 className="mb-3 text-base font-semibold text-ink-900">청소 당번</h2>
+          <DutyEditor plan={duties} onChange={setDuties} />
         </Card>
 
         {mutation.error && (

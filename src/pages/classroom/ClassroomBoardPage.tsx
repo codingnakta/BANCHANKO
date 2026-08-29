@@ -124,24 +124,36 @@ export function ClassroomBoardPage() {
           {data.duties.length === 0 ? (
             <Blank>정해진 당번이 없어요.</Blank>
           ) : (
-            <ul className="flex flex-col gap-1.5">
-              {data.duties.map((duty, index) => (
-                <li
-                  key={duty.id}
-                  className="flex items-center gap-3 rounded-xl bg-white px-4 py-2.5"
-                >
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700">
-                    {WEEKDAY_NAMES[index + 1] ?? '—'}
-                  </span>
-                  <span className="w-20 shrink-0 truncate text-sm font-medium text-ink-900">
-                    {duty.area}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-ink-600">
-                    {duty.studentNames.join(', ') || '미지정'}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <div className="flex flex-col gap-2">
+              {[1, 2, 3, 4, 5]
+                .map((weekday) => ({
+                  weekday,
+                  rows: data.duties.filter((duty) => duty.weekday === weekday),
+                }))
+                .filter((day) => day.rows.length > 0)
+                .map((day) => (
+                  <div key={day.weekday} className="rounded-xl bg-white px-4 py-3">
+                    <div className="mb-1.5 flex items-center gap-2">
+                      <span className="flex size-6 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700">
+                        {WEEKDAY_NAMES[day.weekday]}
+                      </span>
+                      <span className="text-xs text-ink-400">구역 {day.rows.length}개</span>
+                    </div>
+                    <ul className="flex flex-col gap-1">
+                      {day.rows.map((duty) => (
+                        <li key={duty.id} className="flex gap-2 text-sm">
+                          <span className="w-16 shrink-0 truncate font-medium text-ink-900">
+                            {duty.area}
+                          </span>
+                          <span className="min-w-0 flex-1 text-ink-600">
+                            {duty.studentNames.join(', ') || '미지정'}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+            </div>
           )}
         </Section>
 
