@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { Link } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { AppHeader } from '@/components/layout'
 import { Card, Spinner } from '@/components/ui'
@@ -72,10 +73,11 @@ export function ClassroomBoardPage() {
       </p>
 
       <div className="flex flex-col gap-7">
-        {/* 그때그때 바뀌는 소식 — 최신 세 개를 펼쳐 둔다 */}
+        {/* 그때그때 바뀌는 소식 — 접어 두고, 펼치면 최신 세 개가 보인다 */}
         <Group title="소식">
-          <Preview
+          <Folder
             label="공지사항"
+            meta={count(data.notices.length, '개')}
             to={ROUTES.classroomSection.notices}
             blank={notices.length === 0 ? '올라온 공지가 없어요.' : undefined}
           >
@@ -96,10 +98,11 @@ export function ClassroomBoardPage() {
                 </Link>
               </li>
             ))}
-          </Preview>
+          </Folder>
 
-          <Preview
+          <Folder
             label="학사일정"
+            meta={count(data.schedule.length, '건')}
             to={ROUTES.classroomSection.schedule}
             blank={schedule.length === 0 ? '다가오는 일정이 없어요.' : undefined}
           >
@@ -117,7 +120,7 @@ export function ClassroomBoardPage() {
                 {item.isClassEvent && <span className="shrink-0 text-xs text-brand-700">학급</span>}
               </li>
             ))}
-          </Preview>
+          </Folder>
         </Group>
 
         {/* 학교에서 정해져 내려오는 것 */}
@@ -200,35 +203,57 @@ function MenuRow({ label, to, meta }: { label: string; to: string; meta: string 
   )
 }
 
-/** 제목 줄 + 더보기, 그 아래 미리보기 몇 줄. */
-function Preview({
+/**
+ * 접었다 펼치는 줄. 기본은 접힌 상태라 목록이 짧게 유지된다.
+ * 펼치면 최신 몇 개가 보이고, 전체는 '전체 보기'로 들어간다.
+ */
+function Folder({
   label,
+  meta,
   to,
   blank,
   children,
 }: {
   label: string
+  meta: string
   to: string
   /** 보여줄 내용이 없을 때의 안내 문구 */
   blank?: string
   children: ReactNode
 }) {
+  const [open, setOpen] = useState(false)
+
   return (
     <li className="border-b border-ink-100 last:border-0">
-      <Link
-        to={to}
-        className="flex items-center gap-2 px-4 pb-1.5 pt-4 transition-colors hover:text-brand-600"
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-brand-50"
       >
         <span className="min-w-0 flex-1 text-[15px] font-medium text-ink-900">{label}</span>
-        <span className="shrink-0 text-sm text-brand-500">더보기</span>
-        <ChevronRight className="size-4 shrink-0 text-brand-500" aria-hidden />
-      </Link>
+        <span className="shrink-0 text-sm text-ink-400">{meta}</span>
+        <ChevronDown
+          className={cn('size-5 shrink-0 text-ink-300 transition-transform', open && 'rotate-180')}
+          aria-hidden
+        />
+      </button>
 
-      {blank ? (
-        <p className="px-4 pb-3.5 text-sm text-ink-400">{blank}</p>
-      ) : (
-        <ul className="px-4 pb-3">{children}</ul>
-      )}
+      {open &&
+        (blank ? (
+          <p className="px-4 pb-3.5 text-sm text-ink-400">{blank}</p>
+        ) : (
+          <div className="px-4 pb-3">
+            <ul className="border-t border-ink-100 pt-1">{children}</ul>
+            <Link
+              to={to}
+              className="mt-1 flex items-center gap-1 py-1 text-sm font-medium text-brand-500 hover:underline"
+            >
+              전체 보기
+              <ChevronRight className="size-4" aria-hidden />
+            </Link>
+          </div>
+        ))}
     </li>
   )
 }
