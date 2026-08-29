@@ -31,8 +31,8 @@ interface MenuItem {
 }
 
 /**
- * 더보기 탭 (F-ZYSPUS).
- * 알림 목록, 계정과 개인정보 관리, 서비스 안내만 담는다.
+ * 개인 탭 (F-ZYSPUS).
+ * 내 학급·이름, 공지사항(알림), 계정과 개인정보 관리, 서비스 안내만 담는다.
  * 규칙상 학급 운영 기능은 이 탭에 포함하지 않는다.
  */
 export function MorePage() {
@@ -40,12 +40,12 @@ export function MorePage() {
   const { data: classroom } = useClassroom()
   const { unreadCount } = useNotifications()
 
-  const groups: { title: string; items: MenuItem[] }[] = [
+  // 첫 묶음은 한 줄뿐이라 제목 없이 바로 보여준다
+  const groups: { title?: string; items: MenuItem[] }[] = [
     {
-      title: '알림',
       items: [
         {
-          label: '알림',
+          label: '공지사항',
           description: '공지·과제·당번·행사 소식',
           to: ROUTES.notifications,
           icon: Bell,
@@ -81,7 +81,7 @@ export function MorePage() {
 
   return (
     <>
-      <AppHeader title="더보기" hasUnreadNotification={unreadCount > 0} />
+      <AppHeader title="개인" hasUnreadNotification={unreadCount > 0} />
 
       {/* 프로필 */}
       <section className="mb-7 flex items-center gap-3.5 rounded-card bg-white px-4 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
@@ -101,8 +101,10 @@ export function MorePage() {
 
       <div className="flex flex-col gap-7">
         {groups.map((group) => (
-          <section key={group.title}>
-            <h2 className="mb-3 px-1 text-lg font-bold text-ink-900">{group.title}</h2>
+          <section key={group.title ?? group.items[0].label}>
+            {group.title && (
+              <h2 className="mb-3 px-1 text-lg font-bold text-ink-900">{group.title}</h2>
+            )}
             <ul className="flex flex-col gap-2">
               {group.items.map((item) => (
                 <li key={item.label}>

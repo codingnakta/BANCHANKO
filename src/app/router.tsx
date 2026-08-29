@@ -26,9 +26,9 @@ import { TimetableSectionPage } from '@/pages/classroom/sections/TimetableSectio
 import { MealSectionPage } from '@/pages/classroom/sections/MealSectionPage'
 import { ScheduleSectionPage } from '@/pages/classroom/sections/ScheduleSectionPage'
 import { RulesSectionPage } from '@/pages/classroom/sections/RulesSectionPage'
-import { TodoPage } from '@/pages/student/TodoPage'
 import { ChatbotPage } from '@/pages/student/ChatbotPage'
 // 공통
+import { TodoPage } from '@/pages/todo/TodoPage'
 import { MorePage } from '@/pages/more/MorePage'
 import { NotificationsPage } from '@/pages/more/NotificationsPage'
 import { NoticeDetailPage } from '@/pages/notices/NoticeDetailPage'
@@ -67,9 +67,9 @@ export function AppRouter() {
 
             {/* 학생 */}
             <Route path={ROUTES.student.home} element={<StudentHomePage />} />
-            <Route path={ROUTES.student.todo} element={<TodoPage />} />
 
             {/* 공통 */}
+            <Route path={ROUTES.todo} element={<TodoPage />} />
             <Route path={ROUTES.classroom} element={<ClassroomBoardPage />} />
             <Route path={ROUTES.more} element={<MorePage />} />
           </Route>

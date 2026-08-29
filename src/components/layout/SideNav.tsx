@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 
 /**
  * 데스크톱(md 이상) 전용 좌측 내비게이션.
- * 하단 탭바와 동일한 4개 항목·순서·다크 톤을 유지한다. (F-ZYSPUS)
+ * 하단 탭바와 동일한 항목·순서·다크 톤을 유지한다. (F-ZYSPUS)
  */
 export function SideNav() {
   const tabs = tabsForRole(useCurrentUser()?.role ?? null)
