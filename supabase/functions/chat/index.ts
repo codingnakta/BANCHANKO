@@ -14,7 +14,7 @@
  *
  * 응답:
  *   { reply, action }  action 은 교사가 "~ 해줘" 라고 했을 때만 채워진다.
- *                      (공지·과제 등록 / 청소당번 / 1인1역 / 학급규칙)
+ *                      (공지·과제 등록·수정·삭제 / 청소당번 / 1인1역 / 학급규칙)
  *
  * 규칙
  *  - 답은 facts(학급 데이터에서 뽑아 보낸 근거)만 가지고 만든다. 없으면 모른다고 한다.
@@ -83,6 +83,7 @@ type Action =
       date: string | null
       subject: string | null
     }
+  | { kind: 'delete'; target: string }
   | { kind: 'duty'; weekday: number; area: string; students: string[] }
   | { kind: 'role'; student: string; role: string }
   | { kind: 'rule'; rules: string[] }
@@ -114,7 +115,7 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
     common.push(
       '',
       '이 사용자는 담임 교사다. 교사가 무언가를 바꿔 달라고 하면 action 을 채운다.',
-      '고를 수 있는 action 은 다섯 가지다.',
+      '고를 수 있는 action 은 여섯 가지다.',
       '',
       '1) 공지·과제 등록 — "등록해줘 / 올려줘 / 써줘"',
       '   {"kind":"post","type":"notice"|"assignment","title":"","body":"","date":"yyyy-MM-dd"|null,"subject":null}',
@@ -143,6 +144,13 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
       '5) 학급규칙 추가 — "복도에서 뛰지 않기 규칙 넣어줘"',
       '   {"kind":"rule","rules":["복도에서 뛰지 않기"]}',
       '',
+      '6) 이미 올린 공지·과제 지우기 — "그 공지 지워줘", "현장체험학습 일정 삭제해줘"',
+      '   {"kind":"delete","target":"현장체험학습 안내"}',
+      '   - target 은 [학급 정보]에 있는 기존 공지·과제의 제목을 그대로 쓴다.',
+      '   - 어느 것을 말하는지 분명하지 않으면 action 을 null 로 두고 reply 로 어느 것인지 되묻는다.',
+      '     지운 글은 되살릴 수 없어서, 짐작으로 고르면 엉뚱한 글이 사라진다.',
+      '   - 삭제는 되돌릴 수 없으니 reply 에 그 점을 한 문장으로 알린다.',
+      '',
       '- 이름·구역이 [학급 정보]에 없어 헷갈리면 action 을 null 로 두고 reply 로 되묻는다.',
       '- 부탁한 내용이 [학급 정보]에 이미 그대로 있으면 action 을 null 로 두고,',
       '  "이미 그렇게 되어 있어요"라고 지금 상태를 알려 준다. 같은 것을 다시 만들지 않는다.',
@@ -159,7 +167,7 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
     '반드시 아래 형태의 JSON 하나만 출력한다. 다른 말은 붙이지 않는다.',
     '{"reply": "답변", "action": null}',
     '또는',
-    '{"reply": "답변", "action": { 위 다섯 가지 중 하나 }}',
+    '{"reply": "답변", "action": { 위 여섯 가지 중 하나 }}',
   )
 
   return common.join('\n')
@@ -218,6 +226,12 @@ function toAction(raw: unknown): Action | null {
         date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null,
         subject: text(value.subject) || null,
       }
+    }
+    case 'delete': {
+      const target = text(value.target)
+      // 무엇을 지울지 모르면 제안 자체를 만들지 않는다
+      if (!target) return null
+      return { kind: 'delete', target }
     }
     case 'duty': {
       const weekday = Number(value.weekday)

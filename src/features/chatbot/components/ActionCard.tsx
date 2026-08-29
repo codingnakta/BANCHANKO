@@ -6,6 +6,7 @@ import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { fetchMyClassroom, myClassroomKeys } from '@/features/classroom/api/myClassroom'
 import {
   createNotice,
+  deleteNotice,
   fetchNotices,
   noticeKeys,
   updateNotice,
@@ -111,19 +112,12 @@ export function ActionCard({ action }: { action: ChatAction }) {
       <div className="mt-3 flex gap-2">
         <Button
           size="sm"
-          variant={already ? 'secondary' : 'primary'}
+          // 삭제는 되돌릴 수 없으니 눌리기 전에 눈으로 알아채게 한다
+          variant={action.kind === 'delete' ? 'danger' : already ? 'secondary' : 'primary'}
           onClick={() => mutation.mutate()}
           disabled={mutation.isPending}
         >
-          {mutation.isPending
-            ? '적용 중…'
-            : already
-              ? '그래도 적용'
-              : action.kind === 'post'
-                ? '등록'
-                : action.kind === 'edit'
-                  ? '수정'
-                  : '적용'}
+          {mutation.isPending ? '적용 중…' : already ? '그래도 적용' : applyLabel(action)}
         </Button>
         {editable && (
           <Button size="sm" variant="ghost" onClick={() => setEditing((prev) => !prev)}>
@@ -190,6 +184,17 @@ function Preview({
         </>
       )
 
+    case 'delete':
+      return (
+        <>
+          <p className="text-[15px] text-ink-900">
+            <Tag>삭제</Tag>
+            <b className="font-medium">{action.target}</b>
+          </p>
+          <p className="mt-1.5 text-xs text-danger">지운 안내는 되돌릴 수 없어요.</p>
+        </>
+      )
+
     case 'duty':
       return (
         <p className="text-[15px] text-ink-900">
@@ -235,12 +240,28 @@ function weekdayLabel(weekday: number) {
   return WEEKDAYS.find((day) => day.value === weekday)?.label ?? String(weekday)
 }
 
+/** 실행 버튼 문구 — 갈래마다 무슨 일이 일어나는지 그대로 적는다 */
+function applyLabel(action: ChatAction) {
+  switch (action.kind) {
+    case 'post':
+      return '등록'
+    case 'edit':
+      return '수정'
+    case 'delete':
+      return '삭제'
+    default:
+      return '적용'
+  }
+}
+
 function doneLabel(action: ChatAction, title: string) {
   switch (action.kind) {
     case 'post':
       return `${action.type === 'assignment' ? '과제' : '공지'} “${title}” 등록했어요.`
     case 'edit':
       return `“${action.target}”을 고쳤어요.`
+    case 'delete':
+      return `“${action.target}”을 지웠어요.`
     case 'duty':
       return `${weekdayLabel(action.weekday)}요일 ${action.area} 당번을 바꿨어요.`
     case 'role':
@@ -279,7 +300,9 @@ function useAlready(action: ChatAction, classroomId: string, userId: string): st
       {
         queryKey: noticeKeys.list(classroomId),
         queryFn: () => fetchNotices(classroomId),
-        enabled: enabled && (action.kind === 'post' || action.kind === 'edit'),
+        enabled:
+          enabled &&
+          (action.kind === 'post' || action.kind === 'edit' || action.kind === 'delete'),
       },
     ],
   })
@@ -320,6 +343,12 @@ function useAlready(action: ChatAction, classroomId: string, userId: string): st
       return posts.data?.some((post) => post.title.trim() === title)
         ? '같은 제목으로 올린 안내가 이미 있어요.'
         : null
+    }
+
+    case 'delete': {
+      // 지울 대상이 없으면 눌러도 실패하니 미리 알려 준다
+      const found = findPost(posts.data ?? [], action.target)
+      return found ? null : `“${action.target}”을(를) 올린 안내에서 찾지 못했어요.`
     }
 
     case 'edit': {
@@ -382,6 +411,14 @@ async function apply(
         dueDate: edited.date || found.due_date || '',
         linkUrl: found.link_url ?? '',
       })
+      return
+    }
+
+    case 'delete': {
+      const found = findPost(await fetchNotices(classroomId), action.target)
+      if (!found) throw new Error(`“${action.target}”을(를) 찾지 못했어요.`)
+
+      await deleteNotice(found.id)
       return
     }
 
