@@ -1,17 +1,21 @@
 import { Link } from 'react-router'
 import { format } from 'date-fns'
-import { CalendarDays, ClipboardList, Megaphone, Sparkles, Trash2, Utensils } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { AppHeader } from '@/components/layout'
-import { Card, CardTitle, Spinner } from '@/components/ui'
+import { Card, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
-import { useDashboard } from '@/features/dashboard'
+import {
+  DdayCard,
+  TimetableMealTabs,
+  TodayHeroCard,
+  useDashboard,
+} from '@/features/dashboard'
 import { formatDate, relativeDayLabel } from '@/lib/date'
 import { cn } from '@/lib/utils'
-import type { ReactNode } from 'react'
 
 /**
  * 교사 홈.
- * 위에서부터 과제 안내, 청소 당번, 오늘 시간표, 오늘 급식, 오늘 행사 순으로 보여준다.
+ * 학생 홈과 같은 구성·같은 컴포넌트를 쓰고, 각 묶음에 관리 화면으로 가는 링크만 더한다.
  */
 export function TeacherHomePage() {
   const { data, isPending, isError, error, refetch } = useDashboard()
@@ -41,81 +45,48 @@ export function TeacherHomePage() {
     )
   }
 
-  const today = new Date()
-  const todayIso = format(today, 'yyyy-MM-dd')
+  const todayIso = format(new Date(), 'yyyy-MM-dd')
   const todayEvents = data.upcomingEvents.filter((e) => e.startAt.slice(0, 10) === todayIso)
-  // 오늘 행사가 없으면 다가오는 행사를 대신 보여준다 (등록했는데 안 보이면 당황스러우니까)
   const shownEvents = todayEvents.length > 0 ? todayEvents : data.upcomingEvents.slice(0, 3)
 
   return (
     <>
       <AppHeader classroomName={data.classroomName} />
 
-      <p className="-mt-2 mb-4 px-1 text-sm text-ink-500">{formatDate(today.toISOString())}</p>
+      <div className="flex flex-col gap-6">
+        <TodayHeroCard tasks={data.todayTasks} />
 
-      <div className="flex flex-col gap-4">
-        {/* 1. 과제 안내 — 오늘 할 일 */}
-        <Section
-          title="과제 안내"
-          icon={<Sparkles className="size-4" />}
-          action={{ label: '안내 관리', to: ROUTES.teacher.notices }}
-        >
+        {/* 과제 안내 */}
+        <Section title="과제 안내" action={{ to: ROUTES.teacher.notices, label: '관리' }}>
           {data.upcomingAssignments.length === 0 ? (
-            <Empty message="등록된 과제가 없어요." to={ROUTES.teacher.noticeNew} cta="과제 등록하기" />
+            <Blank message="등록된 과제가 없어요." to={ROUTES.teacher.noticeNew} cta="과제 등록하기" />
           ) : (
-            <ul className="flex flex-col gap-2">
-              {data.upcomingAssignments.slice(0, 5).map((assignment) => {
-                const isToday = assignment.dueAt?.slice(0, 10) === todayIso
-                return (
-                  <li key={assignment.id}>
-                    <Link
-                      to={ROUTES.noticeDetail(assignment.id)}
-                      className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 transition-colors hover:bg-brand-50"
-                    >
-                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-900">
-                        {assignment.title}
-                      </span>
-                      {assignment.dueAt && (
-                        <span
-                          className={cn(
-                            'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold',
-                            isToday
-                              ? 'bg-danger/10 text-danger'
-                              : 'bg-ink-100 text-ink-600',
-                          )}
-                        >
-                          {relativeDayLabel(assignment.dueAt)}
-                        </span>
-                      )}
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
+            <div className="flex flex-col gap-2">
+              {data.upcomingAssignments.slice(0, 3).map((assignment) => (
+                <DdayCard key={assignment.id} assignment={assignment} />
+              ))}
+            </div>
           )}
         </Section>
 
-        {/* 1-2. 공지 — 요청한 구성에는 없지만, 등록해도 홈에 안 보이면 헷갈려서 함께 둔다 */}
-        <Section
-          title="공지"
-          icon={<Megaphone className="size-4" />}
-          action={{ label: '공지 쓰기', to: ROUTES.teacher.noticeNew }}
-        >
+        {/* 공지 */}
+        <Section title="공지" action={{ to: ROUTES.teacher.noticeNew, label: '쓰기' }}>
           {data.unreadNotices.length === 0 ? (
-            <Empty message="올린 공지가 없어요." to={ROUTES.teacher.noticeNew} cta="공지 쓰기" />
+            <Blank message="올린 공지가 없어요." to={ROUTES.teacher.noticeNew} cta="공지 쓰기" />
           ) : (
             <ul className="flex flex-col gap-2">
               {data.unreadNotices.map((notice) => (
                 <li key={notice.id}>
                   <Link
                     to={ROUTES.noticeDetail(notice.id)}
-                    className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 transition-colors hover:bg-brand-50"
+                    className="flex items-center gap-3 rounded-card bg-white px-4 py-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-colors hover:bg-brand-50"
                   >
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-900">
+                    <span className="size-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden />
+                    <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-ink-900">
                       {notice.title}
                     </span>
-                    <span className="shrink-0 text-xs text-ink-500">
-                      {formatDate(notice.publishedAt, 'M/d')}
+                    <span className="shrink-0 text-xs text-ink-400">
+                      {formatDate(notice.publishedAt, 'M월 d일')}
                     </span>
                   </Link>
                 </li>
@@ -124,101 +95,47 @@ export function TeacherHomePage() {
           )}
         </Section>
 
-        {/* 2. 청소 당번 */}
-        <Section
-          title="오늘 청소 당번"
-          icon={<Trash2 className="size-4" />}
-          action={{ label: '당번 설정', to: ROUTES.teacher.settings }}
-        >
+        {/* 청소 당번 */}
+        <Section title="오늘 청소 당번" action={{ to: ROUTES.teacher.settings, label: '설정' }}>
           {data.cleaningDuties.length === 0 ? (
-            <Empty message="오늘 당번이 없어요." to={ROUTES.teacher.settings} cta="당번 정하기" />
+            <Blank message="오늘 당번이 없어요." to={ROUTES.teacher.settings} cta="당번 정하기" />
           ) : (
-            <ul className="flex flex-col gap-2">
-              {data.cleaningDuties.map((duty) => (
-                <li key={duty.id} className="rounded-xl bg-white px-4 py-3">
-                  <p className="text-sm font-medium text-ink-900">{duty.area}</p>
-                  <p className="mt-0.5 text-sm text-ink-600">
-                    {duty.studentNames.length > 0 ? duty.studentNames.join(', ') : '미지정'}
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <div className="rounded-card bg-white px-4 py-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+              <ul className="flex flex-col gap-3">
+                {data.cleaningDuties.map((duty) => (
+                  <li key={duty.id} className="flex items-start gap-2.5">
+                    <span className="mt-2 size-1 shrink-0 rounded-full bg-ink-900" aria-hidden />
+                    <span className="text-[15px] text-ink-900">
+                      <span className="font-medium">{duty.area}</span>
+                      <span className="text-ink-600">
+                        {' — '}
+                        {duty.studentNames.join(', ') || '미지정'}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </Section>
 
-        {/* 3. 오늘 시간표 */}
-        <Section
-          title="오늘 시간표"
-          icon={<ClipboardList className="size-4" />}
-          action={{ label: '검수', to: ROUTES.teacher.timetable }}
-        >
-          {!data.timetable || data.timetable.length === 0 ? (
-            <Empty
-              message="오늘 시간표가 없어요."
-              to={ROUTES.teacher.timetable}
-              cta="시간표 가져오기"
-            />
-          ) : (
-            <ul className="flex flex-col gap-1">
-              {data.timetable.map((entry) => (
-                <li
-                  key={entry.id}
-                  className="flex items-center gap-3 rounded-xl bg-white px-4 py-2.5"
-                >
-                  <span className="w-8 shrink-0 text-sm font-semibold text-brand-700">
-                    {entry.periodLabel ?? `${entry.period}교시`}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-ink-900">
-                    {entry.subject || '—'}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Section>
+        {/* 시간표·급식 — 학생 홈과 같은 탭 카드 */}
+        <TimetableMealTabs entries={data.timetable} meal={data.meal} />
 
-        {/* 4. 오늘 급식 */}
-        <Section title="오늘 급식" icon={<Utensils className="size-4" />}>
-          {!data.meal || data.meal.items.length === 0 ? (
-            <p className="rounded-xl bg-white px-4 py-3 text-sm text-ink-500">
-              오늘 급식 정보가 없어요.
-            </p>
-          ) : (
-            <ul className="flex flex-wrap gap-x-2 gap-y-1.5 rounded-xl bg-white px-4 py-3.5">
-              {data.meal.items.map((item) => (
-                <li
-                  key={item}
-                  className="rounded-full bg-brand-50 px-3 py-1 text-sm text-brand-800"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-          )}
-        </Section>
-
-        {/* 5. 오늘 행사 */}
-        <Section
-          title="오늘 행사"
-          icon={<CalendarDays className="size-4" />}
-          action={{ label: '행사 등록', to: ROUTES.teacher.noticeNew }}
-        >
+        {/* 행사 */}
+        <Section title="행사" action={{ to: ROUTES.teacher.noticeNew, label: '등록' }}>
           {shownEvents.length === 0 ? (
-            <Empty
-              message="등록된 행사가 없어요."
-              to={ROUTES.teacher.noticeNew}
-              cta="행사 등록하기"
-            />
+            <Blank message="예정된 행사가 없어요." to={ROUTES.teacher.noticeNew} cta="행사 등록하기" />
           ) : (
             <ul className="flex flex-col gap-2">
               {shownEvents.map((event) => (
                 <li key={event.id}>
                   <Link
                     to={ROUTES.noticeDetail(event.id)}
-                    className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 transition-colors hover:bg-brand-50"
+                    className="flex items-center gap-3 rounded-card bg-white px-4 py-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-colors hover:bg-brand-50"
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-ink-900">
+                      <span className="block truncate text-[15px] font-medium text-ink-900">
                         {event.title}
                       </span>
                       {event.description && (
@@ -229,10 +146,8 @@ export function TeacherHomePage() {
                     </span>
                     <span
                       className={cn(
-                        'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold',
-                        event.startAt.slice(0, 10) === todayIso
-                          ? 'bg-danger/10 text-danger'
-                          : 'bg-ink-100 text-ink-600',
+                        'shrink-0 text-base font-medium tabular-nums',
+                        event.startAt.slice(0, 10) === todayIso ? 'text-danger' : 'text-ink-900',
                       )}
                     >
                       {relativeDayLabel(event.startAt)}
@@ -248,21 +163,25 @@ export function TeacherHomePage() {
   )
 }
 
-interface SectionProps {
+/** 학생 홈의 탭 제목과 같은 크기·굵기로 맞춘 묶음 제목 */
+function Section({
+  title,
+  action,
+  children,
+}: {
   title: string
-  icon: ReactNode
-  action?: { label: string; to: string }
+  action?: { to: string; label: string }
   children: ReactNode
-}
-
-function Section({ title, icon, action, children }: SectionProps) {
+}) {
   return (
-    <section className="rounded-card bg-ink-50 p-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-      <div className="mb-2 flex items-center gap-2 px-1">
-        <span className="text-brand-700">{icon}</span>
-        <CardTitle className="flex-1 text-base">{title}</CardTitle>
+    <section>
+      <div className="mb-2 flex items-baseline gap-3 px-1">
+        <h2 className="text-xl font-semibold text-ink-900">{title}</h2>
         {action && (
-          <Link to={action.to} className="text-xs font-medium text-brand-500 hover:underline">
+          <Link
+            to={action.to}
+            className="ml-auto text-sm font-medium text-brand-500 hover:underline"
+          >
             {action.label}
           </Link>
         )}
@@ -272,9 +191,9 @@ function Section({ title, icon, action, children }: SectionProps) {
   )
 }
 
-function Empty({ message, to, cta }: { message: string; to: string; cta: string }) {
+function Blank({ message, to, cta }: { message: string; to: string; cta: string }) {
   return (
-    <div className="rounded-xl bg-white px-4 py-4 text-center">
+    <div className="rounded-card bg-white px-4 py-6 text-center shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
       <p className="text-sm text-ink-500">{message}</p>
       <Link to={to} className="mt-1 inline-block text-sm font-medium text-brand-500 hover:underline">
         {cta}
