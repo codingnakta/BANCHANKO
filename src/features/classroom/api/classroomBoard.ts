@@ -169,7 +169,10 @@ async function fetchNeisSchedule(
     return []
   }
 
-  return (data?.schedule ?? []).map((item) => ({ ...item, isClassEvent: false }))
+  return (data?.schedule ?? [])
+    // 나이스 함수도 걸러 내지만, 아직 배포 전인 환경을 위해 여기서도 뺀다
+    .filter((item) => !item.title.includes('토요휴업'))
+    .map((item) => ({ ...item, isClassEvent: false }))
 }
 
 /** 요일별 청소 당번 표기용 (duties.weekday: 1=월) */

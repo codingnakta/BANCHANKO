@@ -301,8 +301,9 @@ async function fetchSchedule(
     // 수업공제일자명. 평범한 수업일에는 아예 비어 오는 학교가 많다.
     const dayKind = row.SBTR_DD_SC_NM?.trim() ?? ''
 
-    // 토요휴업일은 매주 반복돼 일정 목록을 뒤덮기만 한다
-    if (dayKind === '토요휴업일' || title === '토요휴업일') return []
+    // 토요휴업일은 매주 반복돼 일정 목록을 뒤덮기만 한다.
+    // '제3토요휴업일'처럼 앞뒤에 말이 붙는 학교가 있어 포함 여부로 본다.
+    if (dayKind.includes('토요휴업') || title.includes('토요휴업')) return []
 
     return [{
       date: `${ymd.slice(0, 4)}-${ymd.slice(4, 6)}-${ymd.slice(6, 8)}`,
