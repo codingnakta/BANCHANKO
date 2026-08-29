@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query'
 import { Check, Pencil } from 'lucide-react'
 import { Button, Field, Input } from '@/components/ui'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { fetchMyClassroom, myClassroomKeys } from '@/features/classroom/api/myClassroom'
-import { createNotice, noticeKeys } from '@/features/teacher/api/notices'
+import { createNotice, fetchNotices, noticeKeys } from '@/features/teacher/api/notices'
 import { fetchRoster, rosterKeys, setClassRole } from '@/features/teacher/api/roster'
 import {
   fetchDuties,
@@ -26,8 +26,10 @@ import type { ChatAction } from '@/types'
  * 공지·과제는 제목과 날짜를 이 자리에서 바로 고칠 수 있다.
  */
 export function ActionCard({ action }: { action: ChatAction }) {
-  const classroomId = useCurrentUser()?.classroomId ?? ''
+  const user = useCurrentUser()
+  const classroomId = user?.classroomId ?? ''
   const queryClient = useQueryClient()
+  const already = useAlready(action, classroomId, user?.id ?? '')
 
   const [title, setTitle] = useState(action.kind === 'post' ? action.title : '')
   const [date, setDate] = useState(action.kind === 'post' ? (action.date ?? '') : '')
@@ -58,6 +60,10 @@ export function ActionCard({ action }: { action: ChatAction }) {
     <div className="mt-2 rounded-xl border border-ink-200 bg-white px-4 py-3.5">
       <p className="mb-2 text-[11px] font-medium text-ink-500">이렇게 할까요?</p>
 
+      {already && (
+        <p className="mb-2 rounded-lg bg-ink-100 px-3 py-2 text-xs text-ink-600">{already}</p>
+      )}
+
       {action.kind === 'post' && editing ? (
         <div className="flex flex-col gap-2">
           <Field label="제목" htmlFor="actionTitle">
@@ -83,8 +89,13 @@ export function ActionCard({ action }: { action: ChatAction }) {
       )}
 
       <div className="mt-3 flex gap-2">
-        <Button size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-          {mutation.isPending ? '적용 중…' : action.kind === 'post' ? '등록' : '적용'}
+        <Button
+          size="sm"
+          variant={already ? 'secondary' : 'primary'}
+          onClick={() => mutation.mutate()}
+          disabled={mutation.isPending}
+        >
+          {mutation.isPending ? '적용 중…' : already ? '그래도 적용' : action.kind === 'post' ? '등록' : '적용'}
         </Button>
         {action.kind === 'post' && (
           <Button size="sm" variant="ghost" onClick={() => setEditing((prev) => !prev)}>
@@ -183,6 +194,87 @@ function doneLabel(action: ChatAction, title: string) {
     case 'rule':
       return '학급규칙에 넣었어요.'
   }
+}
+
+/**
+ * 지금 이미 그렇게 되어 있는지 확인해 한 줄로 알려 준다.
+ *
+ * 모델도 [학급 정보]를 보고 되묻긴 하지만 놓칠 수 있어서,
+ * 실제 데이터로 한 번 더 본다. 같은 걸 다시 눌러도 사고가 나진 않지만
+ * 교사가 헛일을 하지 않도록 미리 말해 준다.
+ */
+function useAlready(action: ChatAction, classroomId: string, userId: string): string | null {
+  const enabled = Boolean(classroomId)
+  const [duties, roster, classroom, posts] = useQueries({
+    queries: [
+      {
+        queryKey: settingsKeys.duties(classroomId),
+        queryFn: () => fetchDuties(classroomId),
+        enabled: enabled && action.kind === 'duty',
+      },
+      {
+        queryKey: rosterKeys.list(classroomId),
+        queryFn: () => fetchRoster(classroomId),
+        enabled: enabled && action.kind === 'role',
+      },
+      {
+        queryKey: myClassroomKeys.detail(userId),
+        queryFn: fetchMyClassroom,
+        enabled: enabled && action.kind === 'rule',
+      },
+      {
+        queryKey: noticeKeys.list(classroomId),
+        queryFn: () => fetchNotices(classroomId),
+        enabled: enabled && action.kind === 'post',
+      },
+    ],
+  })
+
+  switch (action.kind) {
+    case 'duty': {
+      if (!duties.data) return null
+      const plan = toDutyPlan(duties.data)
+      const index = plan.areas.indexOf(action.area)
+      if (index === -1) return null
+      const current = (plan.names[action.weekday]?.[index] ?? '')
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean)
+      return same(current, action.students)
+        ? `${weekdayLabel(action.weekday)}요일 ${action.area}는 이미 ${current.join(', ')}예요.`
+        : null
+    }
+
+    case 'role': {
+      const member = roster.data?.find((row) => row.name === action.student)
+      return member && member.classRole === action.role
+        ? `${action.student}는 이미 ${action.role}이에요.`
+        : null
+    }
+
+    case 'rule': {
+      const rules = classroom.data?.rules ?? []
+      const dupes = action.rules.filter((rule) => rules.includes(rule))
+      if (dupes.length === 0) return null
+      return dupes.length === action.rules.length
+        ? '이미 학급규칙에 있어요.'
+        : `“${dupes.join('”, “')}”는 이미 학급규칙에 있어요.`
+    }
+
+    case 'post': {
+      const title = action.title.trim()
+      return posts.data?.some((post) => post.title.trim() === title)
+        ? '같은 제목으로 올린 안내가 이미 있어요.'
+        : null
+    }
+  }
+}
+
+/** 순서를 무시하고 같은 사람들인지 */
+function same(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  const sorted = (list: string[]) => [...list].sort()
+  return sorted(a).every((name, i) => name === sorted(b)[i])
 }
 
 /** 제안을 실제 데이터로 반영한다. 저장 경로는 화면에서 쓰는 것과 같다. */

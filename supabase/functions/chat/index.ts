@@ -101,6 +101,8 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
       '   {"kind":"rule","rules":["복도에서 뛰지 않기"]}',
       '',
       '- 이름·구역이 [학급 정보]에 없어 헷갈리면 action 을 null 로 두고 reply 로 되묻는다.',
+      '- 부탁한 내용이 [학급 정보]에 이미 그대로 있으면 action 을 null 로 두고,',
+      '  "이미 그렇게 되어 있어요"라고 지금 상태를 알려 준다. 같은 것을 다시 만들지 않는다.',
       '- 그냥 묻기만 한 것이면 action 은 null 이다.',
       'action 을 채웠으면 reply 에 무엇을 할 것인지 한두 문장으로 말하고,',
       '확인 후 버튼을 눌러 달라고 안내한다.',
