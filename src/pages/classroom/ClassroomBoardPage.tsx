@@ -8,8 +8,7 @@ import { ROUTES } from '@/constants'
 import { useCurrentUser, useIsTeacher } from '@/features/auth/hooks/useCurrentUser'
 import { useClassroomBoard } from '@/features/classroom'
 import { fetchRoster, rosterKeys } from '@/features/teacher/api/roster'
-import { formatDate, getTodayIso, relativeDayLabel } from '@/lib/date'
-import { cn } from '@/lib/utils'
+import { getTodayIso } from '@/lib/date'
 
 /**
  * 우리반 — 학급 정보를 성격별로 묶어 보여준다.
@@ -18,7 +17,7 @@ import { cn } from '@/lib/utils'
  * 교사는 각 항목에 들어가서 그 자리의 편집 링크로 고친다.
  * (예: 청소당번 → 설정, 학급규칙 → 수정)
  *
- * 공지사항·학사일정은 눌러서 들어가지 않고 맨 아래에 그대로 펼쳐 둔다.
+ * 공지사항·학사일정은 맨 위에 두고, 누르면 바로 그 화면으로 들어간다.
  */
 export function ClassroomBoardPage() {
   const isTeacher = useIsTeacher()
@@ -70,6 +69,23 @@ export function ClassroomBoardPage() {
 
       <div className="flex flex-col gap-7">
         {/* 학교에서 정해져 내려오는 것 */}
+        <Group title="소식">
+          <MenuRow
+            label="공지사항"
+            to={ROUTES.classroomSection.notices}
+            meta={count(data.notices.length, '개')}
+          />
+          <MenuRow
+            label="학사일정"
+            to={ROUTES.classroomSection.schedule}
+            meta={
+              data.schedule.some((item) => item.date === todayIso)
+                ? '오늘 일정 있음'
+                : count(data.schedule.length, '건')
+            }
+          />
+        </Group>
+
         <Group title="수업">
           <MenuRow
             label="전체시간표"
@@ -117,80 +133,8 @@ export function ClassroomBoardPage() {
           )}
         </Group>
 
-        {/* 공지사항 — 눌러 들어가지 않고 여기서 다 본다 */}
-        <section>
-          <h2 className="mb-3 px-1 text-lg font-bold text-ink-900">공지사항</h2>
-          {data.notices.length === 0 ? (
-            <Blank>올라온 공지가 없어요.</Blank>
-          ) : (
-            <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-              {data.notices.map((notice) => (
-                <li key={notice.id} className="border-b border-ink-100 last:border-0">
-                  <Link
-                    to={ROUTES.noticeDetail(notice.id)}
-                    className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-brand-50"
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[15px] font-medium text-ink-900">
-                        {notice.title}
-                      </span>
-                      <span className="mt-0.5 block text-xs text-ink-500">
-                        {notice.type === 'assignment' ? '과제' : '공지'} ·{' '}
-                        {formatDate(notice.publishedAt, 'M월 d일')}
-                      </span>
-                    </span>
-                    {notice.dueAt && (
-                      <span className="shrink-0 rounded-full bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-600">
-                        {relativeDayLabel(notice.dueAt)}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* 학사일정 */}
-        <section>
-          <h2 className="mb-3 px-1 text-lg font-bold text-ink-900">학사일정</h2>
-          {data.schedule.length === 0 ? (
-            <Blank>다가오는 일정이 없어요.</Blank>
-          ) : (
-            <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-              {data.schedule.map((item) => (
-                <li
-                  key={`${item.date}-${item.title}`}
-                  className="flex items-center gap-3 border-b border-ink-100 px-4 py-3 last:border-0"
-                >
-                  <span
-                    className={cn(
-                      'w-16 shrink-0 text-xs font-semibold',
-                      item.date === todayIso ? 'text-danger' : 'text-brand-700',
-                    )}
-                  >
-                    {formatDate(`${item.date}T00:00:00`, 'M/d(E)')}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-ink-900">{item.title}</span>
-                  {item.isClassEvent && (
-                    <span className="shrink-0 text-xs text-brand-700">학급</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
       </div>
     </>
-  )
-}
-
-/** 내용이 없을 때의 한 줄 안내 */
-function Blank({ children }: { children: ReactNode }) {
-  return (
-    <p className="rounded-card bg-white px-4 py-4 text-sm text-ink-500 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-      {children}
-    </p>
   )
 }
 

@@ -1,17 +1,15 @@
 import { useState } from 'react'
 import { Check, Plus, Trash2 } from 'lucide-react'
-import { PinIcon } from '@/components/icons'
 import { Button, Input } from '@/components/ui'
-import { usePinnedTodo } from '@/features/dashboard'
+import { TaskCard, usePinnedTodo } from '@/features/dashboard'
 import { relativeDayLabel } from '@/lib/date'
-import { cn } from '@/lib/utils'
 import { usePersonalTodos } from '../hooks/usePersonalTodos'
 
 /**
  * 내 할일 — 학생이 스스로 적는 개인 할 일.
  *
- * 학급 과제와 섞이지 않도록 핀 색을 나눈다. 학급 과제는 파란 핀,
- * 내 할일은 핑크 핀이고 각각 하나씩 홈에 띄울 수 있다.
+ * 모양은 우리반 과제와 같고 핀·화살표 색만 핑크다.
+ * 학급 과제와 따로 하나씩 홈에 띄울 수 있다.
  * 이 목록은 본인 말고는 아무도 보지 못한다.
  */
 export function MyTodoList() {
@@ -69,67 +67,38 @@ export function MyTodoList() {
         </p>
       ) : (
         <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-          {todos.map((todo) => {
-            const pinned = pinnedId === todo.id
-            return (
-              <li
-                key={todo.id}
-                className="flex items-center gap-2.5 border-b border-ink-100 px-4 py-3 last:border-0"
+          {todos.map((todo) => (
+            <li key={todo.id} className="border-b border-ink-100 last:border-0">
+              <TaskCard
+                title={todo.title}
+                dday={
+                  todo.due_date && !todo.done
+                    ? relativeDayLabel(`${todo.due_date}T00:00:00`)
+                    : null
+                }
+                tone="mine"
+                done={todo.done}
+                pinned={pinnedId === todo.id}
+                onTogglePin={() => toggle(todo.id)}
+                inList
               >
-                <button
-                  type="button"
-                  onClick={() => toggle(todo.id)}
-                  aria-pressed={pinned}
-                  aria-label={pinned ? `${todo.title} 홈 고정 해제` : `${todo.title} 홈에 고정`}
-                  className={cn(
-                    'shrink-0 transition-colors',
-                    pinned ? 'text-mine-400' : 'text-ink-300 hover:text-mine-300',
-                  )}
-                >
-                  <PinIcon filled={pinned} className="size-6" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => toggleDone.mutate({ id: todo.id, done: !todo.done })}
-                  aria-pressed={todo.done}
-                  aria-label={`${todo.title} ${todo.done ? '완료 취소' : '완료'}`}
-                  className={cn(
-                    'flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors',
-                    todo.done
-                      ? 'border-mine-400 bg-mine-400 text-white'
-                      : 'border-ink-300 text-transparent hover:border-mine-300',
-                  )}
-                >
-                  <Check className="size-3.5" strokeWidth={3} aria-hidden />
-                </button>
-
-                <span
-                  className={cn(
-                    'min-w-0 flex-1 truncate text-[15px]',
-                    todo.done ? 'text-ink-400 line-through' : 'text-ink-900',
-                  )}
-                >
-                  {todo.title}
-                </span>
-
-                {todo.due_date && !todo.done && (
-                  <span className="shrink-0 text-sm font-medium text-ink-500 tabular-nums">
-                    {relativeDayLabel(`${todo.due_date}T00:00:00`)}
-                  </span>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => remove.mutate(todo.id)}
-                  aria-label={`${todo.title} 지우기`}
-                  className="shrink-0 rounded-full p-1.5 text-ink-300 transition-colors hover:bg-danger/10 hover:text-danger"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </li>
-            )
-          })}
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={todo.done ? 'secondary' : 'primary'}
+                    onClick={() => toggleDone.mutate({ id: todo.id, done: !todo.done })}
+                  >
+                    <Check className="size-4" />
+                    {todo.done ? '완료 취소' : '완료'}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => remove.mutate(todo.id)}>
+                    <Trash2 className="size-4" />
+                    지우기
+                  </Button>
+                </div>
+              </TaskCard>
+            </li>
+          ))}
         </ul>
       )}
     </section>

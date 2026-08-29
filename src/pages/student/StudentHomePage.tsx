@@ -1,15 +1,12 @@
 import { AppHeader } from '@/components/layout'
 import { Spinner } from '@/components/ui'
 import {
-  DdayCard,
+  AssignmentTodoTabs,
   TimetableMealTabs,
   TodayHeroCard,
   UnreadNoticeCard,
   useDashboard,
-  usePinnedPost,
-  usePinnedTodo,
 } from '@/features/dashboard'
-import { MyTodoCard } from '@/features/todo'
 
 /**
  * 홈 탭 — 오늘의 학급 정보 대시보드 (F-ZTJSNU).
@@ -18,8 +15,6 @@ import { MyTodoCard } from '@/features/todo'
  */
 export function StudentHomePage() {
   const { data, isPending, isError, error, refetch } = useDashboard()
-  const { pinnedId } = usePinnedPost()
-  const { pinnedId: pinnedTodoId } = usePinnedTodo()
 
   if (isPending) {
     return (
@@ -46,9 +41,6 @@ export function StudentHomePage() {
     )
   }
 
-  // 홈에는 핀으로 고정한 과제 하나만. 고른 게 없으면 아무것도 띄우지 않는다.
-  const featured = data.upcomingAssignments.find((assignment) => assignment.id === pinnedId)
-
   return (
     <>
       <AppHeader
@@ -59,9 +51,8 @@ export function StudentHomePage() {
       <div className="flex flex-col gap-4">
         <TodayHeroCard tasks={data.todayTasks} />
 
-        {/* 홈에 고정한 과제(파란 핀)와 내 할일(핑크 핀) */}
-        {featured && <DdayCard assignment={featured} />}
-        {pinnedTodoId && <MyTodoCard todoId={pinnedTodoId} />}
+        {/* 과제 안내 — 우리반 과제 / 내 할일 */}
+        <AssignmentTodoTabs assignments={data.upcomingAssignments} />
 
         <TimetableMealTabs
           entries={data.timetable}

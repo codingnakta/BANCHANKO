@@ -4,14 +4,11 @@ import { AppHeader } from '@/components/layout'
 import { Card, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import {
-  DdayCard,
+  AssignmentTodoTabs,
   TimetableMealTabs,
   TodayHeroCard,
   useDashboard,
-  usePinnedPost,
-  usePinnedTodo,
 } from '@/features/dashboard'
-import { MyTodoCard } from '@/features/todo'
 import { formatDate } from '@/lib/date'
 
 /**
@@ -20,8 +17,6 @@ import { formatDate } from '@/lib/date'
  */
 export function TeacherHomePage() {
   const { data, isPending, isError, error, refetch } = useDashboard()
-  const { pinnedId } = usePinnedPost()
-  const { pinnedId: pinnedTodoId } = usePinnedTodo()
 
   if (isPending) {
     return (
@@ -48,8 +43,6 @@ export function TeacherHomePage() {
     )
   }
 
-  // 홈에는 핀으로 고정한 과제 하나만. 고른 게 없으면 아무것도 띄우지 않는다.
-  const featured = data.upcomingAssignments.find((assignment) => assignment.id === pinnedId)
 
   return (
     <>
@@ -58,19 +51,8 @@ export function TeacherHomePage() {
       <div className="flex flex-col gap-6">
         <TodayHeroCard tasks={data.todayTasks} />
 
-        {/* 과제 안내 */}
-        <Section title="과제 안내" action={{ to: ROUTES.teacher.notices, label: '관리' }}>
-          {featured ? (
-            <DdayCard assignment={featured} />
-          ) : data.upcomingAssignments.length > 0 ? (
-            <Blank message="홈에 띄울 과제를 아직 안 골랐어요." to={ROUTES.todo} cta="할일에서 핀 꽂기" />
-          ) : (
-            <Blank message="등록된 과제가 없어요." to={ROUTES.teacher.noticeNew} cta="과제 등록하기" />
-          )}
-        </Section>
-
-        {/* 홈에 고정한 내 할일 (핑크 핀) */}
-        {pinnedTodoId && <MyTodoCard todoId={pinnedTodoId} />}
+        {/* 과제 안내 — 우리반 과제 / 내 할일 */}
+        <AssignmentTodoTabs assignments={data.upcomingAssignments} />
 
         {/* 공지 */}
         <Section title="공지" action={{ to: ROUTES.teacher.noticeNew, label: '쓰기' }}>
