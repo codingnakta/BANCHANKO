@@ -6,7 +6,7 @@ import {
   TodayHeroCard,
   UnreadNoticeCard,
   useDashboard,
-  usePinnedPostId,
+  usePinnedPost,
 } from '@/features/dashboard'
 
 /**
@@ -16,7 +16,7 @@ import {
  */
 export function StudentHomePage() {
   const { data, isPending, isError, error, refetch } = useDashboard()
-  const pinnedId = usePinnedPostId()
+  const { pinnedId } = usePinnedPost()
 
   if (isPending) {
     return (

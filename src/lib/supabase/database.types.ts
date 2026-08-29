@@ -21,16 +21,20 @@ export type Database = {
           /** null = 아직 역할을 정하지 않음 (구글 로그인 직후) */
           role: UserRole | null
           name: string
+          /** 홈에 띄워 둔 글 — 본인만 바꿀 수 있다 */
+          pinned_post_id: string | null
           created_at: string
         }
         Insert: {
           id: string
           role?: UserRole | null
           name: string
+          pinned_post_id?: string | null
           created_at?: string
         }
         Update: {
           name?: string
+          pinned_post_id?: string | null
         }
         Relationships: []
       }

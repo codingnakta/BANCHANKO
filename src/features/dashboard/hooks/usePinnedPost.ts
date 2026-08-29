@@ -1,53 +1,44 @@
-import { useSyncExternalStore } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
+import { fetchPinnedPostId, pinnedPostKeys, savePinnedPostId } from '../api/pinnedPost'
 
 /**
- * 홈에 띄울 항목 하나를 고르는 핀.
+ * 홈에 띄울 글 하나를 고르는 핀.
  *
- * 고른 사람 각자의 선택이라 이 기기에만 저장한다(localStorage).
- * 계정을 따라다니게 하려면 서버에 컬럼 하나를 두고 이 훅만 바꾸면 된다.
+ * 사람마다 다른 선택이라 계정(profiles.pinned_post_id)에 저장한다.
+ * 같은 것을 다시 누르면 고정이 풀리고, 하나만 고정된다.
  */
-const STORAGE_KEY = 'banchanko:pinnedPostId'
+export function usePinnedPost() {
+  const userId = useCurrentUser()?.id ?? ''
+  const queryClient = useQueryClient()
+  const key = pinnedPostKeys.mine(userId)
 
-const listeners = new Set<() => void>()
+  const { data: pinnedId = null } = useQuery({
+    queryKey: key,
+    queryFn: () => fetchPinnedPostId(userId),
+    enabled: Boolean(userId),
+    staleTime: 60_000,
+  })
 
-function read(): string | null {
-  try {
-    return localStorage.getItem(STORAGE_KEY)
-  } catch {
-    // 사생활 보호 모드 등 저장소를 못 쓰는 경우
-    return null
+  const mutation = useMutation({
+    mutationFn: (next: string | null) => savePinnedPostId(userId, next),
+    // 누르는 즉시 색이 바뀌어야 한다
+    onMutate: async (next) => {
+      await queryClient.cancelQueries({ queryKey: key })
+      const previous = queryClient.getQueryData<string | null>(key) ?? null
+      queryClient.setQueryData(key, next)
+      return { previous }
+    },
+    onError: (_error, _next, context) => {
+      queryClient.setQueryData(key, context?.previous ?? null)
+    },
+  })
+
+  return {
+    pinnedId,
+    toggle: (postId: string) => {
+      if (!userId) return
+      mutation.mutate(pinnedId === postId ? null : postId)
+    },
   }
-}
-
-let current: string | null = read()
-
-function emit() {
-  for (const listener of listeners) listener()
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener)
-  return () => {
-    listeners.delete(listener)
-  }
-}
-
-/** 같은 것을 다시 누르면 고정을 푼다. 하나만 고정된다. */
-export function togglePinnedPost(postId: string) {
-  current = current === postId ? null : postId
-  try {
-    if (current) localStorage.setItem(STORAGE_KEY, current)
-    else localStorage.removeItem(STORAGE_KEY)
-  } catch {
-    // 저장에 실패해도 이번 세션 동안은 선택이 유지된다
-  }
-  emit()
-}
-
-export function usePinnedPostId(): string | null {
-  return useSyncExternalStore(
-    subscribe,
-    () => current,
-    () => null,
-  )
 }

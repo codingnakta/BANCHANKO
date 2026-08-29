@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import dropDownIcon from '@/assets/icons/drop_down.svg'
 import { PinIcon } from '@/components/icons'
-import { togglePinnedPost, usePinnedPostId } from '../hooks/usePinnedPost'
+import { usePinnedPost } from '../hooks/usePinnedPost'
 import { relativeDayLabel } from '@/lib/date'
 import { cn } from '@/lib/utils'
 import type { Notice } from '@/types'
@@ -18,7 +18,8 @@ interface DdayCardProps {
  */
 export function DdayCard({ assignment }: DdayCardProps) {
   const [expanded, setExpanded] = useState(false)
-  const pinned = usePinnedPostId() === assignment.id
+  const { pinnedId, toggle } = usePinnedPost()
+  const pinned = pinnedId === assignment.id
   const dday = assignment.dueAt ? relativeDayLabel(assignment.dueAt) : null
 
   return (
@@ -26,7 +27,7 @@ export function DdayCard({ assignment }: DdayCardProps) {
       <div className="flex items-center gap-3">
         <button
           type="button"
-          onClick={() => togglePinnedPost(assignment.id)}
+          onClick={() => toggle(assignment.id)}
           aria-pressed={pinned}
           aria-label={pinned ? `${assignment.title} 홈 고정 해제` : `${assignment.title} 홈에 고정`}
           className={cn(

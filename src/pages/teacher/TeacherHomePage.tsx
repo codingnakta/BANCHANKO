@@ -8,7 +8,7 @@ import {
   TimetableMealTabs,
   TodayHeroCard,
   useDashboard,
-  usePinnedPostId,
+  usePinnedPost,
 } from '@/features/dashboard'
 import { formatDate, relativeDayLabel, getTodayIso } from '@/lib/date'
 import { cn } from '@/lib/utils'
@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils'
  */
 export function TeacherHomePage() {
   const { data, isPending, isError, error, refetch } = useDashboard()
-  const pinnedId = usePinnedPostId()
+  const { pinnedId } = usePinnedPost()
 
   if (isPending) {
     return (
