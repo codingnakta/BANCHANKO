@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Check, Plus, Trash2 } from 'lucide-react'
-import { Button, Input } from '@/components/ui'
+import { Button, DateDialog, Input } from '@/components/ui'
 import { TaskCard, usePinnedTodo } from '@/features/dashboard'
 import { relativeDayLabel } from '@/lib/date'
 import { usePersonalTodos } from '../hooks/usePersonalTodos'
@@ -13,11 +13,13 @@ import { usePersonalTodos } from '../hooks/usePersonalTodos'
  * 이 목록은 본인 말고는 아무도 보지 못한다.
  */
 export function MyTodoList() {
-  const { todos, add, toggleDone, remove } = usePersonalTodos()
+  const { todos, add, toggleDone, setDueDate: changeDueDate, remove } = usePersonalTodos()
   const { pinnedId, toggle } = usePinnedTodo()
 
   const [title, setTitle] = useState('')
   const [dueDate, setDueDate] = useState('')
+  /** 마감일을 고치는 중인 할 일 */
+  const [editing, setEditing] = useState<string | null>(null)
 
   function submit() {
     if (!title.trim() || add.isPending) return
@@ -80,6 +82,7 @@ export function MyTodoList() {
                 done={todo.done}
                 pinned={pinnedId === todo.id}
                 onTogglePin={() => toggle(todo.id)}
+                onEditDate={() => setEditing(todo.id)}
                 inList
               >
                 <div className="flex gap-2">
@@ -100,6 +103,20 @@ export function MyTodoList() {
             </li>
           ))}
         </ul>
+      )}
+      {editing && (
+        <DateDialog
+          title="마감일 바꾸기"
+          value={todos.find((todo) => todo.id === editing)?.due_date ?? ''}
+          isSaving={changeDueDate.isPending}
+          onSave={(value) =>
+            changeDueDate.mutate(
+              { id: editing, dueDate: value },
+              { onSuccess: () => setEditing(null) },
+            )
+          }
+          onClose={() => setEditing(null)}
+        />
       )}
     </section>
   )

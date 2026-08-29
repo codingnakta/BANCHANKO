@@ -103,6 +103,19 @@ export async function updateNotice(id: string, input: NoticeInput): Promise<void
   }
 }
 
+/** 마감일(공지는 일정 날짜)만 고친다. 카드에서 D-day 를 눌러 바꿀 때 쓴다. */
+export async function updateNoticeDueDate(id: string, dueDate: string): Promise<void> {
+  const { error } = await supabase
+    .from('posts')
+    .update({ due_date: dueDate || null })
+    .eq('id', id)
+
+  if (error) {
+    console.error('[notices] 마감일 변경 실패', error)
+    throw new Error('마감일을 바꾸지 못했어요.')
+  }
+}
+
 export async function deleteNotice(id: string): Promise<void> {
   const { error } = await supabase.from('posts').delete().eq('id', id)
   if (error) {

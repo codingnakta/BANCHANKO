@@ -6,6 +6,7 @@ import {
   fetchPersonalTodos,
   personalTodoKeys,
   setPersonalTodoDone,
+  setPersonalTodoDueDate,
 } from '../api/personalTodos'
 
 /** 내 할일 목록과 등록·완료·삭제. 전부 본인 것만 다룬다. */
@@ -32,10 +33,23 @@ export function usePersonalTodos() {
     onSuccess: invalidate,
   })
 
+  const setDueDate = useMutation({
+    mutationFn: ({ id, dueDate }: { id: string; dueDate: string }) =>
+      setPersonalTodoDueDate(id, dueDate),
+    onSuccess: invalidate,
+  })
+
   const remove = useMutation({
     mutationFn: (id: string) => deletePersonalTodo(id),
     onSuccess: invalidate,
   })
 
-  return { todos: query.data ?? [], isPending: query.isPending, add, toggleDone, remove }
+  return {
+    todos: query.data ?? [],
+    isPending: query.isPending,
+    add,
+    toggleDone,
+    setDueDate,
+    remove,
+  }
 }

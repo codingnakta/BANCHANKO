@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { Check } from 'lucide-react'
-import { Button } from '@/components/ui'
+import { Button, DateDialog } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import { relativeDayLabel } from '@/lib/date'
 import { cn } from '@/lib/utils'
 import { usePersonalTodos } from '@/features/todo'
 import { usePinnedPost, usePinnedTodo } from '../hooks/usePinnedPost'
+import { DdayCard } from './DdayCard'
 import { TaskCard } from './TaskCard'
 import type { Notice } from '@/types'
 
@@ -25,9 +26,10 @@ interface AssignmentTodoTabsProps {
  */
 export function AssignmentTodoTabs({ assignments }: AssignmentTodoTabsProps) {
   const [tab, setTab] = useState<TabKey>('assignment')
-  const { pinnedId, toggle: togglePin } = usePinnedPost()
+  const [editingTodoDate, setEditingTodoDate] = useState(false)
+  const { pinnedId } = usePinnedPost()
   const { pinnedId: pinnedTodoId, toggle: toggleTodoPin } = usePinnedTodo()
-  const { todos, toggleDone, remove } = usePersonalTodos()
+  const { todos, toggleDone, setDueDate, remove } = usePersonalTodos()
 
   const assignment = assignments.find((item) => item.id === pinnedId)
   const todo = todos.find((item) => item.id === pinnedTodoId)
@@ -46,24 +48,7 @@ export function AssignmentTodoTabs({ assignments }: AssignmentTodoTabsProps) {
       <div className="mt-2 overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
         {tab === 'assignment' ? (
           assignment ? (
-            <TaskCard
-              title={assignment.title}
-              subject={assignment.subject}
-              dday={assignment.dueAt ? relativeDayLabel(assignment.dueAt) : null}
-              pinned
-              onTogglePin={() => togglePin(assignment.id)}
-              inList
-            >
-              {assignment.body ? (
-                <p className="text-sm leading-relaxed text-ink-600">{assignment.body}</p>
-              ) : null}
-              <Link
-                to={ROUTES.noticeDetail(assignment.id)}
-                className="mt-2 inline-block text-sm font-medium text-brand-500 hover:underline"
-              >
-                원문 보기
-              </Link>
-            </TaskCard>
+            <DdayCard assignment={assignment} inList />
           ) : (
             <Blank>할일에서 파란 핀을 꽂으면 여기에 보여요.</Blank>
           )
@@ -77,6 +62,7 @@ export function AssignmentTodoTabs({ assignments }: AssignmentTodoTabsProps) {
             done={todo.done}
             pinned
             onTogglePin={() => toggleTodoPin(todo.id)}
+            onEditDate={() => setEditingTodoDate(true)}
             inList
           >
             <div className="flex gap-2">
@@ -97,6 +83,20 @@ export function AssignmentTodoTabs({ assignments }: AssignmentTodoTabsProps) {
           <Blank>할일에서 핑크 핀을 꽂으면 여기에 보여요.</Blank>
         )}
       </div>
+      {editingTodoDate && todo && (
+        <DateDialog
+          title="마감일 바꾸기"
+          value={todo.due_date ?? ''}
+          isSaving={setDueDate.isPending}
+          onSave={(value) =>
+            setDueDate.mutate(
+              { id: todo.id, dueDate: value },
+              { onSuccess: () => setEditingTodoDate(false) },
+            )
+          }
+          onClose={() => setEditingTodoDate(false)}
+        />
+      )}
     </section>
   )
 }

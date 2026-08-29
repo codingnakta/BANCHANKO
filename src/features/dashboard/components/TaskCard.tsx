@@ -22,6 +22,8 @@ interface TaskCardProps {
   onTogglePin: () => void
   /** 완료한 할 일은 제목에 줄을 긋는다 */
   done?: boolean
+  /** D-day 를 눌렀을 때. 없으면 눌리지 않는다 (고칠 권한이 없을 때) */
+  onEditDate?: () => void
   /** 펼쳤을 때 보여줄 것. 없으면 화살표를 감춘다 */
   children?: ReactNode
   /** 목록 안에 줄로 들어갈 때 — 카드 배경·그림자를 벗는다 */
@@ -41,6 +43,7 @@ export function TaskCard({
   pinned,
   onTogglePin,
   done,
+  onEditDate,
   children,
   inList,
 }: TaskCardProps) {
@@ -91,21 +94,52 @@ export function TaskCard({
               {title}
             </span>
           </span>
-          {dday && (
+        </button>
+
+        {/* 날짜가 없어도 고칠 수 있으면 눌러 넣을 자리를 둔다 */}
+        {!dday && onEditDate && (
+          <button
+            type="button"
+            onClick={onEditDate}
+            className="shrink-0 rounded-lg px-1.5 py-0.5 text-sm text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600"
+          >
+            날짜
+          </button>
+        )}
+
+        {dday &&
+          (onEditDate ? (
+            <button
+              type="button"
+              onClick={onEditDate}
+              aria-label={`마감일 바꾸기 (지금 ${dday})`}
+              className="shrink-0 rounded-lg px-1.5 py-0.5 text-base font-medium tracking-tight text-ink-900 tabular-nums transition-colors hover:bg-ink-100"
+            >
+              {dday}
+            </button>
+          ) : (
             <span className="shrink-0 text-base font-medium tracking-tight text-ink-900 tabular-nums">
               {dday}
             </span>
-          )}
-          {children && (
+          ))}
+
+        {children && (
+          <button
+            type="button"
+            onClick={() => setExpanded((prev) => !prev)}
+            aria-expanded={expanded}
+            aria-label={expanded ? '접기' : '펼치기'}
+            className="shrink-0"
+          >
             <DropDownIcon
               className={cn(
-                'size-6 shrink-0 transition-transform',
+                'size-6 transition-transform',
                 color.arrow,
                 expanded && 'rotate-180',
               )}
             />
-          )}
-        </button>
+          </button>
+        )}
       </div>
 
       {expanded && children && (

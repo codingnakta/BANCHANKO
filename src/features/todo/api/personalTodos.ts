@@ -41,6 +41,18 @@ export async function createPersonalTodo(
   }
 }
 
+export async function setPersonalTodoDueDate(id: string, dueDate: string): Promise<void> {
+  const { error } = await supabase
+    .from('personal_todos')
+    .update({ due_date: dueDate || null })
+    .eq('id', id)
+
+  if (error) {
+    console.error('[todo] 마감일 변경 실패', error)
+    throw new Error('마감일을 바꾸지 못했어요.')
+  }
+}
+
 export async function setPersonalTodoDone(id: string, done: boolean): Promise<void> {
   const { error } = await supabase.from('personal_todos').update({ done }).eq('id', id)
   if (error) {
