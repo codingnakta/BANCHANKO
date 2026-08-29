@@ -22,6 +22,7 @@ import {
   toDutyPlan,
   WEEKDAYS,
 } from '@/features/teacher/api/settings'
+import { createPersonalTodo, personalTodoKeys } from '@/features/todo'
 import { invalidateClassroomViews } from '@/lib/invalidate'
 import { formatDate } from '@/lib/date'
 import { teacherContextKeys } from '../api/teacherContext'
@@ -56,13 +57,14 @@ export function ActionCard({ action }: { action: ChatAction }) {
   const [editing, setEditing] = useState(false)
 
   const mutation = useMutation({
-    mutationFn: () => apply(action, classroomId, { title, date, body }),
+    mutationFn: () => apply(action, { classroomId, userId: user?.id ?? '' }, { title, date, body }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: noticeKeys.all })
       await queryClient.invalidateQueries({ queryKey: settingsKeys.all })
       await queryClient.invalidateQueries({ queryKey: rosterKeys.all })
       await queryClient.invalidateQueries({ queryKey: myClassroomKeys.all })
       await queryClient.invalidateQueries({ queryKey: teacherContextKeys.all })
+      await queryClient.invalidateQueries({ queryKey: personalTodoKeys.all })
       await invalidateClassroomViews(queryClient)
     },
   })
@@ -244,6 +246,19 @@ function Preview({
         </p>
       )
 
+    case 'todo':
+      return (
+        <>
+          <p className="text-[15px] text-ink-900">
+            <Tag>내 할일</Tag>
+            {action.title}
+          </p>
+          {action.date && (
+            <p className="mt-1 text-xs text-ink-500">{formatDate(`${action.date}T00:00:00`)}</p>
+          )}
+        </>
+      )
+
     case 'link':
       // 링크는 카드 자체가 링크라 여기까지 오지 않는다
       return null
@@ -304,6 +319,8 @@ function doneLabel(action: ChatAction, title: string) {
       return `${action.student}의 1인1역을 정했어요.`
     case 'rule':
       return '학급규칙에 넣었어요.'
+    case 'todo':
+      return `내 할일에 “${action.title}”을 넣었어요.`
     case 'link':
       return ''
   }
@@ -377,6 +394,7 @@ function useAlready(action: ChatAction, classroomId: string, userId: string): st
     }
 
     case 'link':
+    case 'todo':
       return null
 
     case 'post': {
@@ -425,9 +443,11 @@ function same(a: string[], b: string[]): boolean {
 /** 제안을 실제 데이터로 반영한다. 저장 경로는 화면에서 쓰는 것과 같다. */
 async function apply(
   action: ChatAction,
-  classroomId: string,
+  who: { classroomId: string; userId: string },
   edited: { title: string; date: string; body: string },
 ): Promise<void> {
+  const { classroomId, userId } = who
+
   switch (action.kind) {
     case 'post':
       await createNotice(classroomId, {
@@ -491,6 +511,10 @@ async function apply(
       await setClassRole(classroomId, member.email, action.role || null)
       return
     }
+
+    case 'todo':
+      await createPersonalTodo(userId, { title: action.title, dueDate: action.date ?? '' })
+      return
 
     case 'link':
       // 화면으로 보내기만 한다 — 저장할 것이 없다

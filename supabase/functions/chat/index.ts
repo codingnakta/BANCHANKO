@@ -84,6 +84,7 @@ type Action =
       subject: string | null
     }
   | { kind: 'delete'; target: string }
+  | { kind: 'todo'; title: string; date: string | null }
   | { kind: 'link'; screen: string; reason: string }
   | { kind: 'duty'; weekday: number; area: string; students: string[] }
   | { kind: 'role'; student: string; role: string }
@@ -112,11 +113,22 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
     evidence,
   ]
 
+  common.push(
+    '',
+    '할 일을 적어 달라고 하면 action 에 내 할일을 채운다.',
+    '   {"kind":"todo","title":"수학 문제집 풀기","date":"2026-09-01"}',
+    '   - "나 ~ 해야 돼", "~ 할 일에 넣어줘", "내 할일에 추가해줘" 처럼 자기 할 일을',
+    '     말하면 이 갈래다. 본인만 보는 개인 메모다.',
+    '   - "과제로 등록해줘", "우리반 과제에 올려줘" 처럼 반 전체에 알리는 것은',
+    '     내 할일이 아니다. (교사는 post 갈래를 쓴다)',
+    '   - 날짜를 말하지 않았으면 date 는 null 로 둔다. 지어내지 않는다.',
+  )
+
   if (role === 'teacher') {
     common.push(
       '',
       '이 사용자는 담임 교사다. 교사가 무언가를 바꿔 달라고 하면 action 을 채운다.',
-      '고를 수 있는 action 은 일곱 가지다.',
+      '위의 내 할일 말고도 고를 수 있는 action 이 일곱 가지 더 있다.',
       '',
       '1) 공지·과제 등록 — "등록해줘 / 올려줘 / 써줘"',
       '   {"kind":"post","type":"notice"|"assignment","title":"","body":"","date":"yyyy-MM-dd"|null,"subject":null}',
@@ -173,7 +185,11 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
       '확인 후 버튼을 눌러 달라고 안내한다.',
     )
   } else {
-    common.push('', '이 사용자는 학생이다. action 은 항상 null 로 둔다.')
+    common.push(
+      '',
+      '이 사용자는 학생이다. 내 할일(todo) 말고 다른 action 은 쓰지 않는다.',
+      '학급 과제·공지를 바꿔 달라고 하면 선생님께 말씀드리라고 안내한다.',
+    )
   }
 
   common.push(
@@ -246,6 +262,12 @@ function toAction(raw: unknown): Action | null {
       // 무엇을 지울지 모르면 제안 자체를 만들지 않는다
       if (!target) return null
       return { kind: 'delete', target }
+    }
+    case 'todo': {
+      const title = text(value.title)
+      if (!title) return null
+      const date = text(value.date)
+      return { kind: 'todo', title, date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null }
     }
     case 'link': {
       const screen = text(value.screen)
@@ -336,8 +358,9 @@ Deno.serve(async (request) => {
     }
 
     const { reply, action } = parseReply(content)
-    // 학생에게는 실행 제안을 절대 내려보내지 않는다
-    return json({ reply, action: role === 'teacher' ? action : null })
+    // 학생에게는 자기 것(내 할일)만 내려보낸다. 학급 데이터는 교사만 바꾼다.
+    const allowed = role === 'teacher' || action?.kind === 'todo' ? action : null
+    return json({ reply, action: allowed })
   } catch (error) {
     console.error('[chat] 오류', error)
     return json({ error: '답변을 만들지 못했습니다.' }, 500)

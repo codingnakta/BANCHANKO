@@ -209,6 +209,8 @@ export type ChatAction =
   | { kind: 'delete'; target: string }
   /** 챗봇이 대신 못 하는 일 — 해당 화면으로 가는 링크만 띄운다 */
   | { kind: 'link'; screen: string; reason: string }
+  /** 내 할일 추가 — 본인만 보는 개인 할 일. 학생도 쓸 수 있다 */
+  | { kind: 'todo'; title: string; date: string | null }
   /** 청소당번 — 한 요일, 한 구역의 담당 학생을 정한다 */
   | { kind: 'duty'; weekday: number; area: string; students: string[] }
   /** 1인1역 — 학생 한 명의 역할을 정한다 */
