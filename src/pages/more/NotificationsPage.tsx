@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Bell, CalendarDays, ChevronLeft, Megaphone, NotebookPen, Sparkles } from 'lucide-react'
 import { EmptyState } from '@/components/ui'
@@ -21,21 +20,12 @@ const TYPE_META: Record<NotificationType, { label: string; icon: typeof Bell }> 
  * 원본이 종료·삭제된 알림은 접근 불가를 안내한다.
  */
 export function NotificationsPage() {
-  const { notifications, unreadCount, markAllAsRead } = useNotifications()
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
   const navigate = useNavigate()
 
-  // 들어온 순간 안 읽었던 것을 기억해 뒀다가 그것만 강조한다
-  const [unreadIds, setUnreadIds] = useState<string[] | null>(null)
-  if (unreadIds === null && notifications.length > 0) {
-    setUnreadIds(notifications.filter((item) => !item.readAt).map((item) => item.id))
-  }
-
-  // 화면을 여는 것이 곧 확인이라, 목록은 곧바로 읽음으로 넘긴다
-  useEffect(() => {
-    void markAllAsRead()
-  }, [markAllAsRead])
-
+  // 내용을 본 것만 읽음이다. 목록을 여는 것만으로는 읽음이 되지 않는다.
   function handleOpen(notification: AppNotification) {
+    void markAsRead(notification.id)
     if (notification.href) navigate(notification.href)
   }
 
@@ -52,7 +42,13 @@ export function NotificationsPage() {
         <h1 className="text-xl font-semibold text-ink-900">알림</h1>
 
         {unreadCount > 0 && (
-          <span className="ml-auto text-sm font-medium text-brand-500">새 알림 {unreadCount}</span>
+          <button
+            type="button"
+            onClick={() => void markAllAsRead()}
+            className="ml-auto text-sm font-medium text-brand-500 hover:underline"
+          >
+            모두 읽음 ({unreadCount})
+          </button>
         )}
       </header>
 
@@ -62,7 +58,7 @@ export function NotificationsPage() {
         <ul className="flex flex-col gap-2">
           {notifications.map((notification) => {
             const meta = TYPE_META[notification.type]
-            const isUnread = unreadIds?.includes(notification.id) ?? !notification.readAt
+            const isUnread = !notification.readAt
             const isGone = notification.href === null
 
             return (

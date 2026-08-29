@@ -224,6 +224,20 @@ export type Database = {
           },
         ]
       }
+      notification_reads: {
+        Row: {
+          user_id: string
+          post_id: string
+          read_at: string
+        }
+        Insert: {
+          user_id: string
+          post_id: string
+          read_at?: string
+        }
+        Update: { read_at?: string }
+        Relationships: []
+      }
       personal_todos: {
         Row: {
           id: string
