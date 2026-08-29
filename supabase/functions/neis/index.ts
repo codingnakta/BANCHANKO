@@ -265,6 +265,35 @@ interface ScheduleItem {
   isHoliday: boolean
 }
 
+/** 국경일·명절처럼 달력에 있는 쉬는 날 — 학사일정에 넣지 않는다 */
+const CALENDAR_HOLIDAYS = [
+  '토요휴업',
+  '공휴일',
+  '국경일',
+  '신정',
+  '설날',
+  '설 연휴',
+  '삼일절',
+  '3·1절',
+  '3.1절',
+  '어린이날',
+  '부처님오신날',
+  '석가탄신일',
+  '현충일',
+  '광복절',
+  '추석',
+  '개천절',
+  '한글날',
+  '성탄절',
+  '크리스마스',
+  '연휴',
+]
+
+function isCalendarHoliday(title: string, dayKind: string): boolean {
+  if (dayKind === '공휴일') return true
+  return CALENDAR_HOLIDAYS.some((word) => title.includes(word))
+}
+
 /** 학교가 나이스에 올린 학사일정 (개학식·시험·방학·공휴일 등). */
 async function fetchSchedule(
   office: string,
@@ -301,9 +330,10 @@ async function fetchSchedule(
     // 수업공제일자명. 평범한 수업일에는 아예 비어 오는 학교가 많다.
     const dayKind = row.SBTR_DD_SC_NM?.trim() ?? ''
 
-    // 토요휴업일은 매주 반복돼 일정 목록을 뒤덮기만 한다.
-    // '제3토요휴업일'처럼 앞뒤에 말이 붙는 학교가 있어 포함 여부로 본다.
-    if (dayKind.includes('토요휴업') || title.includes('토요휴업')) return []
+    // 학교가 정하는 재량휴업일만 남기고, 달력에 있는 쉬는 날은 뺀다.
+    // 국경일·명절은 학사일정이라기보다 달력이고, 토요휴업일은 매주 반복돼
+    // 목록을 뒤덮는다. ('제3토요휴업일'처럼 말이 붙는 학교가 있어 포함으로 본다)
+    if (!title.includes('재량휴업') && isCalendarHoliday(title, dayKind)) return []
 
     return [{
       date: `${ymd.slice(0, 4)}-${ymd.slice(4, 6)}-${ymd.slice(6, 8)}`,

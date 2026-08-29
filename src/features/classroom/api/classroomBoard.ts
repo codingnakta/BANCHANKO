@@ -172,8 +172,40 @@ async function fetchNeisSchedule(
 
   return (data?.schedule ?? [])
     // 나이스 함수도 걸러 내지만, 아직 배포 전인 환경을 위해 여기서도 뺀다
-    .filter((item) => !item.title.includes('토요휴업'))
+    .filter((item) => !isCalendarHoliday(item.title))
     .map((item) => ({ ...item, isClassEvent: false }))
+}
+
+/**
+ * 국경일·명절처럼 달력에 있는 쉬는 날은 학사일정에서 뺀다.
+ * 학교가 스스로 정하는 재량휴업일은 학사일정이므로 남긴다.
+ */
+const CALENDAR_HOLIDAYS = [
+  '토요휴업',
+  '공휴일',
+  '국경일',
+  '신정',
+  '설날',
+  '설 연휴',
+  '삼일절',
+  '3·1절',
+  '3.1절',
+  '어린이날',
+  '부처님오신날',
+  '석가탄신일',
+  '현충일',
+  '광복절',
+  '추석',
+  '개천절',
+  '한글날',
+  '성탄절',
+  '크리스마스',
+  '연휴',
+]
+
+function isCalendarHoliday(title: string): boolean {
+  if (title.includes('재량휴업')) return false
+  return CALENDAR_HOLIDAYS.some((word) => title.includes(word))
 }
 
 /** 요일별 청소 당번 표기용 (duties.weekday: 1=월) */
