@@ -43,7 +43,7 @@ export const ROUTES = {
   },
   noticeDetail: (id: string) => `/notices/${id}`,
 
-  // 개인 (역할 공통)
+  // 더보기 (역할 공통)
   more: '/more',
   notifications: '/more/notifications',
   account: '/more/account',

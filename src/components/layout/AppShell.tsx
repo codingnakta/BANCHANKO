@@ -4,7 +4,7 @@ import { BottomTabBar } from './BottomTabBar'
 import { SideNav } from './SideNav'
 
 /**
- * 탭바가 있는 주요 화면(홈·할일·우리반·개인)의 공통 셸.
+ * 탭바가 있는 주요 화면(홈·할일·우리반·더보기)의 공통 셸.
  * 모바일은 하단 탭바, 데스크톱(md 이상)은 좌측 사이드바로 전환된다.
  * 원본 상세·작성/수정 화면은 DetailShell 을 사용한다.
  *

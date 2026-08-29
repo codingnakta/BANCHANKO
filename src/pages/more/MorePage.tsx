@@ -31,7 +31,7 @@ interface MenuItem {
 }
 
 /**
- * 개인 탭 (F-ZYSPUS).
+ * 더보기 탭 (F-ZYSPUS).
  * 내 학급·이름, 공지사항(알림), 계정과 개인정보 관리, 서비스 안내만 담는다.
  * 규칙상 학급 운영 기능은 이 탭에 포함하지 않는다.
  */
@@ -81,7 +81,7 @@ export function MorePage() {
 
   return (
     <>
-      <AppHeader title="개인" hasUnreadNotification={unreadCount > 0} />
+      <AppHeader title="더보기" hasUnreadNotification={unreadCount > 0} />
 
       {/* 프로필 */}
       <section className="mb-7 flex items-center gap-3.5 rounded-card bg-white px-4 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
