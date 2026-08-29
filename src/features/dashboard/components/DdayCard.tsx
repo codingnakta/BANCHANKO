@@ -19,6 +19,7 @@ export function DdayCard({ assignment, inList }: DdayCardProps) {
   return (
     <TaskCard
       title={assignment.title}
+      subject={assignment.subject}
       dday={assignment.dueAt ? relativeDayLabel(assignment.dueAt) : null}
       pinned={pinnedId === assignment.id}
       onTogglePin={() => toggle(assignment.id)}

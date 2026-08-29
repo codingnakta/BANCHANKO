@@ -48,6 +48,7 @@ export function AssignmentTodoTabs({ assignments }: AssignmentTodoTabsProps) {
           assignment ? (
             <TaskCard
               title={assignment.title}
+              subject={assignment.subject}
               dday={assignment.dueAt ? relativeDayLabel(assignment.dueAt) : null}
               pinned
               onTogglePin={() => togglePin(assignment.id)}

@@ -113,6 +113,8 @@ export interface Notice {
   publishedAt: string
   /** 마감일 (ISO) — 과제 일정에 사용 */
   dueAt?: string
+  /** 과제의 과목 (수업 이름) */
+  subject?: string
   /** 열람한 학생 기준 확인 여부 */
   isRead: boolean
 }

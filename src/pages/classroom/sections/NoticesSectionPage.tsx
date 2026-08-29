@@ -23,7 +23,8 @@ export function NoticesSectionPage() {
                       {notice.title}
                     </span>
                     <span className="mt-0.5 block text-xs text-ink-500">
-                      {notice.type === 'assignment' ? '과제' : '공지'} ·{' '}
+                      {notice.type === 'assignment' ? '과제' : '공지'}
+                      {notice.subject && ` · ${notice.subject}`} ·{' '}
                       {formatDate(notice.publishedAt, 'M월 d일')}
                     </span>
                   </span>

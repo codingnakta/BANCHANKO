@@ -13,6 +13,8 @@ const TONE = {
 
 interface TaskCardProps {
   title: string
+  /** 과제의 과목 — 제목 앞에 작은 표로 붙는다 */
+  subject?: string | null
   /** 'D-3' 같은 짧은 라벨 */
   dday?: string | null
   tone?: TaskTone
@@ -33,6 +35,7 @@ interface TaskCardProps {
  */
 export function TaskCard({
   title,
+  subject,
   dday,
   tone = 'brand',
   pinned,
@@ -68,13 +71,25 @@ export function TaskCard({
           aria-expanded={children ? expanded : undefined}
           className="flex min-w-0 flex-1 items-center gap-3 text-left"
         >
-          <span
-            className={cn(
-              'min-w-0 flex-1 truncate text-base font-medium',
-              done ? 'text-ink-400 line-through' : 'text-ink-900',
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            {subject && (
+              <span
+                className={cn(
+                  'shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold',
+                  tone === 'mine' ? 'bg-mine-100 text-mine-500' : 'bg-brand-100 text-brand-700',
+                )}
+              >
+                {subject}
+              </span>
             )}
-          >
-            {title}
+            <span
+              className={cn(
+                'min-w-0 flex-1 truncate text-base font-medium',
+                done ? 'text-ink-400 line-through' : 'text-ink-900',
+              )}
+            >
+              {title}
+            </span>
           </span>
           {dday && (
             <span className="shrink-0 text-base font-medium tracking-tight text-ink-900 tabular-nums">
