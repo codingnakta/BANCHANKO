@@ -41,6 +41,28 @@ export async function fetchSavedTimetable(classroomId: string): Promise<Timetabl
 }
 
 /**
+ * 저장해 둔 것 위에 나이스에서 받은 것을 얹는다.
+ *
+ * 교사가 고쳐 둔 칸은 건드리지 않고 빈 칸만 채운다.
+ * 아침마다 자동으로 불러오기 때문에, 손댄 값이 조용히 덮이면 안 된다.
+ */
+export function mergeGrid(base: TimetableGrid, incoming: TimetableGrid): TimetableGrid {
+  const merged = emptyGrid()
+  for (let weekday = 1; weekday <= 5; weekday += 1) {
+    for (const period of PERIODS) {
+      merged[weekday][period] =
+        base[weekday]?.[period]?.trim() || incoming[weekday]?.[period]?.trim() || ''
+    }
+  }
+  return merged
+}
+
+/** 격자가 통째로 비어 있는지 (나이스에 시간표를 안 올리는 학교) */
+export function isEmptyGrid(grid: TimetableGrid): boolean {
+  return Object.values(grid).every((day) => Object.values(day).every((subject) => !subject))
+}
+
+/**
  * 나이스에서 이번 주 시간표를 받아온다 (검수 대기 자료).
  *
  * Edge Function 은 하루씩 조회하므로 월~금 다섯 번 부른다.

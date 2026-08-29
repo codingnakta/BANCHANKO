@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { Download, Utensils } from 'lucide-react'
+import { Utensils } from 'lucide-react'
 import { TeacherPageShell } from '@/components/layout'
 import { Button, Card, Spinner } from '@/components/ui'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
@@ -11,6 +11,8 @@ import {
   emptyGrid,
   fetchNeisWeek,
   fetchSavedTimetable,
+  isEmptyGrid,
+  mergeGrid,
   mondayOf,
   PERIODS,
   publishTimetable,
@@ -19,12 +21,13 @@ import {
   type TimetableGrid,
 } from '@/features/teacher/api/timetable'
 import { useMyClassroomRow } from '@/features/teacher/hooks/useMyClassroomRow'
-import { getNow } from '@/lib/date'
+import { getNow, getTodayIso } from '@/lib/date'
 
 /**
  * 시간표·급식 검수 (F-OHHQTM).
  *
  * 나이스에서 받아온 시간표는 그대로 학생에게 보내지 않고, 교사가 확인·수정한 뒤 공개한다.
+ * 불러오기는 하루에 한 번 이 화면을 열 때 자동으로 한다 (교사가 버튼을 누르지 않는다).
  * 시간표를 제공하지 않는 학교는 빈 격자에 직접 입력하면 된다.
  * 급식은 교사가 고칠 수 있는 값이 아니라 확인용으로만 보여준다.
  */
@@ -51,10 +54,27 @@ export function TimetableReviewPage() {
     setGrid(savedGrid)
   }
 
-  const importMutation = useMutation({
-    mutationFn: () => fetchNeisWeek(classroom!, mondayOf(getNow())),
-    onSuccess: (imported) => setGrid(imported),
+  // 하루에 한 번, 이 화면을 처음 열 때 나이스에서 이번 주 시간표를 받아온다.
+  // 날짜를 키에 넣어 두면 날이 바뀔 때 자연스럽게 다시 부른다.
+  const hasSchool = Boolean(classroom?.office_code && classroom?.school_code)
+  const {
+    data: neisGrid,
+    isFetching: isImporting,
+    isError: importFailed,
+  } = useQuery({
+    queryKey: [...timetableKeys.detail(classroomId), 'neis', getTodayIso()],
+    queryFn: () => fetchNeisWeek(classroom!, mondayOf(getNow())),
+    enabled: Boolean(classroomId) && hasSchool,
+    staleTime: Infinity,
   })
+
+  // 받아온 것은 빈 칸만 채운다 — 교사가 고쳐 둔 값은 그대로 둔다.
+  // 저장본이 폼에 올라간 뒤에 얹어야 저장본이 나중에 덮어쓰지 않는다.
+  const [importedFrom, setImportedFrom] = useState<TimetableGrid | null>(null)
+  if (savedGrid && neisGrid && neisGrid !== importedFrom) {
+    setImportedFrom(neisGrid)
+    setGrid((current) => mergeGrid(current, neisGrid))
+  }
 
   const publishMutation = useMutation({
     mutationFn: () => publishTimetable(classroomId, grid),
@@ -74,8 +94,6 @@ export function TimetableReviewPage() {
     )
   }
 
-  const hasSchool = Boolean(classroom?.office_code && classroom?.school_code)
-
   return (
     <TeacherPageShell
       title="시간표·급식 검수"
@@ -92,34 +110,29 @@ export function TimetableReviewPage() {
       }
     >
       <div className="flex flex-col gap-5">
-        <Card className="p-4">
-          <Button
-            variant="secondary"
-            size="md"
-            className="w-full"
-            onClick={() => importMutation.mutate()}
-            disabled={!hasSchool || importMutation.isPending}
-          >
-            {importMutation.isPending ? (
+        <Card className="flex items-center gap-2 p-4 text-sm">
+          {isImporting ? (
+            <>
               <Spinner className="size-4" />
-            ) : (
-              <Download className="size-4" />
-            )}
-            나이스에서 이번 주 시간표 가져오기
-          </Button>
-          <p className="mt-2 text-center text-xs text-ink-500">
-            {hasSchool
-              ? '가져온 뒤 고칠 수 있어요. 공개해야 학생에게 보입니다.'
-              : '학교를 선택하지 않아 자동으로 가져올 수 없어요. 직접 입력해주세요.'}
-          </p>
-          {importMutation.isSuccess &&
-            Object.values(importMutation.data ?? {}).every((day) =>
-              Object.values(day).every((subject) => !subject),
-            ) && (
-              <p className="mt-2 text-center text-xs text-warning">
-                이 학교는 나이스에 시간표를 올리지 않아요. 직접 입력해주세요.
-              </p>
-            )}
+              <span className="text-ink-600">나이스에서 이번 주 시간표를 불러오는 중이에요…</span>
+            </>
+          ) : !hasSchool ? (
+            <span className="text-ink-500">
+              학교를 선택하지 않아 자동으로 불러올 수 없어요. 직접 입력해주세요.
+            </span>
+          ) : importFailed ? (
+            <span className="text-warning">
+              나이스에서 불러오지 못했어요. 직접 입력하거나 잠시 뒤 다시 열어주세요.
+            </span>
+          ) : neisGrid && isEmptyGrid(neisGrid) ? (
+            <span className="text-ink-500">
+              이 학교는 나이스에 시간표를 올리지 않아요. 직접 입력해주세요.
+            </span>
+          ) : (
+            <span className="text-ink-500">
+              아침마다 나이스에서 자동으로 불러와요. 고쳐 둔 칸은 그대로 두고 빈 칸만 채웁니다.
+            </span>
+          )}
         </Card>
 
         {/* 시간표 격자 */}
