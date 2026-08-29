@@ -1,7 +1,6 @@
-import { useState } from 'react'
 import { Link } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { AppHeader } from '@/components/layout'
 import { Card, Spinner } from '@/components/ui'
@@ -12,15 +11,14 @@ import { fetchRoster, rosterKeys } from '@/features/teacher/api/roster'
 import { formatDate, getTodayIso, relativeDayLabel } from '@/lib/date'
 import { cn } from '@/lib/utils'
 
-/** 미리보기로 보여줄 줄 수 */
-const PREVIEW_COUNT = 3
-
 /**
  * 우리반 — 학급 정보를 성격별로 묶어 보여준다.
  *
  * 여기 있는 것은 전부 학급 정보라, 교사용 '관리' 묶음을 따로 두지 않는다.
  * 교사는 각 항목에 들어가서 그 자리의 편집 링크로 고친다.
  * (예: 청소당번 → 설정, 학급규칙 → 수정)
+ *
+ * 공지사항·학사일정은 눌러서 들어가지 않고 맨 아래에 그대로 펼쳐 둔다.
  */
 export function ClassroomBoardPage() {
   const isTeacher = useIsTeacher()
@@ -60,8 +58,6 @@ export function ClassroomBoardPage() {
   }
 
   const todayIso = getTodayIso()
-  const notices = data.notices.slice(0, PREVIEW_COUNT)
-  const schedule = data.schedule.slice(0, PREVIEW_COUNT)
   const dutyAreas = new Set(data.duties.map((duty) => duty.area)).size
 
   return (
@@ -73,56 +69,6 @@ export function ClassroomBoardPage() {
       </p>
 
       <div className="flex flex-col gap-7">
-        {/* 그때그때 바뀌는 소식 — 접어 두고, 펼치면 최신 세 개가 보인다 */}
-        <Group title="소식">
-          <Folder
-            label="공지사항"
-            meta={count(data.notices.length, '개')}
-            to={ROUTES.classroomSection.notices}
-            blank={notices.length === 0 ? '올라온 공지가 없어요.' : undefined}
-          >
-            {notices.map((notice) => (
-              <li key={notice.id}>
-                <Link
-                  to={ROUTES.noticeDetail(notice.id)}
-                  className="flex items-center gap-2 py-1.5 transition-colors hover:text-brand-600"
-                >
-                  <span className="min-w-0 flex-1 truncate text-sm text-ink-700">
-                    {notice.title}
-                  </span>
-                  <span className="shrink-0 text-xs text-ink-400">
-                    {notice.dueAt
-                      ? relativeDayLabel(notice.dueAt)
-                      : formatDate(notice.publishedAt, 'M월 d일')}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </Folder>
-
-          <Folder
-            label="학사일정"
-            meta={count(data.schedule.length, '건')}
-            to={ROUTES.classroomSection.schedule}
-            blank={schedule.length === 0 ? '다가오는 일정이 없어요.' : undefined}
-          >
-            {schedule.map((item) => (
-              <li key={`${item.date}-${item.title}`} className="flex items-center gap-2 py-1.5">
-                <span
-                  className={cn(
-                    'w-14 shrink-0 text-xs font-semibold',
-                    item.date === todayIso ? 'text-danger' : 'text-brand-700',
-                  )}
-                >
-                  {formatDate(`${item.date}T00:00:00`, 'M/d(E)')}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-sm text-ink-700">{item.title}</span>
-                {item.isClassEvent && <span className="shrink-0 text-xs text-brand-700">학급</span>}
-              </li>
-            ))}
-          </Folder>
-        </Group>
-
         {/* 학교에서 정해져 내려오는 것 */}
         <Group title="수업">
           <MenuRow
@@ -170,8 +116,81 @@ export function ClassroomBoardPage() {
             />
           )}
         </Group>
+
+        {/* 공지사항 — 눌러 들어가지 않고 여기서 다 본다 */}
+        <section>
+          <h2 className="mb-3 px-1 text-lg font-bold text-ink-900">공지사항</h2>
+          {data.notices.length === 0 ? (
+            <Blank>올라온 공지가 없어요.</Blank>
+          ) : (
+            <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+              {data.notices.map((notice) => (
+                <li key={notice.id} className="border-b border-ink-100 last:border-0">
+                  <Link
+                    to={ROUTES.noticeDetail(notice.id)}
+                    className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-brand-50"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[15px] font-medium text-ink-900">
+                        {notice.title}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-ink-500">
+                        {notice.type === 'assignment' ? '과제' : '공지'} ·{' '}
+                        {formatDate(notice.publishedAt, 'M월 d일')}
+                      </span>
+                    </span>
+                    {notice.dueAt && (
+                      <span className="shrink-0 rounded-full bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-600">
+                        {relativeDayLabel(notice.dueAt)}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* 학사일정 */}
+        <section>
+          <h2 className="mb-3 px-1 text-lg font-bold text-ink-900">학사일정</h2>
+          {data.schedule.length === 0 ? (
+            <Blank>다가오는 일정이 없어요.</Blank>
+          ) : (
+            <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+              {data.schedule.map((item) => (
+                <li
+                  key={`${item.date}-${item.title}`}
+                  className="flex items-center gap-3 border-b border-ink-100 px-4 py-3 last:border-0"
+                >
+                  <span
+                    className={cn(
+                      'w-16 shrink-0 text-xs font-semibold',
+                      item.date === todayIso ? 'text-danger' : 'text-brand-700',
+                    )}
+                  >
+                    {formatDate(`${item.date}T00:00:00`, 'M/d(E)')}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm text-ink-900">{item.title}</span>
+                  {item.isClassEvent && (
+                    <span className="shrink-0 text-xs text-brand-700">학급</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
     </>
+  )
+}
+
+/** 내용이 없을 때의 한 줄 안내 */
+function Blank({ children }: { children: ReactNode }) {
+  return (
+    <p className="rounded-card bg-white px-4 py-4 text-sm text-ink-500 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+      {children}
+    </p>
   )
 }
 
@@ -199,61 +218,6 @@ function MenuRow({ label, to, meta }: { label: string; to: string; meta: string 
         <span className="shrink-0 text-sm text-ink-400">{meta}</span>
         <ChevronRight className="size-5 shrink-0 text-ink-300" aria-hidden />
       </Link>
-    </li>
-  )
-}
-
-/**
- * 접었다 펼치는 줄. 기본은 접힌 상태라 목록이 짧게 유지된다.
- * 펼치면 최신 몇 개가 보이고, 전체는 '전체 보기'로 들어간다.
- */
-function Folder({
-  label,
-  meta,
-  to,
-  blank,
-  children,
-}: {
-  label: string
-  meta: string
-  to: string
-  /** 보여줄 내용이 없을 때의 안내 문구 */
-  blank?: string
-  children: ReactNode
-}) {
-  const [open, setOpen] = useState(false)
-
-  return (
-    <li className="border-b border-ink-100 last:border-0">
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        aria-expanded={open}
-        className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-brand-50"
-      >
-        <span className="min-w-0 flex-1 text-[15px] font-medium text-ink-900">{label}</span>
-        <span className="shrink-0 text-sm text-ink-400">{meta}</span>
-        <ChevronDown
-          className={cn('size-5 shrink-0 text-ink-300 transition-transform', open && 'rotate-180')}
-          aria-hidden
-        />
-      </button>
-
-      {open &&
-        (blank ? (
-          <p className="px-4 pb-3.5 text-sm text-ink-400">{blank}</p>
-        ) : (
-          <div className="px-4 pb-3">
-            <ul className="border-t border-ink-100 pt-1">{children}</ul>
-            <Link
-              to={to}
-              className="mt-1 flex items-center gap-1 py-1 text-sm font-medium text-brand-500 hover:underline"
-            >
-              전체 보기
-              <ChevronRight className="size-4" aria-hidden />
-            </Link>
-          </div>
-        ))}
     </li>
   )
 }

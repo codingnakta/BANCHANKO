@@ -33,12 +33,10 @@ export const ROUTES = {
   classroom: '/classroom',
   /** 우리반 목록에서 하나씩 눌러 들어가는 화면들 */
   classroomSection: {
-    notices: '/classroom/notices',
     duties: '/classroom/duties',
     roles: '/classroom/roles',
     timetable: '/classroom/timetable',
     meal: '/classroom/meal',
-    schedule: '/classroom/schedule',
     rules: '/classroom/rules',
   },
   noticeDetail: (id: string) => `/notices/${id}`,
