@@ -10,6 +10,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type UserRole = 'teacher' | 'student'
 export type SchoolLevel = 'middle' | 'high'
 export type PostType = 'notice' | 'assignment'
+export type AttendanceStatus = 'present' | 'absent' | 'late' | 'early_leave' | 'excused'
 
 export type Database = {
   public: {
@@ -44,6 +45,8 @@ export type Database = {
           school_level: SchoolLevel | null
           grade: number
           class_no: number
+          rules: string[]
+          timetable_published: boolean
           created_at: string
         }
         Insert: {
@@ -66,6 +69,8 @@ export type Database = {
           school_level?: SchoolLevel | null
           grade?: number
           class_no?: number
+          rules?: string[]
+          timetable_published?: boolean
         }
         Relationships: [
           {
@@ -194,6 +199,66 @@ export type Database = {
           },
         ]
       }
+      timetable_entries: {
+        Row: {
+          classroom_id: string
+          /** 1=월 ~ 5=금 */
+          weekday: number
+          period: number
+          subject: string
+        }
+        Insert: {
+          classroom_id: string
+          weekday: number
+          period: number
+          subject?: string
+        }
+        Update: { subject?: string }
+        Relationships: []
+      }
+      attendance: {
+        Row: {
+          id: string
+          classroom_id: string
+          student_id: string
+          date: string
+          status: AttendanceStatus
+          reason: string | null
+          updated_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          classroom_id: string
+          student_id: string
+          date: string
+          status: AttendanceStatus
+          reason?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          status?: AttendanceStatus
+          reason?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      attendance_history: {
+        Row: {
+          id: string
+          attendance_id: string
+          before_status: AttendanceStatus | null
+          before_reason: string | null
+          after_status: AttendanceStatus
+          after_reason: string | null
+          changed_by: string | null
+          changed_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       duties: {
         Row: {
           classroom_id: string
@@ -251,3 +316,6 @@ export type ClassroomMemberRow = Database['public']['Tables']['classroom_members
 export type PostRow = Database['public']['Tables']['posts']['Row']
 export type DutyRow = Database['public']['Tables']['duties']['Row']
 export type RosterRow = Database['public']['Tables']['classroom_roster']['Row']
+export type TimetableEntryRow = Database['public']['Tables']['timetable_entries']['Row']
+export type AttendanceRow = Database['public']['Tables']['attendance']['Row']
+export type AttendanceHistoryRow = Database['public']['Tables']['attendance_history']['Row']

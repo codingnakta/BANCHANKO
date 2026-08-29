@@ -28,7 +28,7 @@ export function ChatbotPage() {
     <div className="flex min-h-[calc(100dvh-2rem)] flex-col">
       <header className="mb-4 flex items-center gap-1">
         <Link
-          to={ROUTES.home}
+          to={ROUTES.root}
           aria-label="뒤로"
           className="-ml-2 rounded-full p-1.5 text-ink-700 transition-colors hover:bg-ink-100"
         >

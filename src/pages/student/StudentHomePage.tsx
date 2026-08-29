@@ -13,7 +13,7 @@ import {
  * 미확인 공지와 당일·임박 일정을 우선 표시하고, 각 항목은 원본 상세로 이동한다.
  * 이 화면에서 원본 데이터를 수정할 수 없다.
  */
-export function HomePage() {
+export function StudentHomePage() {
   const { data, isPending, isError, error, refetch } = useDashboard()
 
   if (isPending) {

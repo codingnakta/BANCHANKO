@@ -38,7 +38,7 @@ export function CreateClassroomPage() {
     mutationFn: createClassroom,
     onSuccess: async (result) => {
       await refresh()
-      navigate(ROUTES.home, {
+      navigate(ROUTES.root, {
         replace: true,
         state: { rejectedEmails: result.rejectedEmails },
       })
@@ -54,8 +54,8 @@ export function CreateClassroomPage() {
   }
 
   // 이미 학급이 있으면 교사당 1개 규칙에 걸린다
-  if (profile.classroomId) return <Navigate to={ROUTES.home} replace />
-  if (profile.role !== 'teacher') return <Navigate to={ROUTES.home} replace />
+  if (profile.classroomId) return <Navigate to={ROUTES.root} replace />
+  if (profile.role !== 'teacher') return <Navigate to={ROUTES.root} replace />
 
   const gradeNumber = Number(grade)
   const classNumber = Number(classNo)

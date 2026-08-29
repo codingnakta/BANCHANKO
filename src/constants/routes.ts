@@ -6,31 +6,38 @@ export const ROUTES = {
   onboardingRole: '/onboarding/role',
   onboardingWaiting: '/onboarding/waiting',
 
-  // 하단 탭바 4개 최상위 화면 (F-ZYSPUS · 홈 → 우리반 → 할일 → 더보기)
-  home: '/',
-  classroom: '/classroom',
-  todo: '/todo',
-  more: '/more',
+  /** 역할을 보고 교사/학생 홈으로 보내주는 진입점 */
+  root: '/',
 
-  // 원본 상세·작성 화면 (탭바 미표시)
+  // ── 교사 ────────────────────────────────────────────────
+  teacher: {
+    home: '/teacher',
+    /** 학급 운영 메뉴 모음 */
+    manage: '/teacher/manage',
+    students: '/teacher/students',
+    settings: '/teacher/settings',
+    notices: '/teacher/notices',
+    noticeNew: '/teacher/notices/new',
+    noticeEdit: (id: string) => `/teacher/notices/${id}/edit`,
+    timetable: '/teacher/timetable',
+    attendance: '/teacher/attendance',
+    classroomCreate: '/teacher/classroom/new',
+  },
+
+  // ── 학생 ────────────────────────────────────────────────
+  student: {
+    home: '/student',
+    classroom: '/student/class',
+    todo: '/student/todo',
+    chatbot: '/student/chat',
+  },
+
+  /** 공지·과제 상세는 두 역할이 같은 화면을 본다 */
   noticeDetail: (id: string) => `/notices/${id}`,
-  noticeCreate: '/notices/new',
-  noticeEdit: (id: string) => `/notices/${id}/edit`,
-  eventDetail: (id: string) => `/events/${id}`,
 
-  // 교사 전용
-  classroomCreate: '/classroom/new',
-  classroomSettings: '/classroom/settings',
-  members: '/classroom/members',
-  attendance: '/classroom/attendance',
-  syncReview: '/classroom/sync',
-
-  // 학생 전용
-  chatbot: '/chat',
-
-  // 더보기 하위
+  // 더보기 (역할 공통)
+  more: '/more',
   notifications: '/more/notifications',
   account: '/more/account',
   about: '/more/about',
-
 } as const

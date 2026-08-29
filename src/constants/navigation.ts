@@ -7,14 +7,27 @@ export interface TabItem {
   label: string
   path: string
   icon: typeof HomeIcon
-  /** 표시 대상 역할 — 미지정 시 학생·교사 모두 */
-  roles?: UserRole[]
 }
 
-/** 탭 순서는 홈 → 우리반 → 할일 → 더보기로 고정한다. (F-ZYSPUS 규칙) */
-export const TAB_ITEMS: TabItem[] = [
-  { key: 'home', label: '홈', path: ROUTES.home, icon: HomeIcon },
-  { key: 'classroom', label: '우리반', path: ROUTES.classroom, icon: CatIcon },
-  { key: 'todo', label: '할 일', path: ROUTES.todo, icon: ChatIcon },
+/**
+ * 하단 탭은 역할마다 다르다.
+ *
+ * 학생은 명세대로 홈 → 우리반 → 할일 → 더보기 네 개를 쓰고(F-ZYSPUS),
+ * 교사에게는 '할일'(AI가 만든 학생용 오늘 할 일)이 의미가 없어 빼고 세 개만 둔다.
+ */
+const STUDENT_TABS: TabItem[] = [
+  { key: 'home', label: '홈', path: ROUTES.student.home, icon: HomeIcon },
+  { key: 'classroom', label: '우리반', path: ROUTES.student.classroom, icon: CatIcon },
+  { key: 'todo', label: '할 일', path: ROUTES.student.todo, icon: ChatIcon },
   { key: 'more', label: '더보기', path: ROUTES.more, icon: BunnyIcon },
 ]
+
+const TEACHER_TABS: TabItem[] = [
+  { key: 'home', label: '홈', path: ROUTES.teacher.home, icon: HomeIcon },
+  { key: 'manage', label: '학급 운영', path: ROUTES.teacher.manage, icon: CatIcon },
+  { key: 'more', label: '더보기', path: ROUTES.more, icon: BunnyIcon },
+]
+
+export function tabsForRole(role: UserRole | null): TabItem[] {
+  return role === 'teacher' ? TEACHER_TABS : STUDENT_TABS
+}

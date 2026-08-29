@@ -110,7 +110,7 @@ export function retrieveContext(question: string, summary: DashboardSummary): Re
           sources.push({
             label: `행사: ${e.title}`,
             updatedAt: e.startAt,
-            href: ROUTES.eventDetail(e.id),
+            href: undefined,
           })
         }
         break

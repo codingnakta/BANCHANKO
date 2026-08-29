@@ -13,7 +13,7 @@ export function LoginPage() {
   const [isStarting, setIsStarting] = useState(false)
 
   // 이미 로그인한 상태로 /login 에 오면 홈으로 (가드가 역할·학급에 맞게 다시 보낸다)
-  if (!isLoading && session) return <Navigate to={ROUTES.home} replace />
+  if (!isLoading && session) return <Navigate to={ROUTES.root} replace />
 
   async function startGoogleLogin() {
     setError(null)
@@ -21,7 +21,7 @@ export function LoginPage() {
 
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}${ROUTES.home}` },
+      options: { redirectTo: `${window.location.origin}${ROUTES.root}` },
     })
 
     if (oauthError) {

@@ -19,7 +19,7 @@ export function ChatFab() {
 
   return (
     <Link
-      to={ROUTES.chatbot}
+      to={ROUTES.student.chatbot}
       aria-label="AI에게 물어보기"
       className="fixed right-4 z-50 flex size-14 items-center justify-center rounded-full bg-brand-400 text-white shadow-lg shadow-brand-400/30 transition-colors hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 bottom-[calc(var(--spacing-tabbar)+1rem+env(safe-area-inset-bottom))] md:bottom-6 md:right-6"
     >

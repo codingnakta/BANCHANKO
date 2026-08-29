@@ -1,26 +1,19 @@
 import { AppHeader } from '@/components/layout'
 import { Spinner } from '@/components/ui'
-import { useIsTeacher } from '@/features/auth/hooks/useCurrentUser'
 import {
   ClassBoardSection,
   ClassRulesCard,
   CleaningDutyCard,
-  TeacherMenuList,
   useClassroom,
 } from '@/features/classroom'
 import { TimetableMealTabs } from '@/features/dashboard'
 
 /**
- * 우리반 탭 (F-ZYSPUS).
- *
- * 역할에 따라 다르게 보여준다.
- *  - 학생: 학급 규칙, 시간표, 급식, 청소 당번, 공지·과제·행사 목록
- *  - 담임교사: 학생 관리, 학급 기본 정보, 안내 관리, 시간표·급식 검수, 출결 기록 메뉴
- *
- * 학생에게 출결 기록 관리와 학생 소속 관리 메뉴는 표시하지 않는다.
+ * 학생용 우리반 탭 (S2-4).
+ * 학급 규칙, 시간표, 급식, 청소 당번, 공지·과제 목록을 조회만 한다.
+ * 교사의 학급 운영 메뉴는 /teacher/manage 로 완전히 분리했다.
  */
-export function ClassroomPage() {
-  const isTeacher = useIsTeacher()
+export function StudentClassroomPage() {
   const { data, isPending, isError, refetch } = useClassroom()
 
   if (isPending) {
@@ -46,7 +39,7 @@ export function ClassroomPage() {
     )
   }
 
-  const { classroom, timetable, meal, cleaningDuties, notices, events, studentCount } = data
+  const { classroom, timetable, meal, cleaningDuties, notices } = data
 
   return (
     <>
@@ -55,16 +48,10 @@ export function ClassroomPage() {
       <p className="-mt-2 mb-5 px-1 text-sm text-ink-500">담임 {classroom.teacherName} 선생님</p>
 
       <div className="flex flex-col gap-7">
-        {isTeacher ? (
-          <TeacherMenuList studentCount={studentCount} />
-        ) : (
-          <>
-            <ClassRulesCard rules={classroom.rules} />
-            <TimetableMealTabs entries={timetable} meal={meal} />
-            <CleaningDutyCard duties={cleaningDuties} />
-            <ClassBoardSection notices={notices} events={events} />
-          </>
-        )}
+        <ClassRulesCard rules={classroom.rules} />
+        <TimetableMealTabs entries={timetable} meal={meal} />
+        <CleaningDutyCard duties={cleaningDuties} />
+        <ClassBoardSection notices={notices} />
       </div>
     </>
   )

@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router'
-import { TAB_ITEMS } from '@/constants'
+import { tabsForRole } from '@/constants'
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { cn } from '@/lib/utils'
 
 /**
@@ -7,6 +8,8 @@ import { cn } from '@/lib/utils'
  * 하단 탭바와 동일한 4개 항목·순서·다크 톤을 유지한다. (F-ZYSPUS)
  */
 export function SideNav() {
+  const tabs = tabsForRole(useCurrentUser()?.role ?? null)
+
   return (
     <aside className="hidden w-60 shrink-0 bg-nav md:block">
       <div className="sticky top-0 flex h-dvh flex-col gap-8 px-4 py-7">
@@ -15,7 +18,7 @@ export function SideNav() {
         </p>
         <nav aria-label="주요 화면 이동">
           <ul className="flex flex-col gap-1">
-            {TAB_ITEMS.map((tab) => (
+            {tabs.map((tab) => (
               <li key={tab.key}>
                 <NavLink
                   to={tab.path}

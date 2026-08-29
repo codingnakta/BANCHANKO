@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 import {
   CalendarCheck,
   ChevronRight,
@@ -7,52 +8,57 @@ import {
   Settings,
   Users,
 } from 'lucide-react'
+import { AppHeader } from '@/components/layout'
 import { ROUTES } from '@/constants'
-
-interface MenuItem {
-  label: string
-  description: string
-  to: string
-  icon: typeof Users
-  /** 우측에 표시할 보조 정보 */
-  meta?: string
-}
-
-interface TeacherMenuListProps {
-  studentCount: number
-}
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
+import { fetchRoster, rosterKeys } from '@/features/teacher/api/roster'
+import { useMyClassroomRow } from '@/features/teacher/hooks/useMyClassroomRow'
 
 /**
- * 담임교사용 학급 운영 메뉴 (F-ZYSPUS).
- * 명세가 정한 다섯 항목: 학생 관리, 학급 기본 정보, 안내 관리, 시간표·급식 검수, 출결 기록.
- * 이 메뉴는 학생에게 표시하지 않는다.
+ * 학급 운영 탭 (교사 전용).
+ * 명세가 정한 다섯 항목을 모아둔다: 학생 관리, 학급 기본 정보, 안내 관리,
+ * 시간표·급식 검수, 출결 기록.
  */
-export function TeacherMenuList({ studentCount }: TeacherMenuListProps) {
-  const items: MenuItem[] = [
+export function TeacherManagePage() {
+  const user = useCurrentUser()
+  const { data: classroom } = useMyClassroomRow()
+
+  const { data: roster } = useQuery({
+    queryKey: rosterKeys.list(user?.classroomId ?? 'none'),
+    queryFn: () => fetchRoster(user!.classroomId!),
+    enabled: Boolean(user?.classroomId),
+  })
+
+  const joined = roster?.filter((member) => member.joined).length ?? 0
+  const helpers = roster?.filter((member) => member.helperSubject).length ?? 0
+
+  const items = [
     {
       label: '학생 관리',
-      description: '학생 초대·등록과 소속 관리',
+      description: '명단 등록, 과목도우미 지정',
       to: ROUTES.teacher.students,
       icon: Users,
-      meta: `${studentCount}명`,
+      meta: roster ? `${joined}/${roster.length}명` : undefined,
     },
     {
       label: '학급 기본 정보',
-      description: '학급명·규칙·시간표·청소 당번',
+      description: '학급명, 학급 규칙, 청소 당번',
       to: ROUTES.teacher.settings,
       icon: Settings,
+      meta: classroom?.rules.length ? `규칙 ${classroom.rules.length}개` : undefined,
     },
     {
       label: '안내 관리',
-      description: '공지·가정통신문·과제 일정 발행',
+      description: '공지와 과제 등록·수정',
       to: ROUTES.teacher.notices,
       icon: Megaphone,
     },
     {
       label: '시간표·급식 검수',
-      description: '연동 정보를 확인하고 공개',
+      description: '나이스 시간표를 확인하고 공개',
       to: ROUTES.teacher.timetable,
       icon: ClipboardList,
+      meta: classroom?.timetable_published ? '공개됨' : '미공개',
     },
     {
       label: '출결 기록',
@@ -63,8 +69,15 @@ export function TeacherMenuList({ studentCount }: TeacherMenuListProps) {
   ]
 
   return (
-    <section>
-      <h2 className="mb-3 px-1 text-lg font-bold text-ink-900">학급 운영</h2>
+    <>
+      <AppHeader title={classroom?.name ?? '학급 운영'} />
+
+      {classroom?.school_name && (
+        <p className="-mt-2 mb-5 px-1 text-sm text-ink-500">
+          {classroom.school_name}
+          {helpers > 0 && ` · 과목도우미 ${helpers}명`}
+        </p>
+      )}
 
       <ul className="flex flex-col gap-2">
         {items.map((item) => (
@@ -88,6 +101,6 @@ export function TeacherMenuList({ studentCount }: TeacherMenuListProps) {
           </li>
         ))}
       </ul>
-    </section>
+    </>
   )
 }

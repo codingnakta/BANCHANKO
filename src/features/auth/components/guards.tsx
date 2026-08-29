@@ -34,7 +34,7 @@ export function RequireOnboarded() {
   if (isLoading || !profile) return <FullPageSpinner />
   if (!profile.role) return <Navigate to={ROUTES.onboardingRole} replace />
   if (profile.role === 'teacher' && !profile.classroomId) {
-    return <Navigate to={ROUTES.classroomCreate} replace />
+    return <Navigate to={ROUTES.teacher.classroomCreate} replace />
   }
   if (profile.role === 'student' && !profile.classroomId) {
     return <Navigate to={ROUTES.onboardingWaiting} replace />
@@ -48,7 +48,7 @@ export function RequireTeacher() {
   const { profile, isLoading } = useAuth()
 
   if (isLoading || !profile) return <FullPageSpinner />
-  if (profile.role !== 'teacher') return <Navigate to={ROUTES.home} replace />
+  if (profile.role !== 'teacher') return <Navigate to={ROUTES.root} replace />
 
   return <Outlet />
 }

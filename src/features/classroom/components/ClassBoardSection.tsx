@@ -4,16 +4,15 @@ import { EmptyState } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import { formatDate, isImminent, relativeDayLabel } from '@/lib/date'
 import { cn } from '@/lib/utils'
-import type { ClassEvent, Notice } from '@/types'
+import type { Notice } from '@/types'
 
-type Filter = 'all' | 'notice' | 'newsletter' | 'assignment' | 'event'
+type Filter = 'all' | 'notice' | 'newsletter' | 'assignment'
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: '전체' },
   { key: 'notice', label: '공지' },
   { key: 'newsletter', label: '가정통신문' },
   { key: 'assignment', label: '과제' },
-  { key: 'event', label: '행사' },
 ]
 
 /** 목록에 섞어 보여주기 위한 공통 형태 */
@@ -31,14 +30,13 @@ interface BoardItem {
 
 interface ClassBoardSectionProps {
   notices: Notice[]
-  events: ClassEvent[]
 }
 
 /**
- * 공지·가정통신문·과제·행사 목록 (F-WSHIYO · F-WFEXUJ).
- * 공개된 항목만 전달되며, 각 항목은 원본 상세로 이동한다.
+ * 공지·가정통신문·과제 목록 (F-WSHIYO).
+ * 학급 행사는 저장할 테이블이 없어(해커톤 MVP 범위 밖) 다루지 않는다.
  */
-export function ClassBoardSection({ notices, events }: ClassBoardSectionProps) {
+export function ClassBoardSection({ notices }: ClassBoardSectionProps) {
   const [filter, setFilter] = useState<Filter>('all')
 
   const items: BoardItem[] = [
@@ -50,15 +48,6 @@ export function ClassBoardSection({ notices, events }: ClassBoardSectionProps) {
       date: n.publishedAt,
       dueAt: n.dueAt,
       href: ROUTES.noticeDetail(n.id),
-    })),
-    ...events.map((e) => ({
-      id: e.id,
-      kind: 'event' as const,
-      label: '행사',
-      title: e.title,
-      date: e.startAt,
-      dueAt: e.startAt,
-      href: ROUTES.eventDetail(e.id),
     })),
   ].sort((a, b) => b.date.localeCompare(a.date))
 

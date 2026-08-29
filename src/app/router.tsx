@@ -1,46 +1,76 @@
-import { Routes, Route } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
 import { AppShell, DetailShell } from '@/components/layout'
 import { ROUTES } from '@/constants'
 import { RequireAuth, RequireOnboarded, RequireTeacher } from '@/features/auth/components/guards'
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RoleSelectPage } from '@/pages/onboarding/RoleSelectPage'
 import { WaitingPage } from '@/pages/onboarding/WaitingPage'
-import { CreateClassroomPage } from '@/pages/classroom/CreateClassroomPage'
-import { HomePage } from '@/pages/home/HomePage'
-import { ClassroomPage } from '@/pages/classroom/ClassroomPage'
-import { TodoPage } from '@/pages/todo/TodoPage'
+// 교사
+import { CreateClassroomPage } from '@/pages/teacher/CreateClassroomPage'
+import { TeacherHomePage } from '@/pages/teacher/TeacherHomePage'
+import { TeacherManagePage } from '@/pages/teacher/TeacherManagePage'
+import { StudentsPage } from '@/pages/teacher/StudentsPage'
+import { ClassSettingsPage } from '@/pages/teacher/ClassSettingsPage'
+import { NoticesPage } from '@/pages/teacher/NoticesPage'
+import { NoticeEditPage } from '@/pages/teacher/NoticeEditPage'
+import { TimetableReviewPage } from '@/pages/teacher/TimetableReviewPage'
+import { AttendancePage } from '@/pages/teacher/AttendancePage'
+// 학생
+import { StudentHomePage } from '@/pages/student/StudentHomePage'
+import { StudentClassroomPage } from '@/pages/student/StudentClassroomPage'
+import { TodoPage } from '@/pages/student/TodoPage'
+import { ChatbotPage } from '@/pages/student/ChatbotPage'
+// 공통
 import { MorePage } from '@/pages/more/MorePage'
-import { ChatbotPage } from '@/pages/chatbot/ChatbotPage'
 import { NotificationsPage } from '@/pages/more/NotificationsPage'
+import { NoticeDetailPage } from '@/pages/notices/NoticeDetailPage'
 import { PlaceholderPage } from '@/pages/PlaceholderPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+
+/** 루트(/)에 들어오면 역할에 맞는 홈으로 보낸다. */
+function RoleHomeRedirect() {
+  const user = useCurrentUser()
+  return (
+    <Navigate to={user?.role === 'teacher' ? ROUTES.teacher.home : ROUTES.student.home} replace />
+  )
+}
 
 export function AppRouter() {
   return (
     <Routes>
       <Route path={ROUTES.login} element={<LoginPage />} />
 
-      {/* 로그인은 했지만 아직 온보딩 중인 화면 — 탭바·셸 없이 단독으로 그린다 */}
       <Route element={<RequireAuth />}>
+        {/* 온보딩 — 셸 없이 단독 화면 */}
         <Route path={ROUTES.onboardingRole} element={<RoleSelectPage />} />
         <Route path={ROUTES.onboardingWaiting} element={<WaitingPage />} />
-        <Route path={ROUTES.classroomCreate} element={<CreateClassroomPage />} />
+        <Route path={ROUTES.teacher.classroomCreate} element={<CreateClassroomPage />} />
 
-        {/* 온보딩을 끝낸 사용자만 서비스 본체로 들어온다 */}
         <Route element={<RequireOnboarded />}>
-          {/* 하단 탭바가 있는 주요 화면 */}
+          <Route path={ROUTES.root} element={<RoleHomeRedirect />} />
+
+          {/* 탭바가 있는 최상위 화면 */}
           <Route element={<AppShell />}>
-            <Route path={ROUTES.home} element={<HomePage />} />
-            <Route path={ROUTES.classroom} element={<ClassroomPage />} />
-            <Route path={ROUTES.todo} element={<TodoPage />} />
+            {/* 교사 */}
+            <Route element={<RequireTeacher />}>
+              <Route path={ROUTES.teacher.home} element={<TeacherHomePage />} />
+              <Route path={ROUTES.teacher.manage} element={<TeacherManagePage />} />
+            </Route>
+
+            {/* 학생 */}
+            <Route path={ROUTES.student.home} element={<StudentHomePage />} />
+            <Route path={ROUTES.student.classroom} element={<StudentClassroomPage />} />
+            <Route path={ROUTES.student.todo} element={<TodoPage />} />
+
+            {/* 공통 */}
             <Route path={ROUTES.more} element={<MorePage />} />
           </Route>
 
-          {/* 원본 상세·작성/수정 화면 (탭바 미표시) */}
+          {/* 상세·작성 화면 (탭바 미표시) */}
           <Route element={<DetailShell />}>
-            <Route path={ROUTES.chatbot} element={<ChatbotPage />} />
-
-            {/* 더보기 하위 화면 */}
+            <Route path={ROUTES.noticeDetail(':id')} element={<NoticeDetailPage />} />
+            <Route path={ROUTES.student.chatbot} element={<ChatbotPage />} />
             <Route path={ROUTES.notifications} element={<NotificationsPage />} />
             <Route
               path={ROUTES.account}
@@ -63,30 +93,15 @@ export function AppRouter() {
               }
             />
 
-            {/* 교사 학급 운영 메뉴 */}
+            {/* 교사 운영 화면 */}
             <Route element={<RequireTeacher />}>
-              <Route
-                path={ROUTES.members}
-                element={<PlaceholderPage title="학생 관리" feature="학생 명단 등록과 소속 관리" />}
-              />
-              <Route
-                path={ROUTES.classroomSettings}
-                element={
-                  <PlaceholderPage title="학급 기본 정보" feature="학급 규칙·시간표·청소 당번 설정" />
-                }
-              />
-              <Route
-                path={ROUTES.noticeCreate}
-                element={<PlaceholderPage title="안내 관리" feature="공지·가정통신문·과제 일정 발행" />}
-              />
-              <Route
-                path={ROUTES.syncReview}
-                element={<PlaceholderPage title="시간표·급식 검수" feature="외부 연동 정보 검수와 공개" />}
-              />
-              <Route
-                path={ROUTES.attendance}
-                element={<PlaceholderPage title="출결 기록" feature="학생별 출결과 변경 이력" />}
-              />
+              <Route path={ROUTES.teacher.students} element={<StudentsPage />} />
+              <Route path={ROUTES.teacher.settings} element={<ClassSettingsPage />} />
+              <Route path={ROUTES.teacher.notices} element={<NoticesPage />} />
+              <Route path={ROUTES.teacher.noticeNew} element={<NoticeEditPage />} />
+              <Route path={ROUTES.teacher.noticeEdit(':id')} element={<NoticeEditPage />} />
+              <Route path={ROUTES.teacher.timetable} element={<TimetableReviewPage />} />
+              <Route path={ROUTES.teacher.attendance} element={<AttendancePage />} />
             </Route>
           </Route>
         </Route>

@@ -26,7 +26,7 @@ export function WaitingPage() {
   }
 
   // 교사가 명단에 넣어주면 다음 확인에서 학급이 잡히고, 그때 홈으로 보낸다
-  if (profile.classroomId) return <Navigate to={ROUTES.home} replace />
+  if (profile.classroomId) return <Navigate to={ROUTES.root} replace />
 
   async function copyEmail() {
     try {

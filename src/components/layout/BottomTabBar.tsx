@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router'
-import { TAB_ITEMS } from '@/constants'
+import { tabsForRole } from '@/constants'
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { cn } from '@/lib/utils'
 
 /**
@@ -8,13 +9,15 @@ import { cn } from '@/lib/utils'
  * 데스크톱(md 이상)에서는 SideNav 가 같은 역할을 하므로 숨긴다.
  */
 export function BottomTabBar() {
+  const tabs = tabsForRole(useCurrentUser()?.role ?? null)
+
   return (
     <nav
       aria-label="주요 화면 이동"
       className="safe-bottom fixed inset-x-0 bottom-0 z-40 bg-nav md:hidden"
     >
       <ul className="flex h-tabbar items-stretch">
-        {TAB_ITEMS.map((tab) => (
+        {tabs.map((tab) => (
           <li key={tab.key} className="flex-1">
             <NavLink
               to={tab.path}

@@ -44,7 +44,7 @@ export function RoleSelectPage() {
   }
 
   // 이미 역할이 정해졌으면 되돌아갈 이유가 없다
-  if (profile.role) return <Navigate to={ROUTES.home} replace />
+  if (profile.role) return <Navigate to={ROUTES.root} replace />
 
   async function choose(role: UserRole) {
     setPending(role)
@@ -59,7 +59,7 @@ export function RoleSelectPage() {
     }
 
     await refresh()
-    navigate(role === 'teacher' ? ROUTES.classroomCreate : ROUTES.onboardingWaiting, {
+    navigate(role === 'teacher' ? ROUTES.teacher.classroomCreate : ROUTES.onboardingWaiting, {
       replace: true,
     })
   }
