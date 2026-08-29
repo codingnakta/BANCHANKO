@@ -151,14 +151,20 @@ export async function fetchDashboard(now: Date = getNow()): Promise<DashboardSum
       return upcoming(a) - upcoming(b) || (a.dueAt ?? '9999').localeCompare(b.dueAt ?? '9999')
     })
 
-  // 행사는 posts 의 한 유형이다 (due_date 가 행사 날짜). 지난 행사만 뺀다.
+  // 일정은 날짜를 넣은 공지다. (예전에 '행사'로 올린 글도 함께 본다)
+  // 지난 일정만 뺀다.
   const upcomingEvents = posts
-    .filter((post) => post.type === 'event' && (!post.due_date || post.due_date >= isoDate))
+    .filter(
+      (post) =>
+        post.type !== 'assignment' &&
+        (post.type === 'event' || Boolean(post.due_date)) &&
+        (!post.due_date || post.due_date >= isoDate),
+    )
     .sort((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'))
     .map((post) => ({
       id: post.id,
       title: post.title,
-      // 날짜를 안 넣고 등록한 행사는 올린 날을 기준으로 본다
+      // 날짜 없이 올라온 예전 행사는 올린 날을 기준으로 본다
       startAt: post.due_date ? `${post.due_date}T00:00:00` : post.created_at,
       description: post.body ?? undefined,
       isPublic: true,

@@ -106,9 +106,9 @@ export function retrieveContext(question: string, summary: DashboardSummary): Re
         if (!summary.upcomingEvents.length) break
         for (const e of summary.upcomingEvents) {
           const desc = e.description ? ` — ${e.description}` : ''
-          facts.push(`행사 "${e.title}" ${formatDate(e.startAt)} (${relativeDayLabel(e.startAt)})${desc}`)
+          facts.push(`일정 "${e.title}" ${formatDate(e.startAt)} (${relativeDayLabel(e.startAt)})${desc}`)
           sources.push({
-            label: `행사: ${e.title}`,
+            label: `일정: ${e.title}`,
             updatedAt: e.startAt,
             href: undefined,
           })

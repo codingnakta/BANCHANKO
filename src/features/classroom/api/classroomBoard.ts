@@ -104,8 +104,9 @@ export async function fetchClassroomBoard(now: Date = getNow()): Promise<Classro
         }, {})
       : null
 
+  // 학급 일정 = 날짜를 넣은 공지 (예전 '행사' 글도 함께)
   const classEvents: ScheduleItem[] = posts
-    .filter((post) => post.type === 'event')
+    .filter((post) => post.type === 'event' || (post.type === 'notice' && post.due_date))
     .map((post) => ({
       date: post.due_date ?? post.created_at.slice(0, 10),
       title: post.title,

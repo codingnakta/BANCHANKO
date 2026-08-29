@@ -16,10 +16,13 @@ import {
 import { cn } from '@/lib/utils'
 import type { PostType } from '@/lib/supabase/database.types'
 
+/** 고를 수 있는 유형. 예전 '행사'는 날짜가 있는 공지로 대신한다. */
+const TYPES = ['notice', 'assignment'] as const
+
 const TYPE_LABEL: Record<PostType, string> = {
   notice: '공지',
   assignment: '과제',
-  event: '행사',
+  event: '공지',
 }
 
 const EMPTY: NoticeInput = {
@@ -53,7 +56,8 @@ export function NoticeEditPage() {
   if (existing && existing.id !== loadedId) {
     setLoadedId(existing.id)
     setForm({
-      type: existing.type,
+      // 예전 '행사' 글은 공지로 열어 준다
+      type: existing.type === 'event' ? 'notice' : existing.type,
       title: existing.title,
       body: existing.body ?? '',
       subject: existing.subject ?? '',
@@ -105,7 +109,7 @@ export function NoticeEditPage() {
       <Card className="flex flex-col gap-5 p-5">
         {/* 유형 */}
         <div className="flex gap-2">
-          {(['notice', 'assignment', 'event'] as PostType[]).map((type) => (
+          {TYPES.map((type) => (
             <button
               key={type}
               type="button"
@@ -143,10 +147,10 @@ export function NoticeEditPage() {
           </div>
         )}
 
-        {form.type === 'event' && (
-          <Field label="행사 날짜" htmlFor="eventDate">
+        {form.type === 'notice' && (
+          <Field label="날짜" htmlFor="noticeDate" hint="일정이 있는 공지라면 날짜를 넣어주세요 (선택)">
             <Input
-              id="eventDate"
+              id="noticeDate"
               type="date"
               value={form.dueDate}
               onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
@@ -160,11 +164,7 @@ export function NoticeEditPage() {
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             placeholder={
-              form.type === 'assignment'
-                ? '수학 익힘책 32~35p'
-                : form.type === 'event'
-                  ? '체육대회'
-                  : '체육대회 반티 색상 투표 안내'
+              form.type === 'assignment' ? '수학 익힘책 32~35p' : '체육대회 반티 색상 투표 안내'
             }
           />
         </Field>

@@ -10,7 +10,7 @@ export function ScheduleSectionPage() {
   return (
     <ClassroomSectionShell
       title="학사일정"
-      edit={{ to: ROUTES.teacher.noticeNew, label: '행사 등록' }}
+      edit={{ to: ROUTES.teacher.noticeNew, label: '공지 쓰기' }}
     >
       {(data) =>
         data.schedule.length === 0 ? (

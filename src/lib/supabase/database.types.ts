@@ -147,6 +147,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          type?: PostType
           subject?: string | null
           title?: string
           body?: string | null

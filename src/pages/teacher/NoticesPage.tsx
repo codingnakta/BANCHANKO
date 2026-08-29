@@ -88,7 +88,7 @@ export function NoticesPage() {
                     {notice.due_date && (
                       <span className="flex items-center gap-1">
                         <CalendarClock className="size-3" />
-                        {notice.type === 'event' ? '' : '마감 '}
+                        {notice.type === 'assignment' ? '마감 ' : '일정 '}
                         {formatDate(`${notice.due_date}T00:00:00`)} (
                         {relativeDayLabel(`${notice.due_date}T00:00:00`)})
                       </span>

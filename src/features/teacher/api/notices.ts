@@ -13,7 +13,7 @@ export interface NoticeInput {
   body: string
   /** 과제만 사용 */
   subject: string
-  /** 과제 마감일 (yyyy-MM-dd) */
+  /** 과제는 마감일, 공지는 일정 날짜 (yyyy-MM-dd, 없어도 된다) */
   dueDate: string
   linkUrl: string
 }
@@ -69,8 +69,8 @@ export async function createNotice(classroomId: string, input: NoticeInput): Pro
       subject: input.type === 'assignment' ? input.subject.trim() || null : null,
       title: input.title.trim(),
       body: input.body.trim() || null,
-      // 과제는 마감일, 행사는 행사 날짜를 같은 컬럼에 담는다
-      due_date: input.type !== 'notice' && input.dueDate ? input.dueDate : null,
+      // 과제는 마감일, 공지는 일정 날짜를 같은 칸에 담는다
+      due_date: input.dueDate || null,
       link_url: normalizeLinkUrl(input.linkUrl),
     })
     .select('id')
@@ -87,11 +87,12 @@ export async function updateNotice(id: string, input: NoticeInput): Promise<void
   const { error } = await supabase
     .from('posts')
     .update({
+      // 예전에 '행사'로 올린 글을 열어 고치면 공지로 바뀐다
+      type: input.type,
       subject: input.type === 'assignment' ? input.subject.trim() || null : null,
       title: input.title.trim(),
       body: input.body.trim() || null,
-      // 과제는 마감일, 행사는 행사 날짜를 같은 컬럼에 담는다
-      due_date: input.type !== 'notice' && input.dueDate ? input.dueDate : null,
+      due_date: input.dueDate || null,
       link_url: normalizeLinkUrl(input.linkUrl),
     })
     .eq('id', id)

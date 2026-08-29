@@ -10,8 +10,7 @@ import {
   useDashboard,
   usePinnedPost,
 } from '@/features/dashboard'
-import { formatDate, relativeDayLabel, getTodayIso } from '@/lib/date'
-import { cn } from '@/lib/utils'
+import { formatDate } from '@/lib/date'
 
 /**
  * 교사 홈.
@@ -46,11 +45,8 @@ export function TeacherHomePage() {
     )
   }
 
-  const todayIso = getTodayIso()
   // 홈에는 핀으로 고정한 과제 하나만. 고른 게 없으면 아무것도 띄우지 않는다.
   const featured = data.upcomingAssignments.find((assignment) => assignment.id === pinnedId)
-  const todayEvents = data.upcomingEvents.filter((e) => e.startAt.slice(0, 10) === todayIso)
-  const shownEvents = todayEvents.length > 0 ? todayEvents : data.upcomingEvents.slice(0, 3)
 
   return (
     <>
@@ -123,42 +119,6 @@ export function TeacherHomePage() {
         {/* 시간표·급식 — 학생 홈과 같은 탭 카드 */}
         <TimetableMealTabs entries={data.timetable} meal={data.meal} />
 
-        {/* 행사 */}
-        <Section title="행사" action={{ to: ROUTES.teacher.noticeNew, label: '등록' }}>
-          {shownEvents.length === 0 ? (
-            <Blank message="예정된 행사가 없어요." to={ROUTES.teacher.noticeNew} cta="행사 등록하기" />
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {shownEvents.map((event) => (
-                <li key={event.id}>
-                  <Link
-                    to={ROUTES.noticeDetail(event.id)}
-                    className="flex items-center gap-3 rounded-card bg-white px-4 py-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-colors hover:bg-brand-50"
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[15px] font-medium text-ink-900">
-                        {event.title}
-                      </span>
-                      {event.description && (
-                        <span className="mt-0.5 block truncate text-xs text-ink-500">
-                          {event.description}
-                        </span>
-                      )}
-                    </span>
-                    <span
-                      className={cn(
-                        'shrink-0 text-base font-medium tabular-nums',
-                        event.startAt.slice(0, 10) === todayIso ? 'text-danger' : 'text-ink-900',
-                      )}
-                    >
-                      {relativeDayLabel(event.startAt)}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Section>
       </div>
     </>
   )

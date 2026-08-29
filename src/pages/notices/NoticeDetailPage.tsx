@@ -71,7 +71,7 @@ export function NoticeDetailPage() {
         <Card className="mb-4 flex items-center gap-2 p-4">
           <CalendarClock className="size-5 shrink-0 text-brand-700" aria-hidden />
           <p className="text-sm text-ink-800">
-            {notice.type === 'event' ? '행사일 ' : '마감 '}
+            {notice.type === 'assignment' ? '마감 ' : '일정 '}
             {formatDate(dueIso)}
             <span className="ml-2 font-semibold text-brand-700">{relativeDayLabel(dueIso)}</span>
           </p>
