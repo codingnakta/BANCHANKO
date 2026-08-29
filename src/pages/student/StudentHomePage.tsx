@@ -6,6 +6,7 @@ import {
   TodayHeroCard,
   UnreadNoticeCard,
   useDashboard,
+  usePinnedPostId,
 } from '@/features/dashboard'
 
 /**
@@ -15,6 +16,7 @@ import {
  */
 export function StudentHomePage() {
   const { data, isPending, isError, error, refetch } = useDashboard()
+  const pinnedId = usePinnedPostId()
 
   if (isPending) {
     return (
@@ -41,6 +43,11 @@ export function StudentHomePage() {
     )
   }
 
+  // 홈에는 핀으로 고정한 과제 하나만. 고른 게 없으면 마감이 가장 가까운 것.
+  const featured =
+    data.upcomingAssignments.find((assignment) => assignment.id === pinnedId) ??
+    data.upcomingAssignments[0]
+
   return (
     <>
       <AppHeader
@@ -51,8 +58,8 @@ export function StudentHomePage() {
       <div className="flex flex-col gap-4">
         <TodayHeroCard tasks={data.todayTasks} />
 
-        {/* 마감이 가장 임박한 과제 */}
-        {data.upcomingAssignments[0] && <DdayCard assignment={data.upcomingAssignments[0]} />}
+        {/* 홈에 고정한 과제 */}
+        {featured && <DdayCard assignment={featured} />}
 
         <TimetableMealTabs
           entries={data.timetable}

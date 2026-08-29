@@ -1,4 +1,5 @@
 export { useDashboard, dashboardKeys } from './hooks/useDashboard'
+export { usePinnedPostId, togglePinnedPost } from './hooks/usePinnedPost'
 export { TodayHeroCard } from './components/TodayHeroCard'
 export { DdayCard } from './components/DdayCard'
 export { TimetableMealTabs } from './components/TimetableMealTabs'

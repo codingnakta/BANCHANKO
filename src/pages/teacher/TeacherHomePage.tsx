@@ -8,6 +8,7 @@ import {
   TimetableMealTabs,
   TodayHeroCard,
   useDashboard,
+  usePinnedPostId,
 } from '@/features/dashboard'
 import { formatDate, relativeDayLabel, getTodayIso } from '@/lib/date'
 import { cn } from '@/lib/utils'
@@ -18,6 +19,7 @@ import { cn } from '@/lib/utils'
  */
 export function TeacherHomePage() {
   const { data, isPending, isError, error, refetch } = useDashboard()
+  const pinnedId = usePinnedPostId()
 
   if (isPending) {
     return (
@@ -45,6 +47,10 @@ export function TeacherHomePage() {
   }
 
   const todayIso = getTodayIso()
+  // 홈에는 핀으로 고정한 과제 하나만. 고른 게 없으면 마감이 가장 가까운 것.
+  const featured =
+    data.upcomingAssignments.find((assignment) => assignment.id === pinnedId) ??
+    data.upcomingAssignments[0]
   const todayEvents = data.upcomingEvents.filter((e) => e.startAt.slice(0, 10) === todayIso)
   const shownEvents = todayEvents.length > 0 ? todayEvents : data.upcomingEvents.slice(0, 3)
 
@@ -57,14 +63,10 @@ export function TeacherHomePage() {
 
         {/* 과제 안내 */}
         <Section title="과제 안내" action={{ to: ROUTES.teacher.notices, label: '관리' }}>
-          {data.upcomingAssignments.length === 0 ? (
+          {!featured ? (
             <Blank message="등록된 과제가 없어요." to={ROUTES.teacher.noticeNew} cta="과제 등록하기" />
           ) : (
-            <div className="flex flex-col gap-2">
-              {data.upcomingAssignments.slice(0, 3).map((assignment) => (
-                <DdayCard key={assignment.id} assignment={assignment} />
-              ))}
-            </div>
+            <DdayCard assignment={featured} />
           )}
         </Section>
 
