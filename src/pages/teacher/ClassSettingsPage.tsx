@@ -4,6 +4,7 @@ import { Plus, X } from 'lucide-react'
 import { TeacherPageShell } from '@/components/layout'
 import { Button, Card, Field, Input, Spinner } from '@/components/ui'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
+import { invalidateClassroomViews } from '@/lib/invalidate'
 import { myClassroomKeys } from '@/features/classroom/api/myClassroom'
 import {
   fetchDuties,
@@ -64,6 +65,7 @@ export function ClassSettingsPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: myClassroomKeys.all })
       await queryClient.invalidateQueries({ queryKey: settingsKeys.duties(classroomId) })
+      await invalidateClassroomViews(queryClient)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     },

@@ -5,7 +5,7 @@ import { Download, Utensils } from 'lucide-react'
 import { TeacherPageShell } from '@/components/layout'
 import { Button, Card, Spinner } from '@/components/ui'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
-import { myClassroomKeys } from '@/features/classroom/api/myClassroom'
+import { invalidateClassroomViews } from '@/lib/invalidate'
 import { useDashboard } from '@/features/dashboard'
 import {
   emptyGrid,
@@ -59,7 +59,7 @@ export function TimetableReviewPage() {
     mutationFn: () => publishTimetable(classroomId, grid),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: timetableKeys.detail(classroomId) })
-      await queryClient.invalidateQueries({ queryKey: myClassroomKeys.all })
+      await invalidateClassroomViews(queryClient)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     },

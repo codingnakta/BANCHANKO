@@ -5,6 +5,7 @@ import { TeacherPageShell } from '@/components/layout'
 import { Badge, Button, EmptyState, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
+import { invalidateClassroomViews } from '@/lib/invalidate'
 import { deleteNotice, fetchNotices, noticeKeys } from '@/features/teacher/api/notices'
 import { formatDate, relativeDayLabel } from '@/lib/date'
 import type { PostType } from '@/lib/supabase/database.types'
@@ -30,7 +31,10 @@ export function NoticesPage() {
 
   const removeMutation = useMutation({
     mutationFn: deleteNotice,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: noticeKeys.list(classroomId) }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: noticeKeys.list(classroomId) })
+      await invalidateClassroomViews(queryClient)
+    },
   })
 
   return (

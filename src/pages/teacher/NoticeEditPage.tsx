@@ -5,6 +5,7 @@ import { TeacherPageShell } from '@/components/layout'
 import { Button, Card, Field, Input, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
+import { invalidateClassroomViews } from '@/lib/invalidate'
 import {
   createNotice,
   fetchNotice,
@@ -71,6 +72,7 @@ export function NoticeEditPage() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: noticeKeys.all })
+      await invalidateClassroomViews(queryClient)
       navigate(ROUTES.teacher.notices, { replace: true })
     },
   })

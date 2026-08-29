@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import { format } from 'date-fns'
-import { CalendarDays, ClipboardList, Sparkles, Trash2, Utensils } from 'lucide-react'
+import { CalendarDays, ClipboardList, Megaphone, Sparkles, Trash2, Utensils } from 'lucide-react'
 import { AppHeader } from '@/components/layout'
 import { Card, CardTitle, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
@@ -44,6 +44,8 @@ export function TeacherHomePage() {
   const today = new Date()
   const todayIso = format(today, 'yyyy-MM-dd')
   const todayEvents = data.upcomingEvents.filter((e) => e.startAt.slice(0, 10) === todayIso)
+  // 오늘 행사가 없으면 다가오는 행사를 대신 보여준다 (등록했는데 안 보이면 당황스러우니까)
+  const shownEvents = todayEvents.length > 0 ? todayEvents : data.upcomingEvents.slice(0, 3)
 
   return (
     <>
@@ -89,6 +91,35 @@ export function TeacherHomePage() {
                   </li>
                 )
               })}
+            </ul>
+          )}
+        </Section>
+
+        {/* 1-2. 공지 — 요청한 구성에는 없지만, 등록해도 홈에 안 보이면 헷갈려서 함께 둔다 */}
+        <Section
+          title="공지"
+          icon={<Megaphone className="size-4" />}
+          action={{ label: '공지 쓰기', to: ROUTES.teacher.noticeNew }}
+        >
+          {data.unreadNotices.length === 0 ? (
+            <Empty message="올린 공지가 없어요." to={ROUTES.teacher.noticeNew} cta="공지 쓰기" />
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {data.unreadNotices.map((notice) => (
+                <li key={notice.id}>
+                  <Link
+                    to={ROUTES.noticeDetail(notice.id)}
+                    className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 transition-colors hover:bg-brand-50"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-900">
+                      {notice.title}
+                    </span>
+                    <span className="shrink-0 text-xs text-ink-500">
+                      {formatDate(notice.publishedAt, 'M/d')}
+                    </span>
+                  </Link>
+                </li>
+              ))}
             </ul>
           )}
         </Section>
@@ -172,22 +203,40 @@ export function TeacherHomePage() {
           icon={<CalendarDays className="size-4" />}
           action={{ label: '행사 등록', to: ROUTES.teacher.noticeNew }}
         >
-          {todayEvents.length === 0 ? (
-            <p className="rounded-xl bg-white px-4 py-3 text-sm text-ink-500">
-              오늘은 예정된 행사가 없어요.
-            </p>
+          {shownEvents.length === 0 ? (
+            <Empty
+              message="등록된 행사가 없어요."
+              to={ROUTES.teacher.noticeNew}
+              cta="행사 등록하기"
+            />
           ) : (
             <ul className="flex flex-col gap-2">
-              {todayEvents.map((event) => (
+              {shownEvents.map((event) => (
                 <li key={event.id}>
                   <Link
                     to={ROUTES.noticeDetail(event.id)}
-                    className="block rounded-xl bg-white px-4 py-3 transition-colors hover:bg-brand-50"
+                    className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 transition-colors hover:bg-brand-50"
                   >
-                    <p className="truncate text-sm font-medium text-ink-900">{event.title}</p>
-                    {event.description && (
-                      <p className="mt-0.5 truncate text-xs text-ink-500">{event.description}</p>
-                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-ink-900">
+                        {event.title}
+                      </span>
+                      {event.description && (
+                        <span className="mt-0.5 block truncate text-xs text-ink-500">
+                          {event.description}
+                        </span>
+                      )}
+                    </span>
+                    <span
+                      className={cn(
+                        'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold',
+                        event.startAt.slice(0, 10) === todayIso
+                          ? 'bg-danger/10 text-danger'
+                          : 'bg-ink-100 text-ink-600',
+                      )}
+                    >
+                      {relativeDayLabel(event.startAt)}
+                    </span>
                   </Link>
                 </li>
               ))}
