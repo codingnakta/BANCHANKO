@@ -44,7 +44,14 @@ export function useChat() {
       setIsAnswering(true)
 
       try {
-        const answer = await answerQuestion(question, summary, role, teacherFacts ?? [])
+        // 이번 세션에서 오간 대화를 함께 넘겨 앞의 답을 기억하게 한다
+        const answer = await answerQuestion(
+          question,
+          summary,
+          role,
+          teacherFacts ?? [],
+          messages,
+        )
         setMessages((prev) => [
           ...prev,
           {
@@ -75,7 +82,7 @@ export function useChat() {
         setIsAnswering(false)
       }
     },
-    [isAnswering, role, summary, teacherFacts],
+    [isAnswering, messages, role, summary, teacherFacts],
   )
 
   return { messages, isAnswering, send, isReady: !!summary }

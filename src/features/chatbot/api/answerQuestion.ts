@@ -7,7 +7,7 @@ import {
   type MascotKey,
 } from '../constants'
 import { retrieveContext, type Topic } from './retrieveContext'
-import type { ChatAction, ChatAnswer, DashboardSummary, UserRole } from '@/types'
+import type { ChatAction, ChatAnswer, ChatMessage, DashboardSummary, UserRole } from '@/types'
 
 /**
  * 질문 주제에 따라 답변을 맡을 마스코트를 고른다.
@@ -42,11 +42,13 @@ export async function answerQuestion(
   role: UserRole | null = 'student',
   /** 교사 대화에만 더해지는 근거 (청소 구역·명단·규칙) */
   extraFacts: string[] = [],
+  /** 이번 대화에서 오간 메시지 — 앞의 답을 기억하게 한다 */
+  history: ChatMessage[] = [],
 ): Promise<ChatAnswer> {
   const { topics, facts, sources } = retrieveContext(question, summary)
 
   // 교사의 요청은 주제 판정에 걸리지 않아도 모델에게 넘긴다
-  const generated = await generate(question, [...facts, ...extraFacts], role)
+  const generated = await generate(question, [...facts, ...extraFacts], role, history)
   if (generated) {
     return {
       status: facts.length > 0 ? 'answered' : 'no_evidence',
@@ -90,13 +92,20 @@ async function generate(
   question: string,
   facts: string[],
   role: UserRole | null,
+  history: ChatMessage[],
 ): Promise<{ reply: string; action: ChatAction | null } | null> {
   try {
     const { data, error } = await supabase.functions.invoke<{
       reply?: string
       action?: ChatAction | null
     }>('chat', {
-      body: { question, role: role ?? 'student', facts, today: getTodayIso() },
+      body: {
+        question,
+        role: role ?? 'student',
+        facts,
+        today: getTodayIso(),
+        history: history.map((message) => ({ role: message.role, text: message.text })),
+      },
     })
 
     if (error || !data?.reply) return null

@@ -8,7 +8,9 @@
  *   npx supabase functions deploy chat
  *
  * 요청 (POST):
- *   { question, role: 'teacher'|'student', facts: string[], today: 'yyyy-MM-dd' }
+ *   { question, role, facts, today, history }
+ *   history 는 이번 대화에서 오간 최근 메시지다. 앞의 답을 기억해야
+ *   "그럼 그거 등록해줘" 같은 말이 통한다.
  *
  * 응답:
  *   { reply, action }  action 은 교사가 "~ 해줘" 라고 했을 때만 채워진다.
@@ -34,6 +36,31 @@ interface ChatRequest {
   role?: 'teacher' | 'student'
   facts?: string[]
   today?: string
+  history?: { role?: string; text?: string }[]
+}
+
+interface ChatTurn {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+/** 이번 대화에서 이어 붙일 최근 메시지 수 (질문·답변 합쳐서) */
+const HISTORY_LIMIT = 12
+/** 한 메시지가 지나치게 길면 잘라 낸다 */
+const HISTORY_CHAR_LIMIT = 1500
+
+/** 클라이언트가 보낸 대화 기록을 모델이 읽을 형태로만 통과시킨다. */
+function toTurns(history: ChatRequest['history']): ChatTurn[] {
+  if (!Array.isArray(history)) return []
+
+  return history
+    .filter((turn) => turn?.role === 'user' || turn?.role === 'assistant')
+    .map((turn) => ({
+      role: turn.role as 'user' | 'assistant',
+      content: String(turn.text ?? '').slice(0, HISTORY_CHAR_LIMIT),
+    }))
+    .filter((turn) => turn.content.trim().length > 0)
+    .slice(-HISTORY_LIMIT)
 }
 
 /** 교사가 부탁한 일을 모델이 채워 오는 제안 */
@@ -69,6 +96,7 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
     '아래 [학급 정보]에 있는 내용만 근거로 답한다.',
     '거기에 없는 것은 지어내지 말고 "아직 등록된 정보가 없어요"라고 말한다.',
     '학급과 무관한 질문에는 답할 수 있는 범위(시간표·급식·청소당번·1인1역·과제·공지·일정)를 안내한다.',
+    '앞선 대화를 이어서 이해한다. "그거", "아까 그 날짜"처럼 가리키는 말은 바로 앞 대화에서 찾는다.',
     '',
     '[학급 정보]',
     evidence,
@@ -228,6 +256,7 @@ Deno.serve(async (request) => {
         temperature: 0.2,
         messages: [
           { role: 'system', content: systemPrompt(role, today, payload.facts ?? []) },
+          ...toTurns(payload.history),
           { role: 'user', content: question },
         ],
       }),
