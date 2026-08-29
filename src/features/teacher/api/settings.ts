@@ -15,18 +15,25 @@ export const WEEKDAYS = [
   { value: 5, label: '금' },
 ] as const
 
-/** 한 요일의 청소 구역 한 줄 */
-export interface DutyRowInput {
-  area: string
-  /** 쉼표로 구분한 학생 이름 */
-  studentNames: string
+/**
+ * 청소 당번 계획.
+ *
+ * 구역은 학급이 정해두고 요일마다 바뀌지 않는다(복도, 교실 뒤, 화장실…).
+ * 요일마다 달라지는 건 그 구역을 누가 맡느냐다. 그래서 구역 목록은 하나만 두고
+ * 학생 이름만 요일별로 갖는다.
+ */
+export interface DutyPlan {
+  /** 모든 요일이 함께 쓰는 구역 목록 */
+  areas: string[]
+  /** 요일(1~5) → 구역과 같은 순서의 담당 학생 (쉼표로 구분) */
+  names: Record<number, string[]>
 }
 
-/** 요일(1~5)별 구역 목록 */
-export type DutyPlan = Record<number, DutyRowInput[]>
-
 export function emptyDutyPlan(): DutyPlan {
-  return Object.fromEntries(WEEKDAYS.map((day) => [day.value, []]))
+  return {
+    areas: [],
+    names: Object.fromEntries(WEEKDAYS.map((day) => [day.value, []])),
+  }
 }
 
 export async function fetchDuties(classroomId: string): Promise<DutyRow[]> {
@@ -44,12 +51,25 @@ export async function fetchDuties(classroomId: string): Promise<DutyRow[]> {
   return data ?? []
 }
 
-/** 저장된 행들을 요일별 묶음으로 바꾼다. */
+/**
+ * 저장된 행들을 계획으로 되돌린다.
+ * 구역 목록은 sort_order 순서로 모든 요일에서 모아 중복을 없앤다.
+ */
 export function toDutyPlan(rows: DutyRow[]): DutyPlan {
   const plan = emptyDutyPlan()
-  for (const row of rows) {
-    if (!plan[row.weekday]) plan[row.weekday] = []
-    plan[row.weekday].push({ area: row.task ?? '', studentNames: row.student_names })
+
+  const ordered = [...rows].sort((a, b) => a.sort_order - b.sort_order)
+  for (const row of ordered) {
+    const area = (row.task ?? '').trim()
+    if (area && !plan.areas.includes(area)) plan.areas.push(area)
+  }
+
+  for (const day of WEEKDAYS) {
+    plan.names[day.value] = plan.areas.map(
+      (area) =>
+        rows.find((row) => row.weekday === day.value && (row.task ?? '').trim() === area)
+          ?.student_names ?? '',
+    )
   }
   return plan
 }
@@ -61,15 +81,18 @@ export function toDutyPlan(rows: DutyRow[]): DutyPlan {
  * 전체를 지우고 다시 넣는 쪽이 어긋날 여지가 없다.
  */
 export async function saveDuties(classroomId: string, plan: DutyPlan): Promise<void> {
+  // 구역은 요일마다 한 줄씩 남긴다. 담당 학생이 비어 있어도 구역 자체는 유지해야
+  // 다음에 열었을 때 구역 목록이 그대로 보인다.
   const rows = WEEKDAYS.flatMap((day) =>
-    (plan[day.value] ?? [])
-      .filter((row) => row.area.trim() || row.studentNames.trim())
-      .map((row, index) => ({
+    plan.areas
+      .map((area, index) => ({ area: area.trim(), index }))
+      .filter((entry) => entry.area)
+      .map((entry) => ({
         classroom_id: classroomId,
         weekday: day.value,
-        task: row.area.trim() || null,
-        student_names: row.studentNames.trim(),
-        sort_order: index,
+        task: entry.area,
+        student_names: (plan.names[day.value]?.[entry.index] ?? '').trim(),
+        sort_order: entry.index,
       })),
   )
 

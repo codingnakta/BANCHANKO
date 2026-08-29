@@ -163,14 +163,17 @@ export async function fetchDashboard(now: Date = new Date()): Promise<DashboardS
       isPublic: true,
     }))
 
-  const cleaningDuties: CleaningDuty[] = (dutiesResult.data ?? []).map((duty) => ({
-    id: duty.id,
-    area: duty.task ?? '청소',
-    studentNames: duty.student_names
-      .split(',')
-      .map((name) => name.trim())
-      .filter(Boolean),
-  }))
+  // 담당을 정하지 않은 구역은 오늘 당번에서 뺀다
+  const cleaningDuties: CleaningDuty[] = (dutiesResult.data ?? [])
+    .map((duty) => ({
+      id: duty.id,
+      area: duty.task ?? '청소',
+      studentNames: duty.student_names
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean),
+    }))
+    .filter((duty) => duty.studentNames.length > 0)
 
   return {
     classroomName: classroom.name,
