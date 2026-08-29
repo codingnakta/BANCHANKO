@@ -4,12 +4,15 @@ import { EmptyState, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import { useIsTeacher } from '@/features/auth/hooks/useCurrentUser'
 import { DdayCard, useDashboard, usePinnedPost } from '@/features/dashboard'
+import { MyTodoList } from '@/features/todo'
 import { getTodayIso, relativeDayLabel } from '@/lib/date'
 import { cn } from '@/lib/utils'
 
 /**
  * 할일 탭 (역할 공통).
- * 다가오는 일정과 과제를 모아 보여주고, 교사에게는 맨 위에 작성 링크를 더한다.
+ *
+ * 다가오는 일정과 학급 과제를 모아 보여준다.
+ * 교사에게는 맨 위에 작성 링크를, 학생에게는 스스로 적는 '내 할일'을 더한다.
  */
 export function TodoPage() {
   const isTeacher = useIsTeacher()
@@ -92,9 +95,9 @@ export function TodoPage() {
           )}
         </section>
 
-        {/* 과제 */}
+        {/* 우리반 과제 — 교사가 올린다 */}
         <section>
-          <h2 className="mb-3 px-1 text-lg font-bold text-ink-900">과제</h2>
+          <h2 className="mb-3 px-1 text-lg font-bold text-ink-900">우리반 과제</h2>
           {assignments.length === 0 ? (
             <EmptyState message="지금 확인할 과제가 없습니다." />
           ) : (
@@ -107,6 +110,9 @@ export function TodoPage() {
             </ul>
           )}
         </section>
+
+        {/* 내 할일 — 학생이 스스로 적는다 */}
+        {!isTeacher && <MyTodoList />}
       </div>
     </>
   )

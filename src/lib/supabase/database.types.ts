@@ -23,6 +23,8 @@ export type Database = {
           name: string
           /** 홈에 띄워 둔 글 — 본인만 바꿀 수 있다 */
           pinned_post_id: string | null
+          /** 홈에 띄워 둔 내 할일 */
+          pinned_todo_id: string | null
           created_at: string
         }
         Insert: {
@@ -30,11 +32,13 @@ export type Database = {
           role?: UserRole | null
           name: string
           pinned_post_id?: string | null
+          pinned_todo_id?: string | null
           created_at?: string
         }
         Update: {
           name?: string
           pinned_post_id?: string | null
+          pinned_todo_id?: string | null
         }
         Relationships: []
       }
@@ -216,6 +220,38 @@ export type Database = {
           },
         ]
       }
+      personal_todos: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          due_date: string | null
+          done: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          due_date?: string | null
+          done?: boolean
+          created_at?: string
+        }
+        Update: {
+          title?: string
+          due_date?: string | null
+          done?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'personal_todos_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       timetable_entries: {
         Row: {
           classroom_id: string
@@ -350,6 +386,7 @@ export type ClassroomRow = Database['public']['Tables']['classrooms']['Row']
 export type ClassroomMemberRow = Database['public']['Tables']['classroom_members']['Row']
 export type PostRow = Database['public']['Tables']['posts']['Row']
 export type DutyRow = Database['public']['Tables']['duties']['Row']
+export type PersonalTodoRow = Database['public']['Tables']['personal_todos']['Row']
 export type RosterRow = Database['public']['Tables']['classroom_roster']['Row']
 export type TimetableEntryRow = Database['public']['Tables']['timetable_entries']['Row']
 export type AttendanceRow = Database['public']['Tables']['attendance']['Row']

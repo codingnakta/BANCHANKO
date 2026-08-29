@@ -7,7 +7,9 @@ import {
   UnreadNoticeCard,
   useDashboard,
   usePinnedPost,
+  usePinnedTodo,
 } from '@/features/dashboard'
+import { MyTodoCard } from '@/features/todo'
 
 /**
  * 홈 탭 — 오늘의 학급 정보 대시보드 (F-ZTJSNU).
@@ -17,6 +19,7 @@ import {
 export function StudentHomePage() {
   const { data, isPending, isError, error, refetch } = useDashboard()
   const { pinnedId } = usePinnedPost()
+  const { pinnedId: pinnedTodoId } = usePinnedTodo()
 
   if (isPending) {
     return (
@@ -56,8 +59,9 @@ export function StudentHomePage() {
       <div className="flex flex-col gap-4">
         <TodayHeroCard tasks={data.todayTasks} />
 
-        {/* 홈에 고정한 과제 */}
+        {/* 홈에 고정한 과제(파란 핀)와 내 할일(핑크 핀) */}
         {featured && <DdayCard assignment={featured} />}
+        {pinnedTodoId && <MyTodoCard todoId={pinnedTodoId} />}
 
         <TimetableMealTabs
           entries={data.timetable}

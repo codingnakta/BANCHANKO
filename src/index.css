@@ -36,6 +36,12 @@
   --color-nav: #2b2b2b;
   --color-nav-muted: #909090;
 
+  /* 내 할일 — 학급 과제(블루)와 구분하는 핑크 */
+  --color-mine-100: #ffe6f0;
+  --color-mine-300: #ffa9c9;
+  --color-mine-400: #ff7bac;
+  --color-mine-500: #ef5a98;
+
   /* 상태 */
   --color-success: #22a06b;
   --color-warning: #e8a33d;

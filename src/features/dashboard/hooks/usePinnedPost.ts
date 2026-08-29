@@ -1,27 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
-import { fetchPinnedPostId, pinnedPostKeys, savePinnedPostId } from '../api/pinnedPost'
+import { fetchPinnedId, pinnedKeys, savePinnedId, type PinColumn } from '../api/pinnedPost'
 
 /**
- * 홈에 띄울 글 하나를 고르는 핀.
+ * 홈에 띄울 것 하나를 고르는 핀.
  *
- * 사람마다 다른 선택이라 계정(profiles.pinned_post_id)에 저장한다.
- * 같은 것을 다시 누르면 고정이 풀리고, 하나만 고정된다.
+ * 사람마다 다른 선택이라 계정(profiles)에 저장한다.
+ * 같은 것을 다시 누르면 고정이 풀리고, 종류마다 하나씩만 고정된다.
  */
-export function usePinnedPost() {
+function usePin(column: PinColumn) {
   const userId = useCurrentUser()?.id ?? ''
   const queryClient = useQueryClient()
-  const key = pinnedPostKeys.mine(userId)
+  const key = pinnedKeys.mine(userId, column)
 
   const { data: pinnedId = null } = useQuery({
     queryKey: key,
-    queryFn: () => fetchPinnedPostId(userId),
+    queryFn: () => fetchPinnedId(userId, column),
     enabled: Boolean(userId),
     staleTime: 60_000,
   })
 
   const mutation = useMutation({
-    mutationFn: (next: string | null) => savePinnedPostId(userId, next),
+    mutationFn: (next: string | null) => savePinnedId(userId, column, next),
     // 누르는 즉시 색이 바뀌어야 한다
     onMutate: async (next) => {
       await queryClient.cancelQueries({ queryKey: key })
@@ -36,9 +36,19 @@ export function usePinnedPost() {
 
   return {
     pinnedId,
-    toggle: (postId: string) => {
+    toggle: (id: string) => {
       if (!userId) return
-      mutation.mutate(pinnedId === postId ? null : postId)
+      mutation.mutate(pinnedId === id ? null : id)
     },
   }
+}
+
+/** 학급 과제 핀 (파란색) */
+export function usePinnedPost() {
+  return usePin('pinned_post_id')
+}
+
+/** 내 할일 핀 (핑크색) */
+export function usePinnedTodo() {
+  return usePin('pinned_todo_id')
 }
