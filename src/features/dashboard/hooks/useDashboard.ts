@@ -20,7 +20,8 @@ export function useDashboard() {
 
   return useQuery<DashboardSummary>({
     queryKey: dashboardKeys.summary(classroomId ?? 'none'),
-    queryFn: () => fetchDashboard(),
+    // 오늘 할 일은 보는 사람에 따라 달라진다 (내 당번만 보여준다)
+    queryFn: () => fetchDashboard(undefined, { name: user?.name ?? '', role: user?.role ?? null }),
     enabled: Boolean(classroomId),
     staleTime: 30_000,
     refetchOnMount: 'always',

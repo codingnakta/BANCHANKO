@@ -10,6 +10,7 @@ import type {
   Notice,
   TimetableEntry,
   TodayTask,
+  UserRole,
 } from '@/types'
 
 /** 나이스 연동 응답 (Edge Function 이 정규화해 내려준다) */
@@ -107,7 +108,11 @@ export async function fetchNeis(
  * 공지·과제·청소 당번은 학급 데이터에서 읽는다.
  * 학급 행사는 아직 테이블이 없어 항상 빈 배열이다.
  */
-export async function fetchDashboard(now: Date = getNow()): Promise<DashboardSummary> {
+export async function fetchDashboard(
+  now: Date = getNow(),
+  /** 보고 있는 사람 — 오늘 할 일을 그 사람 것만 추리는 데 쓴다 */
+  viewer?: { name: string; role: UserRole | null },
+): Promise<DashboardSummary> {
   const classroom = await fetchMyClassroom()
   if (!classroom) {
     throw new Error('소속된 학급이 없어요.')
@@ -185,7 +190,7 @@ export async function fetchDashboard(now: Date = getNow()): Promise<DashboardSum
 
   return {
     classroomName: classroom.name,
-    todayTasks: buildTodayTasks(assignments, cleaningDuties, isoDate),
+    todayTasks: buildTodayTasks(assignments, cleaningDuties, isoDate, viewer),
     currentPeriod: undefined,
     timetable: neis.timetable,
     meal: neis.meal,
@@ -199,19 +204,29 @@ export async function fetchDashboard(now: Date = getNow()): Promise<DashboardSum
 
 /**
  * "오늘 뭐 하지?" 카드 내용.
- * AI 생성(F-NXPULH)은 아직이라, 오늘 마감인 과제와 오늘 청소 당번을 그대로 모아 보여준다.
+ *
+ * AI 생성(F-NXPULH)은 아직이라, 오늘 마감인 과제와 오늘 내가 맡은 청소 구역을 모은다.
+ * 당번은 이름이 명단에 있는 학생에게만 보여준다 — 남의 당번까지 '내 할 일'로
+ * 뜨면 카드의 뜻이 흐려진다. 교사는 아래 '오늘 청소 당번'에서 전체를 본다.
  */
 function buildTodayTasks(
   assignments: Notice[],
   duties: CleaningDuty[],
   isoDate: string,
+  viewer?: { name: string; role: UserRole | null },
 ): TodayTask[] {
   const tasks: TodayTask[] = assignments
     .filter((assignment) => assignment.dueAt?.slice(0, 10) === isoDate)
     .map((assignment) => ({ id: assignment.id, label: assignment.title }))
 
-  for (const duty of duties) {
-    tasks.push({ id: duty.id, label: `${duty.area} 당번` })
+  const name = viewer?.name?.trim()
+  if (viewer?.role === 'student' && name) {
+    for (const duty of duties) {
+      if (duty.studentNames.some((student) => student.trim() === name)) {
+        tasks.push({ id: duty.id, label: `${duty.area} 청소 당번` })
+      }
+    }
   }
+
   return tasks
 }
