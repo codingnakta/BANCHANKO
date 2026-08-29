@@ -84,6 +84,7 @@ type Action =
       subject: string | null
     }
   | { kind: 'delete'; target: string }
+  | { kind: 'link'; screen: string; reason: string }
   | { kind: 'duty'; weekday: number; area: string; students: string[] }
   | { kind: 'role'; student: string; role: string }
   | { kind: 'rule'; rules: string[] }
@@ -115,7 +116,7 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
     common.push(
       '',
       '이 사용자는 담임 교사다. 교사가 무언가를 바꿔 달라고 하면 action 을 채운다.',
-      '고를 수 있는 action 은 여섯 가지다.',
+      '고를 수 있는 action 은 일곱 가지다.',
       '',
       '1) 공지·과제 등록 — "등록해줘 / 올려줘 / 써줘"',
       '   {"kind":"post","type":"notice"|"assignment","title":"","body":"","date":"yyyy-MM-dd"|null,"subject":null}',
@@ -151,6 +152,19 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
       '     지운 글은 되살릴 수 없어서, 짐작으로 고르면 엉뚱한 글이 사라진다.',
       '   - 삭제는 되돌릴 수 없으니 reply 에 그 점을 한 문장으로 알린다.',
       '',
+      '7) 네가 대신 할 수 없는 일 — 화면으로 안내하기',
+      '   {"kind":"link","screen":"students","reason":"학생 명단 등록"}',
+      '   - 아래 화면 중 하나를 screen 으로 고른다.',
+      '     students   학생 관리 — 명단·연락처 등록, 학생별 1인1역 지정',
+      '     settings   학급 기본 정보 — 학급 이름, 학급규칙, 청소 구역 정리',
+      '     timetable  시간표·급식 검수 — 시간표 확인과 공개',
+      '     notices    안내 관리 — 올린 공지·과제 목록',
+      '     attendance 출결 기록 — 출석·지각·조퇴·결석',
+      '     todo       할일 — 내 할일 적기',
+      '   - reason 에는 무엇을 하러 가는지 짧게 적는다.',
+      '   - 학생 등록처럼 사람이 직접 입력해야 하는 일은 지어내지 말고 이 갈래를 쓴다.',
+      '     (명단은 이메일이 정확해야 학생이 학급에 들어올 수 있어 네가 대신 만들지 않는다)',
+      '',
       '- 이름·구역이 [학급 정보]에 없어 헷갈리면 action 을 null 로 두고 reply 로 되묻는다.',
       '- 부탁한 내용이 [학급 정보]에 이미 그대로 있으면 action 을 null 로 두고,',
       '  "이미 그렇게 되어 있어요"라고 지금 상태를 알려 준다. 같은 것을 다시 만들지 않는다.',
@@ -167,7 +181,7 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
     '반드시 아래 형태의 JSON 하나만 출력한다. 다른 말은 붙이지 않는다.',
     '{"reply": "답변", "action": null}',
     '또는',
-    '{"reply": "답변", "action": { 위 여섯 가지 중 하나 }}',
+    '{"reply": "답변", "action": { 위 일곱 가지 중 하나 }}',
   )
 
   return common.join('\n')
@@ -232,6 +246,11 @@ function toAction(raw: unknown): Action | null {
       // 무엇을 지울지 모르면 제안 자체를 만들지 않는다
       if (!target) return null
       return { kind: 'delete', target }
+    }
+    case 'link': {
+      const screen = text(value.screen)
+      if (!screen) return null
+      return { kind: 'link', screen, reason: text(value.reason) }
     }
     case 'duty': {
       const weekday = Number(value.weekday)

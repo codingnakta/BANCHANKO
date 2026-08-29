@@ -207,6 +207,8 @@ export type ChatAction =
     }
   /** 이미 올린 공지·과제 지우기. 되돌릴 수 없어 교사가 카드에서 눌러야 지워진다 */
   | { kind: 'delete'; target: string }
+  /** 챗봇이 대신 못 하는 일 — 해당 화면으로 가는 링크만 띄운다 */
+  | { kind: 'link'; screen: string; reason: string }
   /** 청소당번 — 한 요일, 한 구역의 담당 학생을 정한다 */
   | { kind: 'duty'; weekday: number; area: string; students: string[] }
   /** 1인1역 — 학생 한 명의 역할을 정한다 */

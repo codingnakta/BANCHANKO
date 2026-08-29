@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query'
-import { Check, Pencil } from 'lucide-react'
+import { ArrowRight, Check, Pencil } from 'lucide-react'
 import { Button, Field, Input } from '@/components/ui'
+import { Link } from 'react-router'
+import { ROUTES } from '@/constants'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { fetchMyClassroom, myClassroomKeys } from '@/features/classroom/api/myClassroom'
 import {
@@ -24,6 +26,16 @@ import { invalidateClassroomViews } from '@/lib/invalidate'
 import { formatDate } from '@/lib/date'
 import { teacherContextKeys } from '../api/teacherContext'
 import type { ChatAction } from '@/types'
+
+/** 챗봇이 대신 못 하는 일은 여기로 보낸다 */
+const SCREENS: Record<string, { label: string; to: string }> = {
+  students: { label: '학생 관리', to: ROUTES.teacher.students },
+  settings: { label: '학급 기본 정보', to: ROUTES.teacher.settings },
+  timetable: { label: '시간표·급식 검수', to: ROUTES.teacher.timetable },
+  notices: { label: '안내 관리', to: ROUTES.teacher.notices },
+  attendance: { label: '출결 기록', to: ROUTES.teacher.attendance },
+  todo: { label: '할일', to: ROUTES.todo },
+}
 
 /**
  * AI 가 만들어 온 작업 제안.
@@ -54,6 +66,26 @@ export function ActionCard({ action }: { action: ChatAction }) {
       await invalidateClassroomViews(queryClient)
     },
   })
+
+  if (action.kind === 'link') {
+    const screen = SCREENS[action.screen]
+    if (!screen) return null
+
+    return (
+      <Link
+        to={screen.to}
+        className="mt-2 flex items-center gap-3 rounded-xl border border-ink-200 bg-white px-4 py-3.5 transition-colors hover:bg-brand-50"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-medium text-ink-900">{screen.label}</span>
+          {action.reason && (
+            <span className="mt-0.5 block text-xs text-ink-500">{action.reason}</span>
+          )}
+        </span>
+        <ArrowRight className="size-5 shrink-0 text-brand-500" aria-hidden />
+      </Link>
+    )
+  }
 
   if (mutation.isSuccess) {
     return (
@@ -212,6 +244,10 @@ function Preview({
         </p>
       )
 
+    case 'link':
+      // 링크는 카드 자체가 링크라 여기까지 오지 않는다
+      return null
+
     case 'rule':
       return (
         <div className="text-[15px] text-ink-900">
@@ -268,6 +304,8 @@ function doneLabel(action: ChatAction, title: string) {
       return `${action.student}의 1인1역을 정했어요.`
     case 'rule':
       return '학급규칙에 넣었어요.'
+    case 'link':
+      return ''
   }
 }
 
@@ -337,6 +375,9 @@ function useAlready(action: ChatAction, classroomId: string, userId: string): st
         ? '이미 학급규칙에 있어요.'
         : `“${dupes.join('”, “')}”는 이미 학급규칙에 있어요.`
     }
+
+    case 'link':
+      return null
 
     case 'post': {
       const title = action.title.trim()
@@ -450,6 +491,10 @@ async function apply(
       await setClassRole(classroomId, member.email, action.role || null)
       return
     }
+
+    case 'link':
+      // 화면으로 보내기만 한다 — 저장할 것이 없다
+      return
 
     case 'rule': {
       const classroom = await fetchMyClassroom()
