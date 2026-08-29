@@ -1,6 +1,6 @@
 import { AppHeader } from '@/components/layout'
 import { Spinner } from '@/components/ui'
-import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
+import { useIsTeacher } from '@/features/auth/hooks/useCurrentUser'
 import {
   ClassBoardSection,
   ClassRulesCard,
@@ -20,9 +20,8 @@ import { TimetableMealTabs } from '@/features/dashboard'
  * 학생에게 출결 기록 관리와 학생 소속 관리 메뉴는 표시하지 않는다.
  */
 export function ClassroomPage() {
-  const user = useCurrentUser()
+  const isTeacher = useIsTeacher()
   const { data, isPending, isError, refetch } = useClassroom()
-  const isTeacher = user.role === 'teacher'
 
   if (isPending) {
     return (

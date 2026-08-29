@@ -60,6 +60,9 @@
   }
 }
 
+/* 하단 안전영역(iOS 홈 인디케이터)만큼 아래 여백을 '더한다'.
+   기본 여백이 필요하면 --safe-pb 로 넘긴다: safe-bottom [--safe-pb:5rem]
+   (pb-* 와 같이 쓰면 이 유틸리티가 덮어쓰므로 --safe-pb 를 쓸 것) */
 @utility safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: calc(var(--safe-pb, 0px) + env(safe-area-inset-bottom));
 }

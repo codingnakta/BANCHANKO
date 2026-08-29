@@ -1,7 +1,10 @@
 /** 기능명세서(반창고_기능명세서.md)의 공통 정의를 타입으로 옮긴 것. */
 
-/** 역할 — ALBMAT 담임교사 / CZKZUM 학생 / GKCQRO 서비스 관리자 */
-export type UserRole = 'teacher' | 'student' | 'admin'
+/**
+ * 역할 — ALBMAT 담임교사 / CZKZUM 학생.
+ * DB profiles.role 과 값을 맞춘다. 서비스 관리자(GKCQRO)는 해커톤 MVP 범위 밖이라 뺐다.
+ */
+export type UserRole = 'teacher' | 'student'
 
 /** 계정 상태 — 비활성화·탈퇴 계정은 로그인이 차단된다. */
 export type AccountStatus = 'active' | 'suspended' | 'withdrawn'
@@ -31,13 +34,30 @@ export interface UserProfile {
   id: string
   email: string
   name: string
-  role: UserRole
-  status: AccountStatus
-  /** 교사 계정에만 존재 */
-  approvalStatus?: TeacherApprovalStatus
+  /** null = 구글 로그인은 했지만 아직 역할을 고르지 않음 */
+  role: UserRole | null
   /** 학생·교사가 속한 학급. 미소속이면 null */
   classroomId: string | null
   createdAt: string
+}
+
+/* ── 온보딩 ──────────────────────────────────────────────────── */
+
+/** 나이스 학교 검색 결과 1건 (Edge Function 이 정규화해 내려준다) */
+export interface School {
+  officeCode: string
+  officeName: string
+  schoolCode: string
+  schoolName: string
+  schoolLevel: 'middle' | 'high'
+  address: string
+}
+
+/** 교사가 미리 등록해두는 학생 명단 1줄 */
+export interface RosterEntry {
+  studentNo: string
+  name: string
+  email: string
 }
 
 /* ── 학급 데이터 엔티티 ───────────────────────────────────────── */

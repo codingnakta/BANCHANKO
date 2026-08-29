@@ -11,7 +11,7 @@ import {
 import { AppHeader } from '@/components/layout'
 import { Badge } from '@/components/ui'
 import { ROUTES } from '@/constants'
-import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
+import { useAuth } from '@/features/auth/hooks/useCurrentUser'
 import { useClassroom } from '@/features/classroom'
 import { useNotifications } from '@/features/notifications'
 import type { UserRole } from '@/types'
@@ -19,7 +19,6 @@ import type { UserRole } from '@/types'
 const ROLE_LABEL: Record<UserRole, string> = {
   student: '학생',
   teacher: '담임교사',
-  admin: '서비스 관리자',
 }
 
 interface MenuItem {
@@ -37,7 +36,7 @@ interface MenuItem {
  * 규칙상 학급 운영 기능은 이 탭에 포함하지 않는다.
  */
 export function MorePage() {
-  const user = useCurrentUser()
+  const { profile: user, signOut } = useAuth()
   const { data: classroom } = useClassroom()
   const { unreadCount } = useNotifications()
 
@@ -87,12 +86,12 @@ export function MorePage() {
       {/* 프로필 */}
       <section className="mb-7 flex items-center gap-3.5 rounded-card bg-white px-4 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-100 text-lg font-bold text-brand-700">
-          {user.name.at(0)}
+          {user?.name.at(0)}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="truncate text-base font-semibold text-ink-900">{user.name}</p>
-            <Badge tone="brand">{ROLE_LABEL[user.role]}</Badge>
+            <p className="truncate text-base font-semibold text-ink-900">{user?.name}</p>
+            {user?.role && <Badge tone="brand">{ROLE_LABEL[user.role]}</Badge>}
           </div>
           <p className="mt-0.5 truncate text-sm text-ink-500">
             {classroom ? `${classroom.classroom.name} · 담임 ${classroom.classroom.teacherName} 선생님` : '학급 정보 불러오는 중'}
@@ -135,6 +134,7 @@ export function MorePage() {
 
         <button
           type="button"
+          onClick={signOut}
           className="flex items-center justify-center gap-2 rounded-card bg-white py-3.5 text-[15px] font-medium text-ink-600 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-colors hover:text-ink-900"
         >
           <LogOut className="size-[18px]" strokeWidth={2} aria-hidden />

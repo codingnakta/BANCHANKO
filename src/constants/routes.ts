@@ -1,7 +1,10 @@
 /** 앱 전역 라우트 경로. 문자열 하드코딩 대신 이 상수를 사용한다. */
 export const ROUTES = {
   login: '/login',
-  signup: '/signup',
+
+  // 로그인 직후 온보딩 (구글 로그인은 역할 정보를 주지 않는다)
+  onboardingRole: '/onboarding/role',
+  onboardingWaiting: '/onboarding/waiting',
 
   // 하단 탭바 4개 최상위 화면 (F-ZYSPUS · 홈 → 우리반 → 할일 → 더보기)
   home: '/',
@@ -30,12 +33,4 @@ export const ROUTES = {
   account: '/more/account',
   about: '/more/about',
 
-  // 상태 화면
-  pendingApproval: '/pending-approval',
-  noClassroom: '/no-classroom',
-
-  // 서비스 관리자
-  admin: '/admin',
-  adminTeachers: '/admin/teachers',
-  adminAccounts: '/admin/accounts',
 } as const

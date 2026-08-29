@@ -62,7 +62,7 @@ export function ChatbotPage() {
       </div>
 
       {/* 입력창 + 키워드 칩을 하단에 고정 */}
-      <div className="safe-bottom sticky bottom-0 -mx-4 border-t border-ink-200 bg-ink-50/95 px-4 pt-2.5 pb-3 backdrop-blur">
+      <div className="safe-bottom [--safe-pb:0.75rem] sticky bottom-0 -mx-4 border-t border-ink-200 bg-ink-50/95 px-4 pt-2.5 backdrop-blur">
         {/* 대화가 시작된 뒤에도 답변 가능한 범위를 계속 노출한다 */}
         {started && <SuggestionChips onPick={send} disabled={isAnswering || !isReady} />}
         <ChatInput onSend={send} disabled={isAnswering || !isReady} />

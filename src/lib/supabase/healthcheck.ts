@@ -11,18 +11,14 @@ export interface SupabaseHealth {
   message: string
 }
 
-/** 스키마를 붙여가며 확인할 테이블 후보 */
+/** supabase/migrations 가 실제로 만드는 테이블 */
 const EXPECTED_TABLES = [
   'profiles',
   'classrooms',
   'classroom_members',
-  'notices',
-  'class_events',
-  'timetable_entries',
-  'meals',
-  'cleaning_duties',
-  'attendances',
-  'notifications',
+  'classroom_roster',
+  'posts',
+  'duties',
 ] as const
 
 /** 테이블이 스키마에 없을 때 PostgREST 가 주는 코드 */

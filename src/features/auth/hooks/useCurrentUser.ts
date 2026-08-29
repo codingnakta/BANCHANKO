@@ -1,26 +1,26 @@
+import { useContext } from 'react'
+import { AuthContext, type AuthState } from '../AuthContext'
 import type { UserProfile } from '@/types'
 
-/**
- * 현재 로그인한 사용자.
- *
- * TODO: Supabase Auth 연동 시 세션에서 프로필을 조회하도록 교체한다.
- *       지금은 화면 개발용으로 학생 계정을 가정한다.
- */
-const MOCK_USER: UserProfile = {
-  id: 'mock-student',
-  email: 'student@example.school.kr',
-  name: '홍창기',
-  role: 'student',
-  status: 'active',
-  classroomId: 'mock-classroom',
-  createdAt: new Date().toISOString(),
+export function useAuth(): AuthState {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth 는 AuthProvider 안에서만 쓸 수 있어요')
+  }
+  return context
 }
 
-export function useCurrentUser(): UserProfile {
-  return MOCK_USER
+/** 현재 로그인한 사용자. 로그인 전이거나 아직 확인 중이면 null. */
+export function useCurrentUser(): UserProfile | null {
+  return useAuth().profile
 }
 
 /** 학생 전용 기능(AI 챗봇 등)의 노출 여부 */
 export function useIsStudent(): boolean {
-  return useCurrentUser().role === 'student'
+  return useCurrentUser()?.role === 'student'
+}
+
+/** 교사 전용 메뉴의 노출 여부 */
+export function useIsTeacher(): boolean {
+  return useCurrentUser()?.role === 'teacher'
 }
