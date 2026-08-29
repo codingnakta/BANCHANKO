@@ -6,6 +6,7 @@ import { AppHeader } from '@/components/layout'
 import { Badge } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import { useAuth } from '@/features/auth/hooks/useCurrentUser'
+import { useMySeat } from '@/features/auth/hooks/useMySeat'
 import { useClassroom } from '@/features/classroom'
 import { useNotifications } from '@/features/notifications'
 import { aboutText, LegalDialog, privacyText, termsText } from '@/features/legal'
@@ -24,6 +25,8 @@ const ROLE_LABEL: Record<UserRole, string> = {
  */
 export function MorePage() {
   const { profile: user, signOut } = useAuth()
+  // 명단에 적힌 학번·이름을 먼저 쓴다. 구글 계정 이름은 학급의 기준이 아니다.
+  const { data: seat } = useMySeat()
   const { data: classroom } = useClassroom()
   const { unreadCount } = useNotifications()
 
@@ -37,11 +40,14 @@ export function MorePage() {
       {/* 내 정보 */}
       <section className="mb-7 flex items-center gap-3.5 rounded-card bg-white px-4 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-100 text-lg font-bold text-brand-700">
-          {user?.name.at(0)}
+          {(seat?.name || user?.name)?.at(0)}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="truncate text-base font-semibold text-ink-900">{user?.name}</p>
+            <p className="truncate text-base font-semibold text-ink-900">
+              {seat?.studentNo && <span className="mr-1.5 text-ink-500">{seat.studentNo}</span>}
+              {seat?.name || user?.name}
+            </p>
             {user?.role && <Badge tone="brand">{ROLE_LABEL[user.role]}</Badge>}
           </div>
           <p className="mt-0.5 truncate text-sm text-ink-500">

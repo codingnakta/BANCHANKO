@@ -366,6 +366,16 @@ export type Database = {
       }
     }
     Views: {
+      /** 로그인한 학생 자기 명단 한 줄 (학번·이름·1인1역) */
+      my_seat: {
+        Row: {
+          classroom_id: string
+          student_no: string | null
+          student_name: string | null
+          class_role: string | null
+        }
+        Relationships: []
+      }
       /** 우리반 1인1역 — 이름과 역할만 공개하는 뷰 (이메일·연락처 제외) */
       class_roles: {
         Row: {
