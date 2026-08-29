@@ -36,3 +36,13 @@ export async function fetchMySeat(): Promise<MySeat | null> {
     classRole: data.class_role ?? '',
   }
 }
+
+/** 내 이름 바꾸기. profiles 는 컬럼 단위로 열려 있어 이름만 고칠 수 있다. */
+export async function updateMyName(userId: string, name: string): Promise<void> {
+  const { error } = await supabase.from('profiles').update({ name: name.trim() }).eq('id', userId)
+
+  if (error) {
+    console.error('[profile] 이름 변경 실패', error)
+    throw new Error('이름을 바꾸지 못했어요.')
+  }
+}

@@ -3,10 +3,11 @@ import { Link } from 'react-router'
 import { ChevronRight, LogOut } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { AppHeader } from '@/components/layout'
-import { Badge } from '@/components/ui'
+import { Badge, Button, Input, Modal } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import { useAuth } from '@/features/auth/hooks/useCurrentUser'
 import { useMySeat } from '@/features/auth/hooks/useMySeat'
+import { updateMyName } from '@/features/auth/api/mySeat'
 import { useClassroom } from '@/features/classroom'
 import { useNotifications } from '@/features/notifications'
 import { aboutText, LegalDialog, privacyText, termsText } from '@/features/legal'
@@ -24,9 +25,26 @@ const ROLE_LABEL: Record<UserRole, string> = {
  * 규칙상 학급 운영 기능은 이 탭에 포함하지 않는다.
  */
 export function MorePage() {
-  const { profile: user, signOut } = useAuth()
+  const { profile: user, signOut, refresh } = useAuth()
   // 명단에 적힌 학번·이름을 먼저 쓴다. 구글 계정 이름은 학급의 기준이 아니다.
   const { data: seat } = useMySeat()
+  const isTeacher = user?.role === 'teacher'
+
+  // 교사는 화면에 뜨는 이름을 직접 고친다. 학생 이름은 명단이 기준이라 못 고친다.
+  const [editingName, setEditingName] = useState<string | null>(null)
+  const [savingName, setSavingName] = useState(false)
+
+  async function saveName() {
+    if (!user || editingName === null || !editingName.trim()) return
+    setSavingName(true)
+    try {
+      await updateMyName(user.id, editingName)
+      await refresh()
+      setEditingName(null)
+    } finally {
+      setSavingName(false)
+    }
+  }
   const { data: classroom } = useClassroom()
   const { unreadCount } = useNotifications()
 
@@ -37,25 +55,33 @@ export function MorePage() {
     <>
       <AppHeader title="더보기" hasUnreadNotification={unreadCount > 0} />
 
-      {/* 내 정보 */}
-      <section className="mb-7 flex items-center gap-3.5 rounded-card bg-white px-4 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-100 text-lg font-bold text-brand-700">
-          {(seat?.name || user?.name)?.at(0)}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="truncate text-base font-semibold text-ink-900">
-              {seat?.studentNo && <span className="mr-1.5 text-ink-500">{seat.studentNo}</span>}
-              {seat?.name || user?.name}
-            </p>
-            {user?.role && <Badge tone="brand">{ROLE_LABEL[user.role]}</Badge>}
-          </div>
-          <p className="mt-0.5 truncate text-sm text-ink-500">
-            {classroom
-              ? `${classroom.classroom.name} · 담임 ${classroom.classroom.teacherName} 선생님`
-              : '학급 정보 불러오는 중'}
-          </p>
-        </div>
+      {/* 내 정보 — 교사는 눌러서 이름을 고친다 */}
+      <section className="mb-7 rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+        <button
+          type="button"
+          onClick={() => isTeacher && setEditingName(user?.name ?? '')}
+          disabled={!isTeacher}
+          className="flex w-full items-center gap-3.5 px-4 py-4 text-left transition-colors enabled:hover:bg-brand-50"
+        >
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-100 text-lg font-bold text-brand-700">
+            {(seat?.name || user?.name)?.at(0)}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2">
+              <span className="truncate text-base font-semibold text-ink-900">
+                {seat?.studentNo && <span className="mr-1.5 text-ink-500">{seat.studentNo}</span>}
+                {seat?.name || user?.name}
+              </span>
+              {user?.role && <Badge tone="brand">{ROLE_LABEL[user.role]}</Badge>}
+            </span>
+            <span className="mt-0.5 block truncate text-sm text-ink-500">
+              {classroom
+                ? `${classroom.classroom.name} · 담임 ${classroom.classroom.teacherName} 선생님`
+                : '학급 정보 불러오는 중'}
+            </span>
+          </span>
+          {isTeacher && <ChevronRight className="size-5 shrink-0 text-ink-300" aria-hidden />}
+        </button>
       </section>
 
       <div className="flex flex-col gap-7">
@@ -95,6 +121,32 @@ export function MorePage() {
       </div>
 
       {doc && <LegalDialog title={doc.title} text={doc.text} onClose={() => setDoc(null)} />}
+
+      {editingName !== null && (
+        <Modal title="이름 바꾸기" onClose={() => setEditingName(null)}>
+          <p className="mb-3 text-xs text-ink-500">
+            학생과 학부모에게 보이는 이름이에요. 처음에는 구글 계정 이름이 들어가 있어요.
+          </p>
+          <Input
+            value={editingName}
+            onChange={(e) => setEditingName(e.target.value)}
+            placeholder="김다연"
+            autoFocus
+          />
+          <div className="mt-4 flex gap-2">
+            <Button
+              className="flex-1"
+              onClick={() => void saveName()}
+              disabled={!editingName.trim() || savingName}
+            >
+              저장
+            </Button>
+            <Button variant="ghost" onClick={() => setEditingName(null)}>
+              취소
+            </Button>
+          </div>
+        </Modal>
+      )}
     </>
   )
 }
