@@ -19,6 +19,13 @@ import { AttendancePage } from '@/pages/teacher/AttendancePage'
 // 학생
 import { StudentHomePage } from '@/pages/student/StudentHomePage'
 import { ClassroomBoardPage } from '@/pages/classroom/ClassroomBoardPage'
+import { NoticesSectionPage } from '@/pages/classroom/sections/NoticesSectionPage'
+import { DutiesSectionPage } from '@/pages/classroom/sections/DutiesSectionPage'
+import { RolesSectionPage } from '@/pages/classroom/sections/RolesSectionPage'
+import { TimetableSectionPage } from '@/pages/classroom/sections/TimetableSectionPage'
+import { MealSectionPage } from '@/pages/classroom/sections/MealSectionPage'
+import { ScheduleSectionPage } from '@/pages/classroom/sections/ScheduleSectionPage'
+import { RulesSectionPage } from '@/pages/classroom/sections/RulesSectionPage'
 import { TodoPage } from '@/pages/student/TodoPage'
 import { ChatbotPage } from '@/pages/student/ChatbotPage'
 // 공통
@@ -70,6 +77,16 @@ export function AppRouter() {
           {/* 상세·작성 화면 (탭바 미표시) */}
           <Route element={<DetailShell />}>
             <Route path={ROUTES.noticeDetail(':id')} element={<NoticeDetailPage />} />
+
+            {/* 우리반 하위 화면 */}
+            <Route path={ROUTES.classroomSection.notices} element={<NoticesSectionPage />} />
+            <Route path={ROUTES.classroomSection.duties} element={<DutiesSectionPage />} />
+            <Route path={ROUTES.classroomSection.roles} element={<RolesSectionPage />} />
+            <Route path={ROUTES.classroomSection.timetable} element={<TimetableSectionPage />} />
+            <Route path={ROUTES.classroomSection.meal} element={<MealSectionPage />} />
+            <Route path={ROUTES.classroomSection.schedule} element={<ScheduleSectionPage />} />
+            <Route path={ROUTES.classroomSection.rules} element={<RulesSectionPage />} />
+
             <Route path={ROUTES.student.chatbot} element={<ChatbotPage />} />
             <Route path={ROUTES.notifications} element={<NotificationsPage />} />
             <Route

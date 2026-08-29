@@ -33,6 +33,16 @@ export const ROUTES = {
 
   /** 우리반·공지 상세는 두 역할이 같은 화면을 본다 */
   classroom: '/classroom',
+  /** 우리반 목록에서 하나씩 눌러 들어가는 화면들 */
+  classroomSection: {
+    notices: '/classroom/notices',
+    duties: '/classroom/duties',
+    roles: '/classroom/roles',
+    timetable: '/classroom/timetable',
+    meal: '/classroom/meal',
+    schedule: '/classroom/schedule',
+    rules: '/classroom/rules',
+  },
   noticeDetail: (id: string) => `/notices/${id}`,
 
   // 더보기 (역할 공통)

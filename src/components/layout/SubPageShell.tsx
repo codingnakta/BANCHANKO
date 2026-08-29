@@ -3,23 +3,24 @@ import { Link } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { ROUTES } from '@/constants'
 
-interface TeacherPageShellProps {
+interface SubPageShellProps {
   title: string
   description?: string
   /** 헤더 오른쪽 (저장 버튼 등) */
   action?: ReactNode
-  backTo?: string
+  /** 뒤로가기로 돌아갈 곳 */
+  backTo: string
   children: ReactNode
 }
 
-/** 교사 운영 화면 공통 껍데기 — 뒤로가기 + 제목 + 본문. */
-export function TeacherPageShell({
+/** 하단 탭바 없이 뒤로가기 + 제목 + 본문으로 이루어진 하위 화면 껍데기. */
+export function SubPageShell({
   title,
   description,
   action,
-  backTo = ROUTES.teacher.manage,
+  backTo,
   children,
-}: TeacherPageShellProps) {
+}: SubPageShellProps) {
   return (
     <>
       <header className="mb-5 flex items-start gap-1">
@@ -40,4 +41,12 @@ export function TeacherPageShell({
       {children}
     </>
   )
+}
+
+/** 교사 운영 화면 — 기본 뒤로가기만 '학급 운영'으로 다른 하위 화면. */
+export function TeacherPageShell({
+  backTo = ROUTES.teacher.manage,
+  ...props
+}: Omit<SubPageShellProps, 'backTo'> & { backTo?: string }) {
+  return <SubPageShell backTo={backTo} {...props} />
 }
