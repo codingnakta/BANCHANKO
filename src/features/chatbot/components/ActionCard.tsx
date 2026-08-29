@@ -33,10 +33,11 @@ export function ActionCard({ action }: { action: ChatAction }) {
 
   const [title, setTitle] = useState(action.kind === 'post' ? action.title : '')
   const [date, setDate] = useState(action.kind === 'post' ? (action.date ?? '') : '')
+  const [body, setBody] = useState(action.kind === 'post' ? action.body : '')
   const [editing, setEditing] = useState(false)
 
   const mutation = useMutation({
-    mutationFn: () => apply(action, classroomId, { title, date }),
+    mutationFn: () => apply(action, classroomId, { title, date, body }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: noticeKeys.all })
       await queryClient.invalidateQueries({ queryKey: settingsKeys.all })
@@ -83,9 +84,19 @@ export function ActionCard({ action }: { action: ChatAction }) {
               className="h-9 text-sm"
             />
           </Field>
+          <Field label="안내 문구" htmlFor="actionBody">
+            <textarea
+              id="actionBody"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              rows={5}
+              placeholder="학생들에게 전할 내용을 적어주세요."
+              className="w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm leading-relaxed text-ink-900 placeholder:text-ink-400 focus:outline-2 focus:outline-brand-500"
+            />
+          </Field>
         </div>
       ) : (
-        <Preview action={action} title={title} date={date} />
+        <Preview action={action} title={title} date={date} body={body} />
       )}
 
       <div className="mt-3 flex gap-2">
@@ -114,7 +125,17 @@ export function ActionCard({ action }: { action: ChatAction }) {
   )
 }
 
-function Preview({ action, title, date }: { action: ChatAction; title: string; date: string }) {
+function Preview({
+  action,
+  title,
+  date,
+  body,
+}: {
+  action: ChatAction
+  title: string
+  date: string
+  body: string
+}) {
   switch (action.kind) {
     case 'post':
       return (
@@ -130,10 +151,8 @@ function Preview({ action, title, date }: { action: ChatAction; title: string; d
               {action.subject && ` · ${action.subject}`}
             </p>
           )}
-          {action.body && (
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-600">
-              {action.body}
-            </p>
+          {body && (
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-600">{body}</p>
           )}
         </>
       )
@@ -281,14 +300,14 @@ function same(a: string[], b: string[]): boolean {
 async function apply(
   action: ChatAction,
   classroomId: string,
-  edited: { title: string; date: string },
+  edited: { title: string; date: string; body: string },
 ): Promise<void> {
   switch (action.kind) {
     case 'post':
       await createNotice(classroomId, {
         type: action.type,
         title: edited.title,
-        body: action.body,
+        body: edited.body,
         subject: action.subject ?? '',
         dueDate: edited.date,
         linkUrl: '',
