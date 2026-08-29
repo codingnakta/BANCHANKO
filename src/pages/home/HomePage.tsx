@@ -5,7 +5,6 @@ import {
   TimetableMealTabs,
   TodayHeroCard,
   UnreadNoticeCard,
-  UpcomingEventCard,
   useDashboard,
 } from '@/features/dashboard'
 
@@ -15,7 +14,7 @@ import {
  * 이 화면에서 원본 데이터를 수정할 수 없다.
  */
 export function HomePage() {
-  const { data, isPending, isError, refetch } = useDashboard()
+  const { data, isPending, isError, error, refetch } = useDashboard()
 
   if (isPending) {
     return (
@@ -28,7 +27,9 @@ export function HomePage() {
   if (isError || !data) {
     return (
       <div className="rounded-card bg-white p-6 text-center shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-        <p className="text-sm text-ink-600">오늘 정보를 불러오지 못했습니다.</p>
+        <p className="text-sm text-ink-600">
+          {error instanceof Error ? error.message : '오늘 정보를 불러오지 못했습니다.'}
+        </p>
         <button
           type="button"
           onClick={() => refetch()}
@@ -60,7 +61,6 @@ export function HomePage() {
         />
 
         <UnreadNoticeCard notices={data.unreadNotices} />
-        <UpcomingEventCard events={data.upcomingEvents} />
       </div>
     </>
   )

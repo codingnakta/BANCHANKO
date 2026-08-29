@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { MOCK_NOTIFICATIONS } from '../api/notifications.mock'
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import type { AppNotification } from '@/types'
 
 export const notificationKeys = {
@@ -14,17 +14,21 @@ export const notificationKeys = {
  * 읽음 상태를 여러 화면(더보기 배지, 알림 목록, 헤더 벨)이 함께 봐야 하므로
  * 로컬 state 대신 React Query 캐시에 담아 공유한다.
  *
- * TODO: Supabase 연동 시 조회·읽음 처리를 실제 쿼리/뮤테이션으로 교체한다.
+ * 알림 테이블이 아직 없어(해커톤 MVP 범위 밖) 항상 빈 목록이다.
+ * 있지도 않은 공지를 알림으로 보여주지 않도록 목업을 걷어냈다.
+ *
+ * TODO: notifications 테이블을 만들면 queryFn 을 실제 쿼리로 교체한다.
  *       학생은 자신에게 생성된 알림만 조회·읽음 처리할 수 있어야 한다(RLS).
  *       알림 기록은 생성일로부터 90일 보관 후 식별 정보를 삭제한다(F-ETJOMB).
  */
-export function useNotifications(userId = 'mock-student') {
+export function useNotifications() {
   const queryClient = useQueryClient()
-  const queryKey = notificationKeys.list(userId)
+  const user = useCurrentUser()
+  const queryKey = notificationKeys.list(user?.id ?? 'none')
 
   const { data: notifications = [] } = useQuery<AppNotification[]>({
     queryKey,
-    queryFn: async () => MOCK_NOTIFICATIONS,
+    queryFn: async () => [],
     staleTime: Infinity,
   })
 

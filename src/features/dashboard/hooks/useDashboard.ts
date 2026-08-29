@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { MOCK_DASHBOARD } from '../api/dashboard.mock'
+import { fetchDashboard } from '../api/dashboard'
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import type { DashboardSummary } from '@/types'
 
 export const dashboardKeys = {
@@ -9,15 +10,16 @@ export const dashboardKeys = {
 
 /**
  * 홈 대시보드 요약 조회 (F-ZTJSNU).
- * TODO: Supabase 연동 시 queryFn 을 실제 쿼리로 교체한다.
- *       공개 전환되지 않은 외부 연동(시간표·급식) 데이터는 제외해야 한다.
+ * 시간표·급식은 나이스 실시간 조회라 자주 다시 부를 이유가 없어 캐시를 길게 잡는다.
  */
-export function useDashboard(classroomId = 'mock-classroom') {
+export function useDashboard() {
+  const user = useCurrentUser()
+  const classroomId = user?.classroomId
+
   return useQuery<DashboardSummary>({
-    queryKey: dashboardKeys.summary(classroomId),
-    queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 300))
-      return MOCK_DASHBOARD
-    },
+    queryKey: dashboardKeys.summary(classroomId ?? 'none'),
+    queryFn: () => fetchDashboard(),
+    enabled: Boolean(classroomId),
+    staleTime: 5 * 60_000,
   })
 }

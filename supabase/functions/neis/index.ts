@@ -10,8 +10,11 @@
  *
  * 사용:
  *   GET /neis?action=searchSchool&name=미림&office=B10
+ *   GET /neis?action=timetable&office=B10&school=7011569&level=high&grade=3&classNo=1&date=2026-08-29
+ *   GET /neis?action=meal&office=B10&school=7011569&date=2026-08-29
  *
- * 시간표·급식은 나중에 action 만 추가해 이 함수를 재사용한다.
+ * date 는 항상 클라이언트(브라우저 로컬 시각)가 계산해 넘긴다.
+ * 이 함수는 UTC 로 도므로 서버에서 "오늘"을 만들면 한국 날짜와 어긋난다.
  */
 
 const NEIS_BASE = 'https://open.neis.go.kr/hub'
@@ -120,6 +123,139 @@ async function searchSchool(name: string, office: string | null): Promise<School
   })
 }
 
+/* ── 시간표 ────────────────────────────────────────────────── */
+
+interface TimetableEntry {
+  period: number
+  subject: string
+}
+
+/**
+ * 학년도·학기를 날짜에서 추정한다.
+ *
+ * 3~8월을 1학기로 보지만 학교마다 2학기 시작이 달라(미림마이스터고는 8월에 이미 2학기)
+ * 한 번에 맞히기 어렵다. 그래서 추정값으로 먼저 조회하고 비면 반대 학기로 다시 조회한다.
+ */
+function guessTerm(date: Date): { ay: number; sem: number } {
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
+  if (month < 3) return { ay: year - 1, sem: 2 }
+  return { ay: year, sem: month <= 8 ? 1 : 2 }
+}
+
+function toNeisDate(isoDate: string): string {
+  return isoDate.replaceAll('-', '')
+}
+
+async function fetchTimetable(params: {
+  office: string
+  school: string
+  level: string
+  grade: string
+  classNo: string
+  date: string
+}): Promise<TimetableEntry[]> {
+  const apiKey = Deno.env.get('NEIS_API_KEY')
+  // 중학교와 고등학교는 엔드포인트가 분리되어 있다
+  const endpoint = params.level === 'middle' ? 'misTimetable' : 'hisTimetable'
+  const ymd = toNeisDate(params.date)
+  const { ay, sem } = guessTerm(new Date(`${params.date}T00:00:00`))
+
+  for (const semester of [sem, sem === 1 ? 2 : 1]) {
+    const query = new URLSearchParams({
+      Type: 'json',
+      pIndex: '1',
+      pSize: '100',
+      ATPT_OFCDC_SC_CODE: params.office,
+      SD_SCHUL_CODE: params.school,
+      AY: String(ay),
+      SEM: String(semester),
+      GRADE: params.grade,
+      CLASS_NM: params.classNo,
+      ALL_TI_YMD: ymd,
+    })
+    if (apiKey) query.set('KEY', apiKey)
+
+    const response = await fetch(`${NEIS_BASE}/${endpoint}?${query}`)
+    if (!response.ok) continue
+
+    const rows = extractRows(await response.json(), endpoint) as Array<{
+      PERIO?: string
+      ITRT_CNTNT?: string
+    }>
+
+    if (rows.length === 0) continue
+
+    return rows
+      .map((row) => ({
+        period: Number(row.PERIO ?? 0),
+        // 전문교과 등에 '* ' 접두사가 붙어 나온다
+        subject: (row.ITRT_CNTNT ?? '').replace(/^\*\s*/, '').trim(),
+      }))
+      .filter((entry) => entry.period > 0)
+      .sort((a, b) => a.period - b.period)
+  }
+
+  return []
+}
+
+/* ── 급식 ──────────────────────────────────────────────────── */
+
+interface Meal {
+  date: string
+  items: string[]
+  calorie: string | null
+}
+
+/**
+ * DDISH_NM 은 '보리쌀밥 <br/>청양호박된장국 (5.6)<br/>배추겉절이(j) ...' 형태다.
+ * 알레르기 번호와 원산지 표시는 학생 화면에서 노이즈라 메뉴 이름만 남긴다.
+ */
+function parseDishes(raw: string): string[] {
+  return raw
+    .split(/<br\s*\/?>/i)
+    .map((dish) =>
+      dish
+        .replace(/\([\d.,\s]*\)/g, '') // 알레르기 번호 (1.5.6.13)
+        .replace(/\(j\)/gi, '') // 원산지 표시
+        .replace(/\s+/g, ' ')
+        .trim(),
+    )
+    .filter(Boolean)
+}
+
+async function fetchMeal(office: string, school: string, date: string): Promise<Meal | null> {
+  const apiKey = Deno.env.get('NEIS_API_KEY')
+  const query = new URLSearchParams({
+    Type: 'json',
+    pIndex: '1',
+    pSize: '10',
+    ATPT_OFCDC_SC_CODE: office,
+    SD_SCHUL_CODE: school,
+    MLSV_YMD: toNeisDate(date),
+  })
+  if (apiKey) query.set('KEY', apiKey)
+
+  const response = await fetch(`${NEIS_BASE}/mealServiceDietInfo?${query}`)
+  if (!response.ok) return null
+
+  const rows = extractRows(await response.json(), 'mealServiceDietInfo') as Array<{
+    MMEAL_SC_NM?: string
+    DDISH_NM?: string
+    CAL_INFO?: string
+  }>
+
+  // 조식·중식·석식이 함께 오는 학교가 있다. MVP 는 중식만 보여준다.
+  const lunch = rows.find((row) => row.MMEAL_SC_NM === '중식') ?? rows[0]
+  if (!lunch?.DDISH_NM) return null
+
+  return {
+    date,
+    items: parseDishes(lunch.DDISH_NM),
+    calorie: lunch.CAL_INFO?.trim() || null,
+  }
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS })
@@ -136,6 +272,38 @@ Deno.serve(async (request) => {
       }
       const schools = await searchSchool(name, url.searchParams.get('office'))
       return json({ schools })
+    }
+
+    if (action === 'timetable') {
+      const office = url.searchParams.get('office')
+      const school = url.searchParams.get('school')
+      const date = url.searchParams.get('date')
+      const grade = url.searchParams.get('grade')
+      const classNo = url.searchParams.get('classNo')
+
+      if (!office || !school || !date || !grade || !classNo) {
+        return json({ entries: [] })
+      }
+
+      const entries = await fetchTimetable({
+        office,
+        school,
+        level: url.searchParams.get('level') ?? 'high',
+        grade,
+        classNo,
+        date,
+      })
+      return json({ entries })
+    }
+
+    if (action === 'meal') {
+      const office = url.searchParams.get('office')
+      const school = url.searchParams.get('school')
+      const date = url.searchParams.get('date')
+
+      if (!office || !school || !date) return json({ meal: null })
+
+      return json({ meal: await fetchMeal(office, school, date) })
     }
 
     return json({ error: `알 수 없는 action: ${action ?? '(없음)'}` }, 400)
