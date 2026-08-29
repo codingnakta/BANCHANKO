@@ -43,10 +43,8 @@ export function StudentHomePage() {
     )
   }
 
-  // 홈에는 핀으로 고정한 과제 하나만. 고른 게 없으면 마감이 가장 가까운 것.
-  const featured =
-    data.upcomingAssignments.find((assignment) => assignment.id === pinnedId) ??
-    data.upcomingAssignments[0]
+  // 홈에는 핀으로 고정한 과제 하나만. 고른 게 없으면 아무것도 띄우지 않는다.
+  const featured = data.upcomingAssignments.find((assignment) => assignment.id === pinnedId)
 
   return (
     <>

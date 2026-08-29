@@ -3,7 +3,7 @@ import { AppHeader } from '@/components/layout'
 import { EmptyState, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import { useIsTeacher } from '@/features/auth/hooks/useCurrentUser'
-import { DdayCard, useDashboard } from '@/features/dashboard'
+import { DdayCard, useDashboard, usePinnedPost } from '@/features/dashboard'
 import { getTodayIso, relativeDayLabel } from '@/lib/date'
 import { cn } from '@/lib/utils'
 
@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
  */
 export function TodoPage() {
   const isTeacher = useIsTeacher()
+  const { pinnedId } = usePinnedPost()
   const { data, isPending } = useDashboard()
 
   if (isPending) {
@@ -24,7 +25,10 @@ export function TodoPage() {
   }
 
   const events = data?.upcomingEvents ?? []
-  const assignments = data?.upcomingAssignments ?? []
+  // 홈에 고정한 과제는 목록에서도 맨 위에 둔다
+  const assignments = [...(data?.upcomingAssignments ?? [])].sort(
+    (a, b) => Number(b.id === pinnedId) - Number(a.id === pinnedId),
+  )
   const todayIso = getTodayIso()
 
   return (
