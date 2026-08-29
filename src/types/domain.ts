@@ -58,6 +58,10 @@ export interface RosterEntry {
   studentNo: string
   name: string
   email: string
+  /** 학생 전화번호 (선택) */
+  phone?: string
+  /** 학부모 전화번호 (선택) */
+  parentPhone?: string
 }
 
 /* ── 학급 데이터 엔티티 ───────────────────────────────────────── */

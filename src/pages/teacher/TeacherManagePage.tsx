@@ -1,13 +1,6 @@
 import { Link } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
-import {
-  CalendarCheck,
-  ChevronRight,
-  ClipboardList,
-  Megaphone,
-  Settings,
-  Users,
-} from 'lucide-react'
+import { ChevronRight, Settings, Users } from 'lucide-react'
 import { AppHeader } from '@/components/layout'
 import { ROUTES } from '@/constants'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
@@ -15,9 +8,9 @@ import { fetchRoster, rosterKeys } from '@/features/teacher/api/roster'
 import { useMyClassroomRow } from '@/features/teacher/hooks/useMyClassroomRow'
 
 /**
- * 학급 운영 탭 (교사 전용).
- * 명세가 정한 다섯 항목을 모아둔다: 학생 관리, 학급 기본 정보, 안내 관리,
- * 시간표·급식 검수, 출결 기록.
+ * 학급운영 탭 (교사 전용).
+ * 학생 관리와 학급 기본 정보 두 가지만 둔다.
+ * 공지·과제 작성은 할일 탭, 시간표 검수는 우리반 › 전체시간표로 들어간다.
  */
 export function TeacherManagePage() {
   const user = useCurrentUser()
@@ -35,7 +28,7 @@ export function TeacherManagePage() {
   const items = [
     {
       label: '학생 관리',
-      description: '명단 등록, 과목도우미 지정',
+      description: '명단 등록, 1인1역',
       to: ROUTES.teacher.students,
       icon: Users,
       meta: roster ? `${joined}/${roster.length}명` : undefined,
@@ -47,35 +40,16 @@ export function TeacherManagePage() {
       icon: Settings,
       meta: classroom?.rules.length ? `규칙 ${classroom.rules.length}개` : undefined,
     },
-    {
-      label: '안내 관리',
-      description: '공지와 과제 등록·수정',
-      to: ROUTES.teacher.notices,
-      icon: Megaphone,
-    },
-    {
-      label: '시간표·급식 검수',
-      description: '나이스 시간표를 확인하고 공개',
-      to: ROUTES.teacher.timetable,
-      icon: ClipboardList,
-      meta: classroom?.timetable_published ? '공개됨' : '미공개',
-    },
-    {
-      label: '출결 기록',
-      description: '학생별 출결과 변경 이력',
-      to: ROUTES.teacher.attendance,
-      icon: CalendarCheck,
-    },
   ]
 
   return (
     <>
-      <AppHeader title={classroom?.name ?? '학급 운영'} />
+      <AppHeader title={classroom?.name ?? '학급운영'} />
 
       {classroom?.school_name && (
         <p className="-mt-2 mb-5 px-1 text-sm text-ink-500">
           {classroom.school_name}
-          {helpers > 0 && ` · 과목도우미 ${helpers}명`}
+          {helpers > 0 && ` · 1인1역 ${helpers}명`}
         </p>
       )}
 

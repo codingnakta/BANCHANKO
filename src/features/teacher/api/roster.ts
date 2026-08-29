@@ -12,11 +12,15 @@ export interface RosterMember {
   email: string
   studentNo: string
   name: string
+  /** 학생 전화번호 (교사만 볼 수 있다) */
+  phone: string
+  /** 학부모 전화번호 (교사만 볼 수 있다) */
+  parentPhone: string
   /** 구글 로그인으로 실제 학급에 들어왔는지 */
   joined: boolean
   /** 참여했다면 그 계정의 profiles.id */
   studentId: string | null
-  /** 담당 과목이 있으면 과목도우미 (M5) */
+  /** 담당 과목이 있으면 1인1역(과목도우미) (M5) */
   helperSubject: string | null
 }
 
@@ -30,7 +34,7 @@ export async function fetchRoster(classroomId: string): Promise<RosterMember[]> 
   const [rosterResult, memberResult] = await Promise.all([
     supabase
       .from('classroom_roster')
-      .select('email, student_no, student_name, claimed_by')
+      .select('email, student_no, student_name, phone, parent_phone, claimed_by')
       .eq('classroom_id', classroomId)
       .order('student_no'),
     supabase
@@ -52,6 +56,8 @@ export async function fetchRoster(classroomId: string): Promise<RosterMember[]> 
     email: row.email,
     studentNo: row.student_no ?? '',
     name: row.student_name ?? '',
+    phone: row.phone ?? '',
+    parentPhone: row.parent_phone ?? '',
     joined: row.claimed_by !== null,
     studentId: row.claimed_by,
     helperSubject: row.claimed_by ? (helperByStudent.get(row.claimed_by) ?? null) : null,
@@ -71,6 +77,8 @@ export async function addRosterEntries(
       email: normalizeEmail(entry.email),
       student_no: entry.studentNo.trim() || null,
       student_name: entry.name.trim() || null,
+      phone: entry.phone?.trim() || null,
+      parent_phone: entry.parentPhone?.trim() || null,
     })
     if (error) {
       if (error.code === '23505') {
@@ -115,7 +123,7 @@ export async function removeRosterEntry(
 }
 
 /**
- * 과목도우미 지정·해제 (M5).
+ * 1인1역(과목도우미) 지정·해제 (M5).
  * 담당 과목이 있으면 그 과목의 과제를 학생이 직접 등록할 수 있다 (RLS 가 강제).
  */
 export async function setHelperSubject(
@@ -130,7 +138,7 @@ export async function setHelperSubject(
     .eq('student_id', studentId)
 
   if (error) {
-    console.error('[roster] 도우미 지정 실패', error)
-    throw new Error('과목도우미를 지정하지 못했어요.')
+    console.error('[roster] 1인1역 지정 실패', error)
+    throw new Error('1인1역을 지정하지 못했어요.')
   }
 }

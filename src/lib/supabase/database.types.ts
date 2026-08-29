@@ -172,6 +172,10 @@ export type Database = {
           email: string
           student_no: string | null
           student_name: string | null
+          /** 학생 전화번호 — 해당 학급 교사만 읽을 수 있다 */
+          phone: string | null
+          /** 학부모 전화번호 — 해당 학급 교사만 읽을 수 있다 */
+          parent_phone: string | null
           claimed_by: string | null
           claimed_at: string | null
           created_at: string
@@ -181,6 +185,8 @@ export type Database = {
           email: string
           student_no?: string | null
           student_name?: string | null
+          phone?: string | null
+          parent_phone?: string | null
           claimed_by?: string | null
           claimed_at?: string | null
           created_at?: string
@@ -188,6 +194,8 @@ export type Database = {
         Update: {
           student_no?: string | null
           student_name?: string | null
+          phone?: string | null
+          parent_phone?: string | null
         }
         Relationships: [
           {

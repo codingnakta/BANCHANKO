@@ -8,7 +8,7 @@ import { normalizeEmail } from './createClassroom'
  * (package.json 의 browser 필드가 미리 빌드된 브라우저 번들을 가리켜 폴리필이 필요 없다)
  */
 
-export const ROSTER_HEADERS = ['학번', '이름', '이메일'] as const
+export const ROSTER_HEADERS = ['학번', '이름', '이메일', '전화번호', '학부모 전화번호'] as const
 
 export interface RosterRowError {
   /** 엑셀에서 보이는 행 번호 (1부터) */
@@ -40,11 +40,19 @@ export async function downloadRosterTemplate(): Promise<void> {
     { header: ROSTER_HEADERS[0], key: 'no', width: 12 },
     { header: ROSTER_HEADERS[1], key: 'name', width: 16 },
     { header: ROSTER_HEADERS[2], key: 'email', width: 34 },
+    { header: ROSTER_HEADERS[3], key: 'phone', width: 18 },
+    { header: ROSTER_HEADERS[4], key: 'parentPhone', width: 20 },
   ]
 
   sheet.getRow(1).font = { bold: true }
   sheet.getRow(1).alignment = { vertical: 'middle' }
-  sheet.addRow({ no: '10101', name: '홍길동', email: 'hong@e-mirim.hs.kr' })
+  sheet.addRow({
+    no: '10101',
+    name: '홍길동',
+    email: 'hong@e-mirim.hs.kr',
+    phone: '010-1234-5678',
+    parentPhone: '010-8765-4321',
+  })
 
   const buffer = await workbook.xlsx.writeBuffer()
   const blob = new Blob([buffer], {
@@ -148,11 +156,23 @@ function cellToString(value: unknown): string {
   return String(value).trim()
 }
 
-/** 헤더 행에서 학번·이름·이메일 열 위치를 찾는다. 못 찾으면 순서대로 0·1·2로 본다. */
-function resolveColumns(rows: string[][]): { start: number; no: number; name: number; email: number } {
+interface RosterColumns {
+  start: number
+  no: number
+  name: number
+  email: number
+  phone: number
+  parentPhone: number
+}
+
+/**
+ * 헤더 행에서 각 열 위치를 찾는다. 헤더가 없으면 양식 순서대로 본다.
+ * '학부모 전화번호'가 '전화번호'도 포함하므로 학부모 열을 먼저 잡고 제외한다.
+ */
+function resolveColumns(rows: string[][]): RosterColumns {
   const headerIndex = rows.findIndex((row) => row.some((cell) => cell.includes('이메일')))
   if (headerIndex === -1) {
-    return { start: 0, no: 0, name: 1, email: 2 }
+    return { start: 0, no: 0, name: 1, email: 2, phone: 3, parentPhone: 4 }
   }
 
   const header = rows[headerIndex]
@@ -161,11 +181,16 @@ function resolveColumns(rows: string[][]): { start: number; no: number; name: nu
     return index === -1 ? fallback : index
   }
 
+  const parentPhone = header.findIndex((cell) => cell.includes('학부모'))
+  const phone = header.findIndex((cell, i) => i !== parentPhone && cell.includes('전화'))
+
   return {
     start: headerIndex + 1,
     no: find('학번', 0),
     name: find('이름', 1),
     email: find('이메일', 2),
+    phone: phone === -1 ? 3 : phone,
+    parentPhone: parentPhone === -1 ? 4 : parentPhone,
   }
 }
 
@@ -174,7 +199,7 @@ export async function parseRosterFile(file: File): Promise<ParsedRoster> {
   const isCsv = /\.csv$/i.test(file.name)
   const rows = isCsv ? parseCsv(decodeText(await file.arrayBuffer())) : await readXlsx(file)
 
-  const { start, no, name, email } = resolveColumns(rows)
+  const { start, no, name, email, phone, parentPhone } = resolveColumns(rows)
   const entries: RosterEntry[] = []
   const errors: RosterRowError[] = []
   const seen = new Set<string>()
@@ -184,6 +209,8 @@ export async function parseRosterFile(file: File): Promise<ParsedRoster> {
     const rawEmail = (row[email] ?? '').trim()
     const rawName = (row[name] ?? '').trim()
     const rawNo = (row[no] ?? '').trim()
+    const rawPhone = (row[phone] ?? '').trim()
+    const rawParentPhone = (row[parentPhone] ?? '').trim()
 
     // 완전히 빈 줄은 조용히 넘어간다
     if (!rawEmail && !rawName && !rawNo) continue
@@ -207,7 +234,13 @@ export async function parseRosterFile(file: File): Promise<ParsedRoster> {
     }
 
     seen.add(normalized)
-    entries.push({ studentNo: rawNo, name: rawName, email: normalized })
+    entries.push({
+      studentNo: rawNo,
+      name: rawName,
+      email: normalized,
+      phone: rawPhone,
+      parentPhone: rawParentPhone,
+    })
   }
 
   return { entries, errors }

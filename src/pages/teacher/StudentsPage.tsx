@@ -22,7 +22,13 @@ export function StudentsPage() {
   const queryClient = useQueryClient()
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const [newStudent, setNewStudent] = useState({ studentNo: '', name: '', email: '' })
+  const [newStudent, setNewStudent] = useState({
+    studentNo: '',
+    name: '',
+    email: '',
+    phone: '',
+    parentPhone: '',
+  })
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [editingHelper, setEditingHelper] = useState<string | null>(null)
@@ -48,7 +54,7 @@ export function StudentsPage() {
           ? `${added}명 추가. ${rejected.length}명은 이미 다른 학급에 등록되어 있어요.`
           : `${added}명을 추가했어요.`,
       )
-      setNewStudent({ studentNo: '', name: '', email: '' })
+      setNewStudent({ studentNo: '', name: '', email: '', phone: '', parentPhone: '' })
     },
     onError: (e: Error) => setError(e.message),
   })
@@ -97,10 +103,16 @@ export function StudentsPage() {
   }
 
   return (
-    <TeacherPageShell title="학생 관리" description="학교 구글 계정으로 등록해요">
+    <TeacherPageShell
+      title="학생 관리"
+      description="학생 정보를 등록하고 1인1역을 정해요"
+    >
       {/* 명단 추가 */}
       <Card className="mb-5 p-5">
-        <h2 className="mb-3 text-base font-semibold text-ink-900">학생 추가</h2>
+        <h2 className="mb-1 text-base font-semibold text-ink-900">학생 정보 등록</h2>
+        <p className="mb-3 text-xs text-ink-500">
+          연락처는 담임인 나만 볼 수 있어요. 학생·학부모에게는 보이지 않아요.
+        </p>
 
         <div className="flex flex-col gap-3">
           <div className="flex gap-2">
@@ -132,6 +144,29 @@ export function StudentsPage() {
               placeholder="hong@e-mirim.hs.kr"
             />
           </Field>
+
+          <div className="flex gap-2">
+            <Field label="전화번호" htmlFor="studentPhone">
+              <Input
+                id="studentPhone"
+                type="tel"
+                inputMode="tel"
+                value={newStudent.phone}
+                onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value })}
+                placeholder="010-1234-5678"
+              />
+            </Field>
+            <Field label="학부모 전화번호" htmlFor="parentPhone">
+              <Input
+                id="parentPhone"
+                type="tel"
+                inputMode="tel"
+                value={newStudent.parentPhone}
+                onChange={(e) => setNewStudent({ ...newStudent, parentPhone: e.target.value })}
+                placeholder="010-8765-4321"
+              />
+            </Field>
+          </div>
 
           <Button onClick={addOne} disabled={addMutation.isPending}>
             <Plus className="size-4" />
@@ -224,11 +259,18 @@ export function StudentsPage() {
                       {member.name || member.email.split('@')[0]}
                       {member.helperSubject && (
                         <span className="ml-2 rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700">
-                          {member.helperSubject} 도우미
+                          {member.helperSubject}
                         </span>
                       )}
                     </p>
                     <p className="mt-0.5 truncate text-xs text-ink-500">{member.email}</p>
+                    {(member.phone || member.parentPhone) && (
+                      <p className="mt-0.5 truncate text-xs text-ink-500">
+                        {member.phone && `학생 ${member.phone}`}
+                        {member.phone && member.parentPhone && ' · '}
+                        {member.parentPhone && `학부모 ${member.parentPhone}`}
+                      </p>
+                    )}
                   </div>
 
                   <button
@@ -241,7 +283,7 @@ export function StudentsPage() {
                   </button>
                 </div>
 
-                {/* 과목도우미는 로그인한 학생에게만 지정할 수 있다 */}
+                {/* 1인1역은 로그인한 학생에게만 지정할 수 있다 */}
                 {member.joined && member.studentId && (
                   <div className="mt-2 border-t border-ink-100 pt-2">
                     {editingHelper === member.studentId ? (
@@ -249,7 +291,7 @@ export function StudentsPage() {
                         <Input
                           value={helperInput}
                           onChange={(e) => setHelperInput(e.target.value)}
-                          placeholder="담당 과목 (예: 수학)"
+                          placeholder="맡은 역할 (예: 수학)"
                           className="h-9 text-sm"
                           autoFocus
                         />
@@ -282,7 +324,7 @@ export function StudentsPage() {
                         }}
                         className="text-sm text-brand-500 hover:underline"
                       >
-                        {member.helperSubject ? '담당 과목 바꾸기' : '과목도우미로 지정'}
+                        {member.helperSubject ? '1인1역 바꾸기' : '1인1역 정하기'}
                       </button>
                     )}
                   </div>
