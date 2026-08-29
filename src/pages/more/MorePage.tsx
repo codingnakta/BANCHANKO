@@ -7,7 +7,7 @@ import { ROUTES } from '@/constants'
 import { useAuth } from '@/features/auth/hooks/useCurrentUser'
 import { useClassroom } from '@/features/classroom'
 import { useNotifications } from '@/features/notifications'
-import { LegalDialog, termsText } from '@/features/legal'
+import { aboutText, LegalDialog, termsText } from '@/features/legal'
 import type { UserRole } from '@/types'
 
 const ROLE_LABEL: Record<UserRole, string> = {
@@ -33,7 +33,8 @@ interface MenuItem {
  */
 export function MorePage() {
   const { profile: user, signOut } = useAuth()
-  const [terms, setTerms] = useState(false)
+  // 약관·소개처럼 팝업으로 여는 문서
+  const [doc, setDoc] = useState<{ title: string; text: string } | null>(null)
   const { data: classroom } = useClassroom()
   const { unreadCount } = useNotifications()
 
@@ -64,8 +65,16 @@ export function MorePage() {
     {
       title: '서비스 안내',
       items: [
-        { label: '이용약관', onClick: () => setTerms(true), icon: FileText },
-        { label: '반창고 소개', to: ROUTES.about, icon: Info },
+        {
+          label: '이용약관',
+          onClick: () => setDoc({ title: '이용약관', text: termsText() }),
+          icon: FileText,
+        },
+        {
+          label: '반창고 소개',
+          onClick: () => setDoc({ title: '반창고 소개', text: aboutText() }),
+          icon: Info,
+        },
       ],
     },
   ]
@@ -118,9 +127,7 @@ export function MorePage() {
         <p className="text-center text-xs text-ink-400">반창고 v0.1.0</p>
       </div>
 
-      {terms && (
-        <LegalDialog title="이용약관" text={termsText()} onClose={() => setTerms(false)} />
-      )}
+      {doc && <LegalDialog title={doc.title} text={doc.text} onClose={() => setDoc(null)} />}
     </>
   )
 }
