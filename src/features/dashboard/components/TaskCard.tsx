@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import dropDownIcon from '@/assets/icons/drop_down.svg'
-import { PinIcon } from '@/components/icons'
+import { DropDownIcon, PinIcon } from '@/components/icons'
 import { cn } from '@/lib/utils'
 
 /** 우리반 과제는 파란색, 내 할일은 핑크색 */
@@ -30,8 +29,7 @@ interface TaskCardProps {
 /**
  * 우리반 과제와 내 할일이 함께 쓰는 한 줄.
  *
- * 모양은 같고 핀과 화살표 색만 다르다. 화살표는 같은 아이콘을 마스크로
- * 써서 글자색을 따라간다 (원본 SVG 는 파란색이 박혀 있다).
+ * 모양은 같고 핀과 화살표 색만 다르다.
  */
 export function TaskCard({
   title,
@@ -84,23 +82,12 @@ export function TaskCard({
             </span>
           )}
           {children && (
-            <span
-              aria-hidden
+            <DropDownIcon
               className={cn(
-                'size-6 shrink-0 bg-current transition-transform',
+                'size-6 shrink-0 transition-transform',
                 color.arrow,
                 expanded && 'rotate-180',
               )}
-              style={{
-                maskImage: `url(${dropDownIcon})`,
-                WebkitMaskImage: `url(${dropDownIcon})`,
-                maskSize: 'contain',
-                WebkitMaskSize: 'contain',
-                maskRepeat: 'no-repeat',
-                WebkitMaskRepeat: 'no-repeat',
-                maskPosition: 'center',
-                WebkitMaskPosition: 'center',
-              }}
             />
           )}
         </button>
