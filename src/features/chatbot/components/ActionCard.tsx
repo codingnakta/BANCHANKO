@@ -4,7 +4,12 @@ import { Check, Pencil } from 'lucide-react'
 import { Button, Field, Input } from '@/components/ui'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { fetchMyClassroom, myClassroomKeys } from '@/features/classroom/api/myClassroom'
-import { createNotice, fetchNotices, noticeKeys } from '@/features/teacher/api/notices'
+import {
+  createNotice,
+  fetchNotices,
+  noticeKeys,
+  updateNotice,
+} from '@/features/teacher/api/notices'
 import { fetchRoster, rosterKeys, setClassRole } from '@/features/teacher/api/roster'
 import {
   fetchDuties,
@@ -31,9 +36,10 @@ export function ActionCard({ action }: { action: ChatAction }) {
   const queryClient = useQueryClient()
   const already = useAlready(action, classroomId, user?.id ?? '')
 
-  const [title, setTitle] = useState(action.kind === 'post' ? action.title : '')
-  const [date, setDate] = useState(action.kind === 'post' ? (action.date ?? '') : '')
-  const [body, setBody] = useState(action.kind === 'post' ? action.body : '')
+  const editable = action.kind === 'post' || action.kind === 'edit'
+  const [title, setTitle] = useState(editable ? (action.title ?? '') : '')
+  const [date, setDate] = useState(editable ? (action.date ?? '') : '')
+  const [body, setBody] = useState(editable ? (action.body ?? '') : '')
   const [editing, setEditing] = useState(false)
 
   const mutation = useMutation({
@@ -65,7 +71,7 @@ export function ActionCard({ action }: { action: ChatAction }) {
         <p className="mb-2 rounded-lg bg-ink-100 px-3 py-2 text-xs text-ink-600">{already}</p>
       )}
 
-      {action.kind === 'post' && editing ? (
+      {editable && editing ? (
         <div className="flex flex-col gap-2">
           <Field label="제목" htmlFor="actionTitle">
             <Input
@@ -75,7 +81,10 @@ export function ActionCard({ action }: { action: ChatAction }) {
               className="h-9 text-sm"
             />
           </Field>
-          <Field label={action.type === 'assignment' ? '마감일' : '날짜'} htmlFor="actionDate">
+          <Field
+            label={action.kind === 'post' && action.type === 'assignment' ? '마감일' : '날짜'}
+            htmlFor="actionDate"
+          >
             <Input
               id="actionDate"
               type="date"
@@ -106,9 +115,17 @@ export function ActionCard({ action }: { action: ChatAction }) {
           onClick={() => mutation.mutate()}
           disabled={mutation.isPending}
         >
-          {mutation.isPending ? '적용 중…' : already ? '그래도 적용' : action.kind === 'post' ? '등록' : '적용'}
+          {mutation.isPending
+            ? '적용 중…'
+            : already
+              ? '그래도 적용'
+              : action.kind === 'post'
+                ? '등록'
+                : action.kind === 'edit'
+                  ? '수정'
+                  : '적용'}
         </Button>
-        {action.kind === 'post' && (
+        {editable && (
           <Button size="sm" variant="ghost" onClick={() => setEditing((prev) => !prev)}>
             <Pencil className="size-4" />
             {editing ? '미리보기' : '고치기'}
@@ -154,6 +171,22 @@ function Preview({
           {body && (
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-600">{body}</p>
           )}
+        </>
+      )
+
+    case 'edit':
+      return (
+        <>
+          <p className="text-[15px] text-ink-900">
+            <Tag>수정</Tag>
+            <b className="font-medium">{action.target}</b>
+          </p>
+          <ul className="mt-1.5 flex flex-col gap-0.5 text-sm text-ink-600">
+            {title && title !== action.target && <li>제목 → {title}</li>}
+            {date && <li>날짜 → {formatDate(`${date}T00:00:00`)}</li>}
+            {action.subject && <li>과목 → {action.subject}</li>}
+            {body && <li className="whitespace-pre-wrap">내용 → {body}</li>}
+          </ul>
         </>
       )
 
@@ -206,6 +239,8 @@ function doneLabel(action: ChatAction, title: string) {
   switch (action.kind) {
     case 'post':
       return `${action.type === 'assignment' ? '과제' : '공지'} “${title}” 등록했어요.`
+    case 'edit':
+      return `“${action.target}”을 고쳤어요.`
     case 'duty':
       return `${weekdayLabel(action.weekday)}요일 ${action.area} 당번을 바꿨어요.`
     case 'role':
@@ -244,7 +279,7 @@ function useAlready(action: ChatAction, classroomId: string, userId: string): st
       {
         queryKey: noticeKeys.list(classroomId),
         queryFn: () => fetchNotices(classroomId),
-        enabled: enabled && action.kind === 'post',
+        enabled: enabled && (action.kind === 'post' || action.kind === 'edit'),
       },
     ],
   })
@@ -286,7 +321,28 @@ function useAlready(action: ChatAction, classroomId: string, userId: string): st
         ? '같은 제목으로 올린 안내가 이미 있어요.'
         : null
     }
+
+    case 'edit': {
+      const found = findPost(posts.data ?? [], action.target)
+      if (!found) return `“${action.target}”을(를) 올린 안내에서 찾지 못했어요.`
+
+      const unchanged =
+        (!action.title || action.title === found.title) &&
+        (!action.date || action.date === found.due_date) &&
+        (!action.body || action.body === (found.body ?? '')) &&
+        (!action.subject || action.subject === (found.subject ?? ''))
+      return unchanged ? '이미 그렇게 되어 있어요.' : null
+    }
   }
+}
+
+/** 제목으로 기존 안내를 찾는다. 정확히 같은 것을 먼저, 없으면 포함하는 것을. */
+function findPost<T extends { title: string }>(posts: T[], target: string): T | undefined {
+  const needle = target.trim()
+  return (
+    posts.find((post) => post.title.trim() === needle) ??
+    posts.find((post) => post.title.includes(needle) || needle.includes(post.title.trim()))
+  )
 }
 
 /** 순서를 무시하고 같은 사람들인지 */
@@ -313,6 +369,21 @@ async function apply(
         linkUrl: '',
       })
       return
+
+    case 'edit': {
+      const found = findPost(await fetchNotices(classroomId), action.target)
+      if (!found) throw new Error(`“${action.target}”을(를) 찾지 못했어요.`)
+
+      await updateNotice(found.id, {
+        type: found.type === 'assignment' ? 'assignment' : 'notice',
+        title: edited.title || found.title,
+        body: edited.body || found.body || '',
+        subject: action.subject ?? found.subject ?? '',
+        dueDate: edited.date || found.due_date || '',
+        linkUrl: found.link_url ?? '',
+      })
+      return
+    }
 
     case 'duty': {
       const plan = toDutyPlan(await fetchDuties(classroomId))

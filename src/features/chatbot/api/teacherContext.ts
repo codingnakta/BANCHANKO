@@ -1,6 +1,7 @@
 import { fetchDuties, toDutyPlan, WEEKDAYS } from '@/features/teacher/api/settings'
 import { fetchRoster } from '@/features/teacher/api/roster'
 import { fetchMyClassroom } from '@/features/classroom/api/myClassroom'
+import { fetchNotices } from '@/features/teacher/api/notices'
 
 export const teacherContextKeys = {
   all: ['chatTeacherContext'] as const,
@@ -14,10 +15,11 @@ export const teacherContextKeys = {
  * 학생 대화에는 넣지 않는다 (명단 전체는 교사만 볼 수 있는 정보다).
  */
 export async function fetchTeacherFacts(classroomId: string): Promise<string[]> {
-  const [dutyRows, roster, classroom] = await Promise.all([
+  const [dutyRows, roster, classroom, posts] = await Promise.all([
     fetchDuties(classroomId),
     fetchRoster(classroomId),
     fetchMyClassroom(),
+    fetchNotices(classroomId),
   ])
 
   const facts: string[] = []
@@ -42,6 +44,21 @@ export async function fetchTeacherFacts(classroomId: string): Promise<string[]> 
       roles.length > 0
         ? `1인1역: ${roles.map((member) => `${member.name} — ${member.classRole}`).join(', ')}`
         : '1인1역: 아직 정한 학생이 없음',
+    )
+  }
+
+  // 고칠 대상을 제목으로 짚을 수 있도록 올린 안내를 그대로 나열한다
+  if (posts.length > 0) {
+    facts.push(
+      `올린 안내(제목 · 유형 · 날짜): ${posts
+        .slice(0, 20)
+        .map(
+          (post) =>
+            `${post.title} · ${post.type === 'assignment' ? '과제' : '공지'}${
+              post.due_date ? ` · ${post.due_date}` : ''
+            }`,
+        )
+        .join(' / ')}`,
     )
   }
 

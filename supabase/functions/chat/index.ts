@@ -75,6 +75,14 @@ type Action =
       /** 과제일 때만 */
       subject: string | null
     }
+  | {
+      kind: 'edit'
+      target: string
+      title: string | null
+      body: string | null
+      date: string | null
+      subject: string | null
+    }
   | { kind: 'duty'; weekday: number; area: string; students: string[] }
   | { kind: 'role'; student: string; role: string }
   | { kind: 'rule'; rules: string[] }
@@ -106,7 +114,7 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
     common.push(
       '',
       '이 사용자는 담임 교사다. 교사가 무언가를 바꿔 달라고 하면 action 을 채운다.',
-      '고를 수 있는 action 은 네 가지다.',
+      '고를 수 있는 action 은 다섯 가지다.',
       '',
       '1) 공지·과제 등록 — "등록해줘 / 올려줘 / 써줘"',
       '   {"kind":"post","type":"notice"|"assignment","title":"","body":"","date":"yyyy-MM-dd"|null,"subject":null}',
@@ -114,18 +122,25 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
       '   - 제출 기한이 있는 학습 과제는 type="assignment", date 에 마감일, subject 에 과목.',
       '   - 제목은 20자 안쪽, body 는 학생이 읽을 안내문으로 두세 문장.',
       '',
-      '2) 청소당번 — "월요일 복도 청소 김영우로 바꿔줘"',
+      '2) 이미 올린 공지·과제 고치기 — "아까 그 공지 날짜 금요일로 바꿔줘", "제목 고쳐줘"',
+      '   {"kind":"edit","target":"현장체험학습 안내","title":null,"body":null,"date":"2026-09-04","subject":null}',
+      '   - target 은 [학급 정보]에 있는 기존 공지·과제의 제목을 그대로 쓴다.',
+      '   - 바꾸는 값만 채우고 나머지는 null 로 둔다. 앞선 대화에서 방금 만든 것을',
+      '     가리키면 그 제목을 target 으로 쓴다.',
+      '   - 새로 올리는 것이 아니라 있는 것을 고치는 경우에는 반드시 이 kind 를 쓴다.',
+      '',
+      '3) 청소당번 — "월요일 복도 청소 김영우로 바꿔줘"',
       '   {"kind":"duty","weekday":1,"area":"복도","students":["김영우"]}',
       '   - weekday 는 월=1 … 금=5.',
       '   - area 는 [학급 정보]의 청소 구역 이름을 그대로 쓴다. 없는 구역이면 새로 만든다.',
       '   - students 는 그 구역을 그 요일에 맡을 학생 전체다. "김영우도 넣어줘"처럼 추가를',
       '     부탁하면 기존 담당에 더한 전체 명단을 적는다.',
       '',
-      '3) 1인1역 — "김영우 칠판 담당으로 해줘"',
+      '4) 1인1역 — "김영우 칠판 담당으로 해줘"',
       '   {"kind":"role","student":"김영우","role":"칠판 담당"}',
       '   - student 는 [학급 정보]의 학생 명단에 있는 이름을 그대로 쓴다.',
       '',
-      '4) 학급규칙 추가 — "복도에서 뛰지 않기 규칙 넣어줘"',
+      '5) 학급규칙 추가 — "복도에서 뛰지 않기 규칙 넣어줘"',
       '   {"kind":"rule","rules":["복도에서 뛰지 않기"]}',
       '',
       '- 이름·구역이 [학급 정보]에 없어 헷갈리면 action 을 null 로 두고 reply 로 되묻는다.',
@@ -144,7 +159,7 @@ function systemPrompt(role: 'teacher' | 'student', today: string, facts: string[
     '반드시 아래 형태의 JSON 하나만 출력한다. 다른 말은 붙이지 않는다.',
     '{"reply": "답변", "action": null}',
     '또는',
-    '{"reply": "답변", "action": { 위 네 가지 중 하나 }}',
+    '{"reply": "답변", "action": { 위 다섯 가지 중 하나 }}',
   )
 
   return common.join('\n')
@@ -187,6 +202,19 @@ function toAction(raw: unknown): Action | null {
         type: value.type === 'assignment' ? 'assignment' : 'notice',
         title,
         body: text(value.body),
+        date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null,
+        subject: text(value.subject) || null,
+      }
+    }
+    case 'edit': {
+      const target = text(value.target)
+      if (!target) return null
+      const date = text(value.date)
+      return {
+        kind: 'edit',
+        target,
+        title: text(value.title) || null,
+        body: text(value.body) || null,
         date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null,
         subject: text(value.subject) || null,
       }

@@ -196,6 +196,15 @@ export type ChatAction =
       /** 과제일 때의 과목 */
       subject: string | null
     }
+  /** 이미 올린 공지·과제 고치기. target 은 기존 제목, 나머지는 바꿀 값만 채운다 */
+  | {
+      kind: 'edit'
+      target: string
+      title: string | null
+      body: string | null
+      date: string | null
+      subject: string | null
+    }
   /** 청소당번 — 한 요일, 한 구역의 담당 학생을 정한다 */
   | { kind: 'duty'; weekday: number; area: string; students: string[] }
   /** 1인1역 — 학생 한 명의 역할을 정한다 */
