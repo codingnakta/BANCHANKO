@@ -15,11 +15,6 @@ export function useCurrentUser(): UserProfile | null {
   return useAuth().profile
 }
 
-/** 학생 전용 기능(AI 챗봇 등)의 노출 여부 */
-export function useIsStudent(): boolean {
-  return useCurrentUser()?.role === 'student'
-}
-
 /** 교사 전용 메뉴의 노출 여부 */
 export function useIsTeacher(): boolean {
   return useCurrentUser()?.role === 'teacher'

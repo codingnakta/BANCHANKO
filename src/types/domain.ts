@@ -148,8 +148,6 @@ export interface DashboardSummary {
   upcomingAssignments: Notice[]
   /** 다가오는 행사 */
   upcomingEvents: ClassEvent[]
-  /** 헤더 알림 벨의 미확인 표시 여부 */
-  hasUnreadNotification: boolean
 }
 
 /** "오늘 뭐 하지?" 카드의 할 일 한 줄. 원본(공지·과제·일정)으로 이동 가능해야 한다. */

@@ -38,7 +38,7 @@ export function TodoPage() {
 
   return (
     <>
-      <AppHeader title="할일" hasUnreadNotification={unreadCount > 0} />
+      <AppHeader title="할일" showBell={!isTeacher} hasUnreadNotification={unreadCount > 0} />
 
       <div className="flex flex-col gap-7">
         {/* 교사만 — 공지사항·과제 작성 */}

@@ -198,7 +198,6 @@ export async function fetchDashboard(
     unreadNotices: notices.slice(0, 3),
     upcomingAssignments: assignments,
     upcomingEvents,
-    hasUnreadNotification: false,
   }
 }
 

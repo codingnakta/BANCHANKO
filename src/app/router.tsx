@@ -31,7 +31,6 @@ import { TodoPage } from '@/pages/todo/TodoPage'
 import { MorePage } from '@/pages/more/MorePage'
 import { NotificationsPage } from '@/pages/more/NotificationsPage'
 import { NoticeDetailPage } from '@/pages/notices/NoticeDetailPage'
-import { PlaceholderPage } from '@/pages/PlaceholderPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
 /** 루트(/)에 들어오면 역할에 맞는 홈으로 보낸다. */
@@ -87,27 +86,6 @@ export function AppRouter() {
 
             <Route path={ROUTES.chat} element={<ChatbotPage />} />
             <Route path={ROUTES.notifications} element={<NotificationsPage />} />
-            <Route
-              path={ROUTES.account}
-              element={
-                <PlaceholderPage
-                  title="계정 관리"
-                  feature="계정 종료와 개인정보 보관 안내"
-                  backTo={ROUTES.more}
-                />
-              }
-            />
-            <Route
-              path={ROUTES.about}
-              element={
-                <PlaceholderPage
-                  title="서비스 안내"
-                  feature="이용약관·개인정보 처리방침"
-                  backTo={ROUTES.more}
-                />
-              }
-            />
-
             {/* 교사 운영 화면 */}
             <Route element={<RequireTeacher />}>
               <Route path={ROUTES.teacher.students} element={<StudentsPage />} />

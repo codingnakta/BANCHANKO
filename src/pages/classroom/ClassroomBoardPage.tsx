@@ -61,7 +61,7 @@ export function ClassroomBoardPage() {
 
   return (
     <>
-      <AppHeader title={data.classroom.name} />
+      <AppHeader title={data.classroom.name} showBell={!isTeacher} />
       <p className="-mt-2 mb-6 px-1 text-sm text-ink-500">
         {data.classroom.school_name && `${data.classroom.school_name} · `}
         담임 {data.teacherName} 선생님

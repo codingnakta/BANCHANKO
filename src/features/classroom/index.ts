@@ -1,6 +1,2 @@
 export { useClassroom, classroomKeys } from './hooks/useClassroom'
 export { useClassroomBoard } from './hooks/useClassroomBoard'
-export { ClassRulesCard } from './components/ClassRulesCard'
-export { CleaningDutyCard } from './components/CleaningDutyCard'
-export { ClassBoardSection } from './components/ClassBoardSection'
-export { TeacherMenuList } from './components/TeacherMenuList'

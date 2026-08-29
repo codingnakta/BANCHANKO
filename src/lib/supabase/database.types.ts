@@ -25,8 +25,6 @@ export type Database = {
           pinned_post_id: string | null
           /** 홈에 띄워 둔 내 할일 */
           pinned_todo_id: string | null
-          /** 알림을 마지막으로 확인한 시각 */
-          notifications_read_at: string | null
           created_at: string
         }
         Insert: {
@@ -35,14 +33,12 @@ export type Database = {
           name: string
           pinned_post_id?: string | null
           pinned_todo_id?: string | null
-          notifications_read_at?: string | null
           created_at?: string
         }
         Update: {
           name?: string
           pinned_post_id?: string | null
           pinned_todo_id?: string | null
-          notifications_read_at?: string | null
         }
         Relationships: []
       }

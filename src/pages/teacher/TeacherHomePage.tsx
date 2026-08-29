@@ -10,7 +10,6 @@ import {
   TodayHeroCard,
   useDashboard,
 } from '@/features/dashboard'
-import { useNotifications } from '@/features/notifications'
 import { formatDate } from '@/lib/date'
 
 /**
@@ -20,7 +19,6 @@ import { formatDate } from '@/lib/date'
 export function TeacherHomePage() {
   const teacherName = useCurrentUser()?.name ?? ''
   const { data, isPending, isError, error, refetch } = useDashboard()
-  const { unreadCount } = useNotifications()
 
   if (isPending) {
     return (
@@ -50,10 +48,7 @@ export function TeacherHomePage() {
 
   return (
     <>
-      <AppHeader
-        heading={`${teacherName} 선생님 안녕하세요`}
-        hasUnreadNotification={unreadCount > 0}
-      />
+      <AppHeader heading={`${teacherName} 선생님 안녕하세요`} />
 
       <div className="flex flex-col gap-6">
         <TodayHeroCard tasks={data.todayTasks} />

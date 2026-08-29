@@ -46,6 +46,4 @@ export const ROUTES = {
   // 더보기 (역할 공통)
   more: '/more',
   notifications: '/more/notifications',
-  account: '/more/account',
-  about: '/more/about',
 } as const

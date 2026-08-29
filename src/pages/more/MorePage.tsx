@@ -53,7 +53,7 @@ export function MorePage() {
 
   return (
     <>
-      <AppHeader title="더보기" hasUnreadNotification={unreadCount > 0} />
+      <AppHeader title="더보기" showBell={!isTeacher} hasUnreadNotification={unreadCount > 0} />
 
       {/* 내 정보 — 교사는 눌러서 이름을 고친다 */}
       <section className="mb-7 rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
@@ -85,13 +85,16 @@ export function MorePage() {
       </section>
 
       <div className="flex flex-col gap-7">
-        <Group title="알림">
-          <MenuRow
-            label="새 소식"
-            to={ROUTES.notifications}
-            meta={unreadCount > 0 ? `새 소식 ${unreadCount}` : '없음'}
-          />
-        </Group>
+        {/* 알림은 학생만 쓴다. 교사는 자기가 올린 글이라 다시 알릴 것이 없다. */}
+        {!isTeacher && (
+          <Group title="알림">
+            <MenuRow
+              label="새 소식"
+              to={ROUTES.notifications}
+              meta={unreadCount > 0 ? `새 소식 ${unreadCount}` : '없음'}
+            />
+          </Group>
+        )}
 
         <Group title="안내">
           <MenuRow
