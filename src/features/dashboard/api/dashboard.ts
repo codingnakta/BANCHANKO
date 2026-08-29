@@ -139,21 +139,26 @@ export async function fetchDashboard(now: Date = new Date()): Promise<DashboardS
 
   const posts = postsResult.data ?? []
   const notices = posts.filter((post) => post.type === 'notice').map(toNotice)
+  // 마감이 지난 과제도 숨기지 않는다. 등록한 게 홈에서 사라지면 교사가 당황한다.
+  // 대신 임박한 순서로 세우고, 지난 것은 화면에서 '기한 지남'으로 구분해 보여준다.
   const assignments = posts
     .filter((post) => post.type === 'assignment')
     .map(toNotice)
-    // 마감이 지나지 않은 것만, 임박한 순서로
-    .filter((notice) => !notice.dueAt || notice.dueAt.slice(0, 10) >= isoDate)
-    .sort((a, b) => (a.dueAt ?? '9999').localeCompare(b.dueAt ?? '9999'))
+    .sort((a, b) => {
+      const upcoming = (notice: Notice) =>
+        !notice.dueAt || notice.dueAt.slice(0, 10) >= isoDate ? 0 : 1
+      return upcoming(a) - upcoming(b) || (a.dueAt ?? '9999').localeCompare(b.dueAt ?? '9999')
+    })
 
-  // 행사는 posts 의 한 유형이다 (due_date 가 행사 날짜)
+  // 행사는 posts 의 한 유형이다 (due_date 가 행사 날짜). 지난 행사만 뺀다.
   const upcomingEvents = posts
-    .filter((post) => post.type === 'event' && post.due_date && post.due_date >= isoDate)
-    .sort((a, b) => (a.due_date ?? '').localeCompare(b.due_date ?? ''))
+    .filter((post) => post.type === 'event' && (!post.due_date || post.due_date >= isoDate))
+    .sort((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'))
     .map((post) => ({
       id: post.id,
       title: post.title,
-      startAt: `${post.due_date}T00:00:00`,
+      // 날짜를 안 넣고 등록한 행사는 올린 날을 기준으로 본다
+      startAt: post.due_date ? `${post.due_date}T00:00:00` : post.created_at,
       description: post.body ?? undefined,
       isPublic: true,
     }))
