@@ -10,7 +10,9 @@ export const dashboardKeys = {
 
 /**
  * 홈 대시보드 요약 조회 (F-ZTJSNU).
- * 시간표·급식은 나이스 실시간 조회라 자주 다시 부를 이유가 없어 캐시를 길게 잡는다.
+ *
+ * 홈에 들어올 때마다 다시 읽는다. 캐시를 길게 잡았더니 방금 등록한 공지·과제가
+ * 한동안 안 보여서, 나이스 호출을 몇 번 더 하더라도 최신 상태를 우선한다.
  */
 export function useDashboard() {
   const user = useCurrentUser()
@@ -20,6 +22,7 @@ export function useDashboard() {
     queryKey: dashboardKeys.summary(classroomId ?? 'none'),
     queryFn: () => fetchDashboard(),
     enabled: Boolean(classroomId),
-    staleTime: 5 * 60_000,
+    staleTime: 30_000,
+    refetchOnMount: 'always',
   })
 }

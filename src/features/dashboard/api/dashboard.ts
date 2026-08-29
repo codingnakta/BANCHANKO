@@ -128,8 +128,13 @@ export async function fetchDashboard(now: Date = new Date()): Promise<DashboardS
       .eq('weekday', now.getDay()),
   ])
 
+  // 조용히 빈 화면을 보여주면 "등록했는데 안 뜬다"의 원인을 알 수 없다. 그대로 드러낸다.
   if (postsResult.error) {
     console.error('[dashboard] 공지·과제 조회 실패', postsResult.error)
+    throw new Error(`공지·과제를 불러오지 못했어요. (${postsResult.error.message})`)
+  }
+  if (dutiesResult.error) {
+    console.error('[dashboard] 청소 당번 조회 실패', dutiesResult.error)
   }
 
   const posts = postsResult.data ?? []
