@@ -8,7 +8,6 @@ import { ROUTES } from '@/constants'
 import { useCurrentUser, useIsTeacher } from '@/features/auth/hooks/useCurrentUser'
 import { useClassroomBoard } from '@/features/classroom'
 import { fetchRoster, rosterKeys } from '@/features/teacher/api/roster'
-import type { ClassroomBoard } from '@/features/classroom/api/classroomBoard'
 import { formatDate, getTodayIso, relativeDayLabel } from '@/lib/date'
 import { cn } from '@/lib/utils'
 
@@ -16,9 +15,11 @@ import { cn } from '@/lib/utils'
 const PREVIEW_COUNT = 3
 
 /**
- * 우리반 — 학급 정보를 설정 화면처럼 목록으로 보여준다.
- * 공지사항·학사일정만 최신 세 줄을 미리 펼쳐 두고, 나머지는 눌러서 들어간다.
- * 교사에게는 맨 아래에 학급 운영 묶음이 더 붙는다.
+ * 우리반 — 학급 정보를 성격별로 묶어 보여준다.
+ *
+ * 여기 있는 것은 전부 학급 정보라, 교사용 '관리' 묶음을 따로 두지 않는다.
+ * 교사는 각 항목에 들어가서 그 자리의 편집 링크로 고친다.
+ * (예: 청소당번 → 설정, 학급규칙 → 수정)
  */
 export function ClassroomBoardPage() {
   const isTeacher = useIsTeacher()
@@ -60,94 +61,130 @@ export function ClassroomBoardPage() {
   const todayIso = getTodayIso()
   const notices = data.notices.slice(0, PREVIEW_COUNT)
   const schedule = data.schedule.slice(0, PREVIEW_COUNT)
+  const dutyAreas = new Set(data.duties.map((duty) => duty.area)).size
 
   return (
     <>
       <AppHeader title={data.classroom.name} />
-      <p className="-mt-2 mb-5 px-1 text-sm text-ink-500">
+      <p className="-mt-2 mb-6 px-1 text-sm text-ink-500">
         {data.classroom.school_name && `${data.classroom.school_name} · `}
         담임 {data.teacherName} 선생님
       </p>
 
-      <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-        {/* 공지사항 — 최신 세 개 미리보기 */}
-        <Preview
-          label="공지사항"
-          to={ROUTES.classroomSection.notices}
-          blank={notices.length === 0 ? '올라온 공지가 없어요.' : undefined}
-        >
-          {notices.map((notice) => (
-            <li key={notice.id}>
-              <Link
-                to={ROUTES.noticeDetail(notice.id)}
-                className="flex items-center gap-2 py-1.5 transition-colors hover:text-brand-600"
-              >
-                <span className="min-w-0 flex-1 truncate text-sm text-ink-700">{notice.title}</span>
-                <span className="shrink-0 text-xs text-ink-400">
-                  {notice.dueAt
-                    ? relativeDayLabel(notice.dueAt)
-                    : formatDate(notice.publishedAt, 'M월 d일')}
+      <div className="flex flex-col gap-7">
+        {/* 그때그때 바뀌는 소식 — 최신 세 개를 펼쳐 둔다 */}
+        <Group title="소식">
+          <Preview
+            label="공지사항"
+            to={ROUTES.classroomSection.notices}
+            blank={notices.length === 0 ? '올라온 공지가 없어요.' : undefined}
+          >
+            {notices.map((notice) => (
+              <li key={notice.id}>
+                <Link
+                  to={ROUTES.noticeDetail(notice.id)}
+                  className="flex items-center gap-2 py-1.5 transition-colors hover:text-brand-600"
+                >
+                  <span className="min-w-0 flex-1 truncate text-sm text-ink-700">
+                    {notice.title}
+                  </span>
+                  <span className="shrink-0 text-xs text-ink-400">
+                    {notice.dueAt
+                      ? relativeDayLabel(notice.dueAt)
+                      : formatDate(notice.publishedAt, 'M월 d일')}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </Preview>
+
+          <Preview
+            label="학사일정"
+            to={ROUTES.classroomSection.schedule}
+            blank={schedule.length === 0 ? '다가오는 일정이 없어요.' : undefined}
+          >
+            {schedule.map((item) => (
+              <li key={`${item.date}-${item.title}`} className="flex items-center gap-2 py-1.5">
+                <span
+                  className={cn(
+                    'w-14 shrink-0 text-xs font-semibold',
+                    item.date === todayIso ? 'text-danger' : 'text-brand-700',
+                  )}
+                >
+                  {formatDate(`${item.date}T00:00:00`, 'M/d(E)')}
                 </span>
-              </Link>
-            </li>
-          ))}
-        </Preview>
+                <span className="min-w-0 flex-1 truncate text-sm text-ink-700">{item.title}</span>
+                {item.isClassEvent && <span className="shrink-0 text-xs text-brand-700">학급</span>}
+              </li>
+            ))}
+          </Preview>
+        </Group>
 
-        {/* 학사일정 — 다가오는 세 개 미리보기 */}
-        <Preview
-          label="학사일정"
-          to={ROUTES.classroomSection.schedule}
-          blank={schedule.length === 0 ? '다가오는 일정이 없어요.' : undefined}
-        >
-          {schedule.map((item) => (
-            <li key={`${item.date}-${item.title}`} className="flex items-center gap-2 py-1.5">
-              <span
-                className={cn(
-                  'w-14 shrink-0 text-xs font-semibold',
-                  item.date === todayIso ? 'text-danger' : 'text-brand-700',
-                )}
-              >
-                {formatDate(`${item.date}T00:00:00`, 'M/d(E)')}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-sm text-ink-700">{item.title}</span>
-              {item.isClassEvent && <span className="shrink-0 text-xs text-brand-700">학급</span>}
-            </li>
-          ))}
-        </Preview>
+        {/* 학교에서 정해져 내려오는 것 */}
+        <Group title="수업">
+          <MenuRow
+            label="전체시간표"
+            to={ROUTES.classroomSection.timetable}
+            meta={data.weekTimetable ? '공개됨' : '미공개'}
+          />
+          <MenuRow
+            label="급식"
+            to={ROUTES.classroomSection.meal}
+            meta={data.meal && data.meal.items.length > 0 ? '오늘 메뉴' : '없음'}
+          />
+        </Group>
 
-        {/* 나머지는 줄만 */}
-        {plainItems(data).map((item) => (
-          <MenuRow key={item.label} {...item} />
-        ))}
-      </ul>
+        {/* 우리 반이 스스로 정한 약속 */}
+        <Group title="생활">
+          <MenuRow
+            label="청소당번"
+            to={ROUTES.classroomSection.duties}
+            meta={dutyAreas > 0 ? `구역 ${dutyAreas}개` : '없음'}
+          />
+          <MenuRow
+            label="학급규칙"
+            to={ROUTES.classroomSection.rules}
+            meta={count(data.rules.length, '개')}
+          />
+        </Group>
 
-      {/* 학급 운영 — 교사에게만 */}
-      {isTeacher && (
-        <section className="mt-7">
-          <h2 className="mb-3 px-1 text-lg font-bold text-ink-900">학급 운영</h2>
-          <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+        {/* 누가 무엇을 맡았는지 */}
+        <Group title="우리 반 사람들">
+          <MenuRow
+            label="1인1역"
+            to={ROUTES.classroomSection.roles}
+            meta={count(data.roles.length, '명')}
+          />
+          {isTeacher && (
             <MenuRow
-              label="학생 관리"
+              label="학생 명단"
               to={ROUTES.teacher.students}
               meta={
                 roster
                   ? `${roster.filter((member) => member.joined).length}/${roster.length}명`
-                  : '명단 등록, 1인1역'
+                  : '등록'
               }
             />
-            <MenuRow
-              label="학급 기본 정보"
-              to={ROUTES.teacher.settings}
-              meta={count(data.rules.length, '개 규칙')}
-            />
-          </ul>
-        </section>
-      )}
+          )}
+        </Group>
+      </div>
     </>
   )
 }
 
-/** 미리보기 없이 눌러서 들어가는 줄 하나. */
+/** 제목 하나에 줄 몇 개. */
+function Group({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section>
+      <h2 className="mb-3 px-1 text-lg font-bold text-ink-900">{title}</h2>
+      <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+        {children}
+      </ul>
+    </section>
+  )
+}
+
+/** 눌러서 들어가는 줄 하나. */
 function MenuRow({ label, to, meta }: { label: string; to: string; meta: string }) {
   return (
     <li className="border-b border-ink-100 last:border-0">
@@ -177,7 +214,7 @@ function Preview({
   children: ReactNode
 }) {
   return (
-    <li className="border-b border-ink-100">
+    <li className="border-b border-ink-100 last:border-0">
       <Link
         to={to}
         className="flex items-center gap-2 px-4 pb-1.5 pt-4 transition-colors hover:text-brand-600"
@@ -194,39 +231,6 @@ function Preview({
       )}
     </li>
   )
-}
-
-/** 미리보기 없이 줄 하나로만 두는 항목. 요약은 안에 무엇이 있는지만 알려 준다. */
-function plainItems(data: ClassroomBoard) {
-  const dutyAreas = new Set(data.duties.map((duty) => duty.area)).size
-
-  return [
-    {
-      label: '청소당번',
-      to: ROUTES.classroomSection.duties,
-      meta: dutyAreas > 0 ? `구역 ${dutyAreas}개` : '없음',
-    },
-    {
-      label: '1인1역',
-      to: ROUTES.classroomSection.roles,
-      meta: count(data.roles.length, '명'),
-    },
-    {
-      label: '전체시간표',
-      to: ROUTES.classroomSection.timetable,
-      meta: data.weekTimetable ? '공개됨' : '미공개',
-    },
-    {
-      label: '급식',
-      to: ROUTES.classroomSection.meal,
-      meta: data.meal && data.meal.items.length > 0 ? '오늘 메뉴' : '없음',
-    },
-    {
-      label: '학급규칙',
-      to: ROUTES.classroomSection.rules,
-      meta: count(data.rules.length, '개'),
-    },
-  ]
 }
 
 function count(value: number, unit: string) {
