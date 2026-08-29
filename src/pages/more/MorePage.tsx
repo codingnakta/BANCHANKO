@@ -1,14 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
-import {
-  Bell,
-  ChevronRight,
-  FileText,
-  Info,
-  LogOut,
-  ShieldCheck,
-  UserRound,
-} from 'lucide-react'
+import { Bell, ChevronRight, FileText, Info, LogOut, ShieldCheck } from 'lucide-react'
 import { AppHeader } from '@/components/layout'
 import { Badge } from '@/components/ui'
 import { ROUTES } from '@/constants'
@@ -61,12 +53,6 @@ export function MorePage() {
     {
       title: '계정과 개인정보',
       items: [
-        {
-          label: '계정 관리',
-          description: '비밀번호 변경, 탈퇴',
-          to: ROUTES.account,
-          icon: UserRound,
-        },
         {
           label: '개인정보 처리방침',
           description: '수집 항목과 보관 기간',
