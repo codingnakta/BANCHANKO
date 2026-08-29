@@ -34,7 +34,8 @@ export function NoticeDetailPage() {
     return <EmptyState message="안내를 찾을 수 없어요. 삭제되었을 수 있습니다." />
   }
 
-  const isAssignment = notice.type === 'assignment'
+  const TYPE_LABEL = { notice: '공지', assignment: '과제', event: '행사' } as const
+  const TYPE_TONE = { notice: 'brand', assignment: 'warning', event: 'success' } as const
   const dueIso = notice.due_date ? `${notice.due_date}T00:00:00` : null
 
   return (
@@ -50,7 +51,7 @@ export function NoticeDetailPage() {
         </button>
         <div className="min-w-0 flex-1">
           <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-            <Badge tone={isAssignment ? 'warning' : 'brand'}>{isAssignment ? '과제' : '공지'}</Badge>
+            <Badge tone={TYPE_TONE[notice.type]}>{TYPE_LABEL[notice.type]}</Badge>
             {notice.subject && <Badge tone="neutral">{notice.subject}</Badge>}
           </div>
           <h1 className="text-xl font-bold text-ink-900">{notice.title}</h1>
@@ -70,7 +71,8 @@ export function NoticeDetailPage() {
         <Card className="mb-4 flex items-center gap-2 p-4">
           <CalendarClock className="size-5 shrink-0 text-brand-700" aria-hidden />
           <p className="text-sm text-ink-800">
-            마감 {formatDate(dueIso)}
+            {notice.type === 'event' ? '행사일 ' : '마감 '}
+            {formatDate(dueIso)}
             <span className="ml-2 font-semibold text-brand-700">{relativeDayLabel(dueIso)}</span>
           </p>
         </Card>

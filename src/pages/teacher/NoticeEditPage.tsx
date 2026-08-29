@@ -15,6 +15,12 @@ import {
 import { cn } from '@/lib/utils'
 import type { PostType } from '@/lib/supabase/database.types'
 
+const TYPE_LABEL: Record<PostType, string> = {
+  notice: '공지',
+  assignment: '과제',
+  event: '행사',
+}
+
 const EMPTY: NoticeInput = {
   type: 'notice',
   title: '',
@@ -97,7 +103,7 @@ export function NoticeEditPage() {
       <Card className="flex flex-col gap-5 p-5">
         {/* 유형 */}
         <div className="flex gap-2">
-          {(['notice', 'assignment'] as PostType[]).map((type) => (
+          {(['notice', 'assignment', 'event'] as PostType[]).map((type) => (
             <button
               key={type}
               type="button"
@@ -109,7 +115,7 @@ export function NoticeEditPage() {
                   : 'border-ink-200 bg-white text-ink-600 hover:bg-ink-50',
               )}
             >
-              {type === 'notice' ? '공지' : '과제'}
+              {TYPE_LABEL[type]}
             </button>
           ))}
         </div>
@@ -135,12 +141,29 @@ export function NoticeEditPage() {
           </div>
         )}
 
+        {form.type === 'event' && (
+          <Field label="행사 날짜" htmlFor="eventDate">
+            <Input
+              id="eventDate"
+              type="date"
+              value={form.dueDate}
+              onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+            />
+          </Field>
+        )}
+
         <Field label="제목" htmlFor="title">
           <Input
             id="title"
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
-            placeholder={form.type === 'assignment' ? '수학 익힘책 32~35p' : '체육대회 안내'}
+            placeholder={
+              form.type === 'assignment'
+                ? '수학 익힘책 32~35p'
+                : form.type === 'event'
+                  ? '체육대회'
+                  : '체육대회 반티 색상 투표 안내'
+            }
           />
         </Field>
 

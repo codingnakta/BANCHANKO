@@ -9,7 +9,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type UserRole = 'teacher' | 'student'
 export type SchoolLevel = 'middle' | 'high'
-export type PostType = 'notice' | 'assignment'
+export type PostType = 'notice' | 'assignment' | 'event'
 export type AttendanceStatus = 'present' | 'absent' | 'late' | 'early_leave' | 'excused'
 
 export type Database = {

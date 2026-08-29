@@ -7,8 +7,16 @@ import { ROUTES } from '@/constants'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { deleteNotice, fetchNotices, noticeKeys } from '@/features/teacher/api/notices'
 import { formatDate, relativeDayLabel } from '@/lib/date'
+import type { PostType } from '@/lib/supabase/database.types'
 
-/** 안내 관리 — 공지·과제 목록 (F-WSHIYO). */
+const TYPE_LABEL: Record<PostType, string> = { notice: '공지', assignment: '과제', event: '행사' }
+const TYPE_TONE: Record<PostType, 'brand' | 'warning' | 'success'> = {
+  notice: 'brand',
+  assignment: 'warning',
+  event: 'success',
+}
+
+/** 안내 관리 — 공지·과제·행사 목록 (F-WSHIYO). */
 export function NoticesPage() {
   const user = useCurrentUser()
   const classroomId = user?.classroomId ?? ''
@@ -60,9 +68,7 @@ export function NoticesPage() {
               <div className="flex items-start gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex flex-wrap items-center gap-1.5">
-                    <Badge tone={notice.type === 'assignment' ? 'warning' : 'brand'}>
-                      {notice.type === 'assignment' ? '과제' : '공지'}
-                    </Badge>
+                    <Badge tone={TYPE_TONE[notice.type]}>{TYPE_LABEL[notice.type]}</Badge>
                     {notice.subject && <Badge tone="neutral">{notice.subject}</Badge>}
                   </div>
 
@@ -78,7 +84,8 @@ export function NoticesPage() {
                     {notice.due_date && (
                       <span className="flex items-center gap-1">
                         <CalendarClock className="size-3" />
-                        마감 {formatDate(`${notice.due_date}T00:00:00`)} (
+                        {notice.type === 'event' ? '' : '마감 '}
+                        {formatDate(`${notice.due_date}T00:00:00`)} (
                         {relativeDayLabel(`${notice.due_date}T00:00:00`)})
                       </span>
                     )}

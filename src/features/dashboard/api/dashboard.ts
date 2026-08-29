@@ -141,6 +141,18 @@ export async function fetchDashboard(now: Date = new Date()): Promise<DashboardS
     .filter((notice) => !notice.dueAt || notice.dueAt.slice(0, 10) >= isoDate)
     .sort((a, b) => (a.dueAt ?? '9999').localeCompare(b.dueAt ?? '9999'))
 
+  // 행사는 posts 의 한 유형이다 (due_date 가 행사 날짜)
+  const upcomingEvents = posts
+    .filter((post) => post.type === 'event' && post.due_date && post.due_date >= isoDate)
+    .sort((a, b) => (a.due_date ?? '').localeCompare(b.due_date ?? ''))
+    .map((post) => ({
+      id: post.id,
+      title: post.title,
+      startAt: `${post.due_date}T00:00:00`,
+      description: post.body ?? undefined,
+      isPublic: true,
+    }))
+
   const cleaningDuties: CleaningDuty[] = (dutiesResult.data ?? []).map((duty) => ({
     id: `duty-${duty.classroom_id}-${duty.weekday}`,
     area: duty.task ?? '청소',
@@ -159,8 +171,7 @@ export async function fetchDashboard(now: Date = new Date()): Promise<DashboardS
     cleaningDuties,
     unreadNotices: notices.slice(0, 3),
     upcomingAssignments: assignments,
-    // 학급 행사는 스키마에 없다 (해커톤 MVP 범위 밖)
-    upcomingEvents: [],
+    upcomingEvents,
     hasUnreadNotification: false,
   }
 }

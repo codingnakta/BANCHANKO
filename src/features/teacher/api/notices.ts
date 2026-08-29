@@ -69,7 +69,8 @@ export async function createNotice(classroomId: string, input: NoticeInput): Pro
       subject: input.type === 'assignment' ? input.subject.trim() || null : null,
       title: input.title.trim(),
       body: input.body.trim() || null,
-      due_date: input.type === 'assignment' && input.dueDate ? input.dueDate : null,
+      // 과제는 마감일, 행사는 행사 날짜를 같은 컬럼에 담는다
+      due_date: input.type !== 'notice' && input.dueDate ? input.dueDate : null,
       link_url: normalizeLinkUrl(input.linkUrl),
     })
     .select('id')
@@ -89,7 +90,8 @@ export async function updateNotice(id: string, input: NoticeInput): Promise<void
       subject: input.type === 'assignment' ? input.subject.trim() || null : null,
       title: input.title.trim(),
       body: input.body.trim() || null,
-      due_date: input.type === 'assignment' && input.dueDate ? input.dueDate : null,
+      // 과제는 마감일, 행사는 행사 날짜를 같은 컬럼에 담는다
+      due_date: input.type !== 'notice' && input.dueDate ? input.dueDate : null,
       link_url: normalizeLinkUrl(input.linkUrl),
     })
     .eq('id', id)
