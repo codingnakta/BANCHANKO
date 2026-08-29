@@ -62,6 +62,8 @@ export interface RosterEntry {
   phone?: string
   /** 학부모 전화번호 (선택) */
   parentPhone?: string
+  /** 1인1역 (선택) */
+  classRole?: string
 }
 
 /* ── 학급 데이터 엔티티 ───────────────────────────────────────── */

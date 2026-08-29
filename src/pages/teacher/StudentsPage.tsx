@@ -10,7 +10,7 @@ import {
   fetchRoster,
   removeRosterEntry,
   rosterKeys,
-  setHelperSubject,
+  setClassRole,
   type RosterMember,
 } from '@/features/teacher/api/roster'
 import { cn } from '@/lib/utils'
@@ -28,11 +28,13 @@ export function StudentsPage() {
     email: '',
     phone: '',
     parentPhone: '',
+    classRole: '',
   })
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [editingHelper, setEditingHelper] = useState<string | null>(null)
-  const [helperInput, setHelperInput] = useState('')
+  /** 1인1역을 고치는 중인 학생의 이메일 */
+  const [editingRole, setEditingRole] = useState<string | null>(null)
+  const [roleInput, setRoleInput] = useState('')
 
   const { data: roster, isPending } = useQuery({
     queryKey: rosterKeys.list(classroomId),
@@ -54,7 +56,14 @@ export function StudentsPage() {
           ? `${added}명 추가. ${rejected.length}명은 이미 다른 학급에 등록되어 있어요.`
           : `${added}명을 추가했어요.`,
       )
-      setNewStudent({ studentNo: '', name: '', email: '', phone: '', parentPhone: '' })
+      setNewStudent({
+        studentNo: '',
+        name: '',
+        email: '',
+        phone: '',
+        parentPhone: '',
+        classRole: '',
+      })
     },
     onError: (e: Error) => setError(e.message),
   })
@@ -66,13 +75,13 @@ export function StudentsPage() {
     onError: (e: Error) => setError(e.message),
   })
 
-  const helperMutation = useMutation({
-    mutationFn: ({ studentId, subject }: { studentId: string; subject: string | null }) =>
-      setHelperSubject(classroomId, studentId, subject),
+  const roleMutation = useMutation({
+    mutationFn: ({ email, role }: { email: string; role: string | null }) =>
+      setClassRole(classroomId, email, role),
     onSuccess: async () => {
       await invalidate()
-      setEditingHelper(null)
-      setHelperInput('')
+      setEditingRole(null)
+      setRoleInput('')
     },
     onError: (e: Error) => setError(e.message),
   })
@@ -168,6 +177,15 @@ export function StudentsPage() {
             </Field>
           </div>
 
+          <Field label="1인1역" htmlFor="classRole">
+            <Input
+              id="classRole"
+              value={newStudent.classRole}
+              onChange={(e) => setNewStudent({ ...newStudent, classRole: e.target.value })}
+              placeholder="칠판 담당"
+            />
+          </Field>
+
           <Button onClick={addOne} disabled={addMutation.isPending}>
             <Plus className="size-4" />
             추가
@@ -257,9 +275,9 @@ export function StudentsPage() {
                         <span className="mr-2 text-sm text-ink-500">{member.studentNo}</span>
                       )}
                       {member.name || member.email.split('@')[0]}
-                      {member.helperSubject && (
+                      {member.classRole && (
                         <span className="ml-2 rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700">
-                          {member.helperSubject}
+                          {member.classRole}
                         </span>
                       )}
                     </p>
@@ -283,52 +301,47 @@ export function StudentsPage() {
                   </button>
                 </div>
 
-                {/* 1인1역은 로그인한 학생에게만 지정할 수 있다 */}
-                {member.joined && member.studentId && (
-                  <div className="mt-2 border-t border-ink-100 pt-2">
-                    {editingHelper === member.studentId ? (
-                      <div className="flex gap-2">
-                        <Input
-                          value={helperInput}
-                          onChange={(e) => setHelperInput(e.target.value)}
-                          placeholder="맡은 역할 (예: 수학)"
-                          className="h-9 text-sm"
-                          autoFocus
-                        />
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            helperMutation.mutate({
-                              studentId: member.studentId!,
-                              subject: helperInput || null,
-                            })
-                          }
-                        >
-                          저장
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setEditingHelper(null)}
-                          aria-label="취소"
-                        >
-                          <X className="size-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingHelper(member.studentId)
-                          setHelperInput(member.helperSubject ?? '')
-                        }}
-                        className="text-sm text-brand-500 hover:underline"
+                {/* 1인1역은 명단에 딸린 값이라 로그인 전 학생에게도 정할 수 있다 */}
+                <div className="mt-2 border-t border-ink-100 pt-2">
+                  {editingRole === member.email ? (
+                    <div className="flex gap-2">
+                      <Input
+                        value={roleInput}
+                        onChange={(e) => setRoleInput(e.target.value)}
+                        placeholder="맡은 역할 (예: 칠판 담당)"
+                        className="h-9 text-sm"
+                        autoFocus
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          roleMutation.mutate({ email: member.email, role: roleInput || null })
+                        }
                       >
-                        {member.helperSubject ? '1인1역 바꾸기' : '1인1역 정하기'}
-                      </button>
-                    )}
-                  </div>
-                )}
+                        저장
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setEditingRole(null)}
+                        aria-label="취소"
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingRole(member.email)
+                        setRoleInput(member.classRole)
+                      }}
+                      className="text-sm text-brand-500 hover:underline"
+                    >
+                      {member.classRole ? '1인1역 바꾸기' : '1인1역 정하기'}
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

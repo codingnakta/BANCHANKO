@@ -176,6 +176,8 @@ export type Database = {
           phone: string | null
           /** 학부모 전화번호 — 해당 학급 교사만 읽을 수 있다 */
           parent_phone: string | null
+          /** 1인1역 — 로그인 전 학생에게도 지정할 수 있다 */
+          class_role: string | null
           claimed_by: string | null
           claimed_at: string | null
           created_at: string
@@ -187,6 +189,7 @@ export type Database = {
           student_name?: string | null
           phone?: string | null
           parent_phone?: string | null
+          class_role?: string | null
           claimed_by?: string | null
           claimed_at?: string | null
           created_at?: string
@@ -196,6 +199,7 @@ export type Database = {
           student_name?: string | null
           phone?: string | null
           parent_phone?: string | null
+          class_role?: string | null
         }
         Relationships: [
           {
@@ -302,7 +306,18 @@ export type Database = {
         ]
       }
     }
-    Views: Record<string, never>
+    Views: {
+      /** 우리반 1인1역 — 이름과 역할만 공개하는 뷰 (이메일·연락처 제외) */
+      class_roles: {
+        Row: {
+          classroom_id: string
+          student_no: string | null
+          student_name: string | null
+          class_role: string | null
+        }
+        Relationships: []
+      }
+    }
     Functions: {
       my_classroom_id: {
         Args: Record<PropertyKey, never>

@@ -23,7 +23,7 @@ export function TeacherManagePage() {
   })
 
   const joined = roster?.filter((member) => member.joined).length ?? 0
-  const helpers = roster?.filter((member) => member.helperSubject).length ?? 0
+  const withRole = roster?.filter((member) => member.classRole).length ?? 0
 
   const items = [
     {
@@ -49,7 +49,7 @@ export function TeacherManagePage() {
       {classroom?.school_name && (
         <p className="-mt-2 mb-5 px-1 text-sm text-ink-500">
           {classroom.school_name}
-          {helpers > 0 && ` · 1인1역 ${helpers}명`}
+          {withRole > 0 && ` · 1인1역 ${withRole}명`}
         </p>
       )}
 

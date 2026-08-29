@@ -11,11 +11,11 @@ export const boardKeys = {
   detail: (classroomId: string) => [...boardKeys.all, classroomId] as const,
 }
 
-/** 1인1역 — 학생이 맡은 역할(과목도우미) */
+/** 1인1역 — 학생이 맡은 역할 */
 export interface ClassRole {
-  studentId: string
+  studentNo: string
   name: string
-  subject: string
+  role: string
 }
 
 export interface ScheduleItem {
@@ -74,10 +74,10 @@ export async function fetchClassroomBoard(now: Date = getNow()): Promise<Classro
         .order('weekday')
         .order('sort_order'),
       supabase
-        .from('classroom_members')
-        .select('student_id, helper_subject, profiles(name)')
+        .from('class_roles')
+        .select('student_no, student_name, class_role')
         .eq('classroom_id', classroom.id)
-        .not('helper_subject', 'is', null),
+        .order('student_no'),
       supabase
         .from('timetable_entries')
         .select('weekday, period, subject')
@@ -130,14 +130,11 @@ export async function fetchClassroomBoard(now: Date = getNow()): Promise<Classro
         .map((name) => name.trim())
         .filter(Boolean),
     })),
-    roles: (rolesResult.data ?? []).map((row) => {
-      const profile = row.profiles as unknown as { name?: string } | null
-      return {
-        studentId: row.student_id,
-        name: profile?.name ?? '이름 없음',
-        subject: row.helper_subject ?? '',
-      }
-    }),
+    roles: (rolesResult.data ?? []).map((row) => ({
+      studentNo: row.student_no ?? '',
+      name: row.student_name ?? '이름 없음',
+      role: row.class_role ?? '',
+    })),
     weekTimetable,
     todayTimetable: neis.timetable,
     meal: neis.meal,

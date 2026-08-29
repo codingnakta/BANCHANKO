@@ -20,47 +20,37 @@ export interface RosterMember {
   joined: boolean
   /** 참여했다면 그 계정의 profiles.id */
   studentId: string | null
-  /** 담당 과목이 있으면 1인1역(과목도우미) (M5) */
-  helperSubject: string | null
+  /** 1인1역. 로그인 전 학생에게도 지정할 수 있다. */
+  classRole: string
 }
 
 /**
  * 학생 명단.
  *
- * classroom_roster(교사가 등록한 좌석)를 기준으로 하고,
- * classroom_members(실제 참여)를 붙여 누가 아직 안 들어왔는지 보여준다.
+ * classroom_roster(교사가 등록한 좌석) 한 장이면 된다.
+ * claimed_by 가 채워졌는지로 실제 참여 여부를 가른다.
  */
 export async function fetchRoster(classroomId: string): Promise<RosterMember[]> {
-  const [rosterResult, memberResult] = await Promise.all([
-    supabase
-      .from('classroom_roster')
-      .select('email, student_no, student_name, phone, parent_phone, claimed_by')
-      .eq('classroom_id', classroomId)
-      .order('student_no'),
-    supabase
-      .from('classroom_members')
-      .select('student_id, helper_subject')
-      .eq('classroom_id', classroomId),
-  ])
+  const { data, error } = await supabase
+    .from('classroom_roster')
+    .select('email, student_no, student_name, phone, parent_phone, class_role, claimed_by')
+    .eq('classroom_id', classroomId)
+    .order('student_no')
 
-  if (rosterResult.error) {
-    console.error('[roster] 조회 실패', rosterResult.error)
+  if (error) {
+    console.error('[roster] 조회 실패', error)
     throw new Error('학생 명단을 불러오지 못했어요.')
   }
 
-  const helperByStudent = new Map(
-    (memberResult.data ?? []).map((m) => [m.student_id, m.helper_subject]),
-  )
-
-  return (rosterResult.data ?? []).map((row) => ({
+  return (data ?? []).map((row) => ({
     email: row.email,
     studentNo: row.student_no ?? '',
     name: row.student_name ?? '',
     phone: row.phone ?? '',
     parentPhone: row.parent_phone ?? '',
+    classRole: row.class_role ?? '',
     joined: row.claimed_by !== null,
     studentId: row.claimed_by,
-    helperSubject: row.claimed_by ? (helperByStudent.get(row.claimed_by) ?? null) : null,
   }))
 }
 
@@ -79,6 +69,7 @@ export async function addRosterEntries(
       student_name: entry.name.trim() || null,
       phone: entry.phone?.trim() || null,
       parent_phone: entry.parentPhone?.trim() || null,
+      class_role: entry.classRole?.trim() || null,
     })
     if (error) {
       if (error.code === '23505') {
@@ -123,19 +114,21 @@ export async function removeRosterEntry(
 }
 
 /**
- * 1인1역(과목도우미) 지정·해제 (M5).
- * 담당 과목이 있으면 그 과목의 과제를 학생이 직접 등록할 수 있다 (RLS 가 강제).
+ * 1인1역 지정·해제.
+ *
+ * 명단 한 줄의 속성이라 아직 로그인하지 않은 학생에게도 미리 정해둘 수 있다.
+ * 학생·학부모는 class_roles 뷰(이름·역할만)로 이 값을 본다.
  */
-export async function setHelperSubject(
+export async function setClassRole(
   classroomId: string,
-  studentId: string,
-  subject: string | null,
+  email: string,
+  role: string | null,
 ): Promise<void> {
   const { error } = await supabase
-    .from('classroom_members')
-    .update({ helper_subject: subject?.trim() || null })
+    .from('classroom_roster')
+    .update({ class_role: role?.trim() || null })
     .eq('classroom_id', classroomId)
-    .eq('student_id', studentId)
+    .eq('email', email)
 
   if (error) {
     console.error('[roster] 1인1역 지정 실패', error)
