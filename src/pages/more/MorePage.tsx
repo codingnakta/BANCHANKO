@@ -7,7 +7,7 @@ import { ROUTES } from '@/constants'
 import { useAuth } from '@/features/auth/hooks/useCurrentUser'
 import { useClassroom } from '@/features/classroom'
 import { useNotifications } from '@/features/notifications'
-import { aboutText, LegalDialog, termsText } from '@/features/legal'
+import { aboutText, LegalDialog, privacyText, termsText } from '@/features/legal'
 import type { UserRole } from '@/types'
 
 const ROLE_LABEL: Record<UserRole, string> = {
@@ -57,7 +57,7 @@ export function MorePage() {
         {
           label: '개인정보 처리방침',
           description: '수집 항목과 보관 기간',
-          to: ROUTES.about,
+          onClick: () => setDoc({ title: '개인정보 처리방침', text: privacyText() }),
           icon: ShieldCheck,
         },
       ],

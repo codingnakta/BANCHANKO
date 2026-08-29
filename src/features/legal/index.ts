@@ -1,5 +1,6 @@
 export { LEGAL_INFO, termsText } from './terms'
 export { aboutText } from './about'
+export { privacyText } from './privacy'
 export { LegalDocument } from './components/LegalDocument'
 export { LegalDialog } from './components/LegalDialog'
 export { TermsLink } from './components/TermsLink'
