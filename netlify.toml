@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# 클라이언트 라우팅(BrowserRouter)을 쓰므로 모든 경로를 index.html 로 넘긴다.
+# 이게 없으면 /login, /onboarding/role 같은 주소를 직접 열거나 새로고침할 때 404 가 난다.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
