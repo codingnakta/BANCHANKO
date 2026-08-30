@@ -54,8 +54,8 @@ export function NoticeDetailPage() {
             <Badge tone={TYPE_TONE[notice.type]}>{TYPE_LABEL[notice.type]}</Badge>
             {notice.subject && <Badge tone="neutral">{notice.subject}</Badge>}
           </div>
+          {/* 등록일은 빼고, 아래 카드의 마감·일정 날짜만 보여준다 */}
           <h1 className="text-xl font-bold text-ink-900">{notice.title}</h1>
-          <p className="mt-1 text-sm text-ink-500">{formatDate(notice.created_at)}</p>
         </div>
         {isTeacher && (
           <Link to={ROUTES.teacher.noticeEdit(notice.id)}>

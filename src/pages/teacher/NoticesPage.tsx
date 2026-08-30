@@ -83,8 +83,8 @@ export function NoticesPage() {
                     {notice.title}
                   </Link>
 
+                  {/* 등록일은 빼고 마감·일정 날짜만 보여준다 */}
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-500">
-                    <span>{formatDate(notice.created_at)}</span>
                     {notice.due_date && (
                       <span className="flex items-center gap-1">
                         <CalendarClock className="size-3" />

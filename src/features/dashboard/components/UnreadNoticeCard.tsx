@@ -1,6 +1,5 @@
 import { Link } from 'react-router'
 import { ROUTES } from '@/constants'
-import { formatDate } from '@/lib/date'
 import type { Notice } from '@/types'
 
 const TYPE_LABEL: Record<Notice['type'], string> = {
@@ -37,9 +36,8 @@ export function UnreadNoticeCard({ notices }: UnreadNoticeCardProps) {
               <span className="size-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-ink-900">{notice.title}</p>
-                <p className="mt-0.5 text-xs text-ink-500">
-                  {TYPE_LABEL[notice.type]} · {formatDate(notice.publishedAt)}
-                </p>
+                {/* 올린 날짜는 보여주지 않는다 */}
+                <p className="mt-0.5 text-xs text-ink-500">{TYPE_LABEL[notice.type]}</p>
               </div>
             </Link>
           </li>

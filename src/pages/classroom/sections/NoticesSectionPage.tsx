@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import { ROUTES } from '@/constants'
-import { formatDate, relativeDayLabel } from '@/lib/date'
+import { relativeDayLabel } from '@/lib/date'
 import { Blank, ClassroomSectionShell } from './ClassroomSectionShell'
 
 /** 우리반 › 공지사항 — 학급에 올라온 공지와 과제 전체. */
@@ -22,10 +22,10 @@ export function NoticesSectionPage() {
                     <span className="block truncate text-[15px] font-medium text-ink-900">
                       {notice.title}
                     </span>
+                    {/* 올린 날짜는 보여주지 않는다. 마감일만 오른쪽에 붙는다 */}
                     <span className="mt-0.5 block text-xs text-ink-500">
                       {notice.type === 'assignment' ? '과제' : '공지'}
-                      {notice.subject && ` · ${notice.subject}`} ·{' '}
-                      {formatDate(notice.publishedAt, 'M월 d일')}
+                      {notice.subject && ` · ${notice.subject}`}
                     </span>
                   </span>
                   {notice.dueAt && (

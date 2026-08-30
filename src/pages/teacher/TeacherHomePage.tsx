@@ -10,7 +10,6 @@ import {
   TodayHeroCard,
   useDashboard,
 } from '@/features/dashboard'
-import { formatDate } from '@/lib/date'
 
 /**
  * 교사 홈.
@@ -71,9 +70,6 @@ export function TeacherHomePage() {
                     <span className="size-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden />
                     <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-ink-900">
                       {notice.title}
-                    </span>
-                    <span className="shrink-0 text-xs text-ink-400">
-                      {formatDate(notice.publishedAt, 'M월 d일')}
                     </span>
                   </Link>
                 </li>
