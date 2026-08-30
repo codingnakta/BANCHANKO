@@ -38,7 +38,7 @@ export function MyTodoList() {
 
       {/* 등록 */}
       <div className="mb-2 flex items-end gap-2">
-        <Field label="할 일" htmlFor="todoTitle" className="flex-[2]">
+        <Field label="할 일" htmlFor="todoTitle" className="min-w-0 flex-1">
           <Input
             id="todoTitle"
             value={title}
@@ -47,7 +47,7 @@ export function MyTodoList() {
             placeholder="독후감 쓰기"
           />
         </Field>
-        <Field label="마감일" htmlFor="todoDue">
+        <Field label="마감일" htmlFor="todoDue" className="w-36 shrink-0">
           <Input
             id="todoDue"
             type="date"
@@ -55,7 +55,14 @@ export function MyTodoList() {
             onChange={(e) => setDueDate(e.target.value)}
           />
         </Field>
-        <Button onClick={submit} disabled={!title.trim() || add.isPending} aria-label="추가">
+        {/* 입력칸(h-12)과 높이를 맞춘다 */}
+        <Button
+          size="lg"
+          className="shrink-0"
+          onClick={submit}
+          disabled={!title.trim() || add.isPending}
+          aria-label="추가"
+        >
           <Plus className="size-4" />
         </Button>
       </div>

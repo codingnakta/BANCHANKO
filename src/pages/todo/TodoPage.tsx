@@ -248,7 +248,7 @@ function AddAssignment() {
       </p>
 
       <div className="flex gap-2">
-        <Field label="과목" htmlFor="assignmentSubject">
+        <Field label="과목" htmlFor="assignmentSubject" className="w-24 shrink-0">
           <Input
             id="assignmentSubject"
             value={subject}
@@ -256,7 +256,7 @@ function AddAssignment() {
             placeholder="수학"
           />
         </Field>
-        <Field label="과제" htmlFor="assignmentTitle" className="flex-[2]">
+        <Field label="과제" htmlFor="assignmentTitle" className="flex-1">
           <Input
             id="assignmentTitle"
             value={title}
@@ -268,7 +268,7 @@ function AddAssignment() {
       </div>
 
       <div className="flex items-end gap-2">
-        <Field label="마감일" htmlFor="assignmentDue">
+        <Field label="마감일" htmlFor="assignmentDue" className="flex-1">
           <Input
             id="assignmentDue"
             type="date"
@@ -276,7 +276,10 @@ function AddAssignment() {
             onChange={(e) => setDueDate(e.target.value)}
           />
         </Field>
+        {/* 입력칸(h-12)과 높이를 맞춘다 */}
         <Button
+          size="lg"
+          className="shrink-0"
           onClick={() => mutation.mutate()}
           disabled={!title.trim() || mutation.isPending}
           aria-label="과제 추가"
