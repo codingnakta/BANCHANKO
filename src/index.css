@@ -64,6 +64,20 @@
   #root {
     min-height: 100dvh;
   }
+
+  /* 모바일 웹킷(iOS 사파리 등)의 날짜 입력칸은 기본 모양을 유지하는 동안
+     자기 고유 폭을 고집해서, 칸이 좁아져도 줄지 않고 옆 요소 위로 삐져나온다.
+     기본 모양을 벗겨야 w-full 이 먹는다. */
+  input[type='date'] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+  }
+
+  /* 기본 모양을 벗기면 iOS 가 값을 가운데 정렬하므로 왼쪽으로 되돌린다 */
+  input[type='date']::-webkit-date-and-time-value {
+    text-align: left;
+  }
 }
 
 /* 하단 안전영역(iOS 홈 인디케이터)만큼 아래 여백을 '더한다'.
