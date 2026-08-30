@@ -55,29 +55,6 @@ export function TeacherHomePage() {
         {/* 꽂아 둔 우리반 과제와 내 할일 */}
         <PinnedTasks assignments={data.upcomingAssignments} />
 
-        {/* 공지 */}
-        <Section title="공지" action={{ to: ROUTES.teacher.noticeNew, label: '쓰기' }}>
-          {data.unreadNotices.length === 0 ? (
-            <Blank message="올린 공지가 없어요." to={ROUTES.teacher.noticeNew} cta="공지 쓰기" />
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {data.unreadNotices.map((notice) => (
-                <li key={notice.id}>
-                  <Link
-                    to={ROUTES.noticeDetail(notice.id)}
-                    className="flex items-center gap-3 rounded-card bg-white px-4 py-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-colors hover:bg-brand-50"
-                  >
-                    <span className="size-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden />
-                    <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-ink-900">
-                      {notice.title}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Section>
-
         {/* 청소 당번 */}
         <Section title="오늘 청소 당번" action={{ to: ROUTES.teacher.settings, label: '설정' }}>
           {data.cleaningDuties.length === 0 ? (

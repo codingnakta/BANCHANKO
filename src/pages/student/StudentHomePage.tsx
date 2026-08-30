@@ -4,7 +4,6 @@ import {
   PinnedTasks,
   TimetableMealTabs,
   TodayHeroCard,
-  UnreadNoticeCard,
   useDashboard,
 } from '@/features/dashboard'
 import { useNotifications } from '@/features/notifications'
@@ -62,7 +61,6 @@ export function StudentHomePage() {
           currentPeriod={data.currentPeriod}
         />
 
-        <UnreadNoticeCard notices={data.unreadNotices} />
       </div>
     </>
   )
