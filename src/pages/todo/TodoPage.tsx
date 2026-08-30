@@ -47,8 +47,12 @@ export function TodoPage() {
     .sort((a, b) => a.startAt.localeCompare(b.startAt))
     .slice(0, 3)
 
-  // 더보기를 누르면 올라온 공지를 날짜 없는 것까지 모두 보여준다
-  const allNotices = data?.unreadNotices ?? []
+  // 더보기를 누르면 올라온 공지를 날짜 없는 것까지 모두 보여준다.
+  // 서버는 최신 등록순으로 주므로 여기서 날짜가 가까운 순으로 다시 세운다.
+  // 날짜 없는 공지는 급하지 않은 것이라 맨 뒤로 보낸다.
+  const allNotices = [...(data?.unreadNotices ?? [])].sort((a, b) =>
+    (a.dueAt ?? '9999').localeCompare(b.dueAt ?? '9999'),
+  )
   // 홈에 고정한 과제는 목록에서도 맨 위에 둔다
   const assignments = (
     showPast ? allAssignments : allAssignments.filter((item) => !isPast(item.dueAt))
