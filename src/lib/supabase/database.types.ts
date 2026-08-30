@@ -204,6 +204,7 @@ export type Database = {
           created_at?: string
         }
         Update: {
+          email?: string
           student_no?: string | null
           student_name?: string | null
           phone?: string | null

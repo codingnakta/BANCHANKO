@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Download, FileSpreadsheet, Plus, Trash2, X } from 'lucide-react'
+import { Check, Download, FileSpreadsheet, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { TeacherPageShell } from '@/components/layout'
 import { Button, EmptyState, Field, Input, Modal, Spinner } from '@/components/ui'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
@@ -11,6 +11,7 @@ import {
   removeRosterEntry,
   rosterKeys,
   setClassRole,
+  updateRosterEntry,
   type RosterMember,
 } from '@/features/teacher/api/roster'
 import { cn } from '@/lib/utils'
@@ -35,6 +36,8 @@ export function StudentsPage() {
   /** 1인1역을 고치는 중인 학생의 이메일 */
   /** 등록 팝업 */
   const [adding, setAdding] = useState(false)
+  /** 고치는 중인 학생 (원래 이메일로 찾는다) */
+  const [editing, setEditing] = useState<RosterMember | null>(null)
   const [editingRole, setEditingRole] = useState<string | null>(null)
   const [roleInput, setRoleInput] = useState('')
 
@@ -76,6 +79,15 @@ export function StudentsPage() {
       removeRosterEntry(classroomId, member.email, member.studentId),
     onSuccess: invalidate,
     onError: (e: Error) => setError(e.message),
+  })
+
+  const editMutation = useMutation({
+    mutationFn: (patch: Parameters<typeof updateRosterEntry>[2]) =>
+      updateRosterEntry(classroomId, editing!.email, patch),
+    onSuccess: async () => {
+      await invalidate()
+      setEditing(null)
+    },
   })
 
   const roleMutation = useMutation({
@@ -193,6 +205,15 @@ export function StudentsPage() {
 
                   <button
                     type="button"
+                    onClick={() => setEditing(member)}
+                    aria-label={`${member.name || member.email} 정보 고치기`}
+                    className="shrink-0 rounded-full p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-700"
+                  >
+                    <Pencil className="size-4" />
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => removeMutation.mutate(member)}
                     aria-label={`${member.name || member.email} 명단에서 빼기`}
                     className="shrink-0 rounded-full p-2 text-ink-400 transition-colors hover:bg-danger/10 hover:text-danger"
@@ -247,6 +268,8 @@ export function StudentsPage() {
           </ul>
         </section>
       )}
+      {editing && <EditStudent member={editing} mutation={editMutation} onClose={() => setEditing(null)} />}
+
       {adding && (
         <Modal title="학생 정보 등록" onClose={() => setAdding(false)}>
         <p className="mb-3 text-xs text-ink-500">
@@ -362,5 +385,115 @@ export function StudentsPage() {
         </Modal>
       )}
     </TeacherPageShell>
+  )
+}
+
+/** 명단 한 줄 고치기 — 학번·이름·이메일·연락처 */
+function EditStudent({
+  member,
+  mutation,
+  onClose,
+}: {
+  member: RosterMember
+  mutation: {
+    mutate: (patch: {
+      studentNo: string
+      name: string
+      email: string
+      phone: string
+      parentPhone: string
+    }) => void
+    isPending: boolean
+    error: Error | null
+  }
+  onClose: () => void
+}) {
+  const [form, setForm] = useState({
+    studentNo: member.studentNo,
+    name: member.name,
+    email: member.email,
+    phone: member.phone,
+    parentPhone: member.parentPhone,
+  })
+
+  return (
+    <Modal title="학생 정보 고치기" onClose={onClose}>
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-2">
+          <Field label="학번" htmlFor="editNo">
+            <Input
+              id="editNo"
+              value={form.studentNo}
+              onChange={(e) => setForm({ ...form, studentNo: e.target.value })}
+              className="w-24"
+            />
+          </Field>
+          <Field label="이름" htmlFor="editName">
+            <Input
+              id="editName"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+          </Field>
+        </div>
+
+        <Field
+          label="구글 계정 이메일"
+          htmlFor="editEmail"
+          hint={
+            member.joined
+              ? '이미 들어온 학생이에요. 이메일을 바꾸면 바뀐 계정으로 들어오게 됩니다.'
+              : '이 이메일로 로그인해야 우리 반에 들어올 수 있어요.'
+          }
+        >
+          <Input
+            id="editEmail"
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
+        </Field>
+
+        <div className="flex gap-2">
+          <Field label="전화번호" htmlFor="editPhone">
+            <Input
+              id="editPhone"
+              type="tel"
+              inputMode="tel"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            />
+          </Field>
+          <Field label="학부모 전화번호" htmlFor="editParentPhone">
+            <Input
+              id="editParentPhone"
+              type="tel"
+              inputMode="tel"
+              value={form.parentPhone}
+              onChange={(e) => setForm({ ...form, parentPhone: e.target.value })}
+            />
+          </Field>
+        </div>
+
+        {mutation.error && (
+          <p role="alert" className="rounded-xl bg-danger/5 px-4 py-3 text-sm text-danger">
+            {mutation.error instanceof Error ? mutation.error.message : '고치지 못했어요.'}
+          </p>
+        )}
+
+        <div className="flex gap-2">
+          <Button
+            className="flex-1"
+            onClick={() => mutation.mutate(form)}
+            disabled={!form.email.trim() || mutation.isPending}
+          >
+            저장
+          </Button>
+          <Button variant="ghost" onClick={onClose}>
+            취소
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }

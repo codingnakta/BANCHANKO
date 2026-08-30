@@ -114,6 +114,44 @@ export async function removeRosterEntry(
 }
 
 /**
+ * 명단 한 줄 고치기 — 학번·이름·이메일·연락처.
+ *
+ * 이메일은 학생이 로그인할 때 자기 자리를 찾는 열쇠라, 바꾸면 그 계정으로
+ * 들어오게 된다. 이미 들어온 학생의 자리(claimed_by)는 그대로 둔다.
+ */
+export async function updateRosterEntry(
+  classroomId: string,
+  email: string,
+  patch: {
+    studentNo: string
+    name: string
+    email: string
+    phone: string
+    parentPhone: string
+  },
+): Promise<void> {
+  const { error } = await supabase
+    .from('classroom_roster')
+    .update({
+      email: normalizeEmail(patch.email),
+      student_no: patch.studentNo.trim() || null,
+      student_name: patch.name.trim() || null,
+      phone: patch.phone.trim() || null,
+      parent_phone: patch.parentPhone.trim() || null,
+    })
+    .eq('classroom_id', classroomId)
+    .eq('email', email)
+
+  if (error) {
+    if (error.code === '23505') {
+      throw new Error('그 이메일은 이미 다른 학생이 쓰고 있어요.')
+    }
+    console.error('[roster] 수정 실패', error)
+    throw new Error('학생 정보를 고치지 못했어요.')
+  }
+}
+
+/**
  * 1인1역 지정·해제.
  *
  * 명단 한 줄의 속성이라 아직 로그인하지 않은 학생에게도 미리 정해둘 수 있다.
