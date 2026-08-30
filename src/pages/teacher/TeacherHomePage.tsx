@@ -5,7 +5,7 @@ import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { Card, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import {
-  AssignmentTodoTabs,
+  PinnedTasks,
   TimetableMealTabs,
   TodayHeroCard,
   useDashboard,
@@ -52,8 +52,8 @@ export function TeacherHomePage() {
       <div className="flex flex-col gap-6">
         <TodayHeroCard tasks={data.todayTasks} />
 
-        {/* 과제 안내 — 우리반 과제 / 내 할일 */}
-        <AssignmentTodoTabs assignments={data.upcomingAssignments} />
+        {/* 꽂아 둔 우리반 과제와 내 할일 */}
+        <PinnedTasks assignments={data.upcomingAssignments} />
 
         {/* 공지 */}
         <Section title="공지" action={{ to: ROUTES.teacher.noticeNew, label: '쓰기' }}>

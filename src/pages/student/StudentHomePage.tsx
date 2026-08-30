@@ -1,7 +1,7 @@
 import { AppHeader } from '@/components/layout'
 import { Spinner } from '@/components/ui'
 import {
-  AssignmentTodoTabs,
+  PinnedTasks,
   TimetableMealTabs,
   TodayHeroCard,
   UnreadNoticeCard,
@@ -53,8 +53,8 @@ export function StudentHomePage() {
       <div className="flex flex-col gap-4">
         <TodayHeroCard tasks={data.todayTasks} />
 
-        {/* 과제 안내 — 우리반 과제 / 내 할일 */}
-        <AssignmentTodoTabs assignments={data.upcomingAssignments} />
+        {/* 꽂아 둔 우리반 과제와 내 할일 */}
+        <PinnedTasks assignments={data.upcomingAssignments} />
 
         <TimetableMealTabs
           entries={data.timetable}
