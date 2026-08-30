@@ -144,7 +144,7 @@ export interface DashboardSummary {
   timetable: TimetableEntry[] | null
   meal: MealMenu | null
   cleaningDuties: CleaningDuty[]
-  /** 미확인 공지 — 우선 표시 대상 */
+  /** 올라온 공지 (최신 순). 몇 개를 보여줄지는 화면이 정한다 */
   unreadNotices: Notice[]
   /** 예정 과제 */
   upcomingAssignments: Notice[]

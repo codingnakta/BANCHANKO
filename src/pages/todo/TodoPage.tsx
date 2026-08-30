@@ -24,6 +24,8 @@ export function TodoPage() {
   const isTeacher = useIsTeacher()
   const { pinnedId } = usePinnedPost()
   const [showPast, setShowPast] = useState(false)
+  /** 다가오는 일정을 다 펼쳤는지 — 켜면 올라온 공지 전체를 본다 */
+  const [showAllNotices, setShowAllNotices] = useState(false)
   const { data, isPending } = useDashboard()
   const { unreadCount } = useNotifications()
 
@@ -42,7 +44,10 @@ export function TodoPage() {
     allEvents.filter((event) => isPast(event.startAt)).length +
     allAssignments.filter((assignment) => isPast(assignment.dueAt)).length
 
-  const events = showPast ? allEvents : allEvents.filter((event) => !isPast(event.startAt))
+  const upcoming = showPast ? allEvents : allEvents.filter((event) => !isPast(event.startAt))
+  // 기본은 셋까지. 더보기를 누르면 올라온 공지를 날짜 없는 것까지 모두 보여준다.
+  const events = upcoming.slice(0, 3)
+  const allNotices = data?.unreadNotices ?? []
   // 홈에 고정한 과제는 목록에서도 맨 위에 둔다
   const assignments = (
     showPast ? allAssignments : allAssignments.filter((item) => !isPast(item.dueAt))
@@ -93,10 +98,47 @@ export function TodoPage() {
           </section>
         )}
 
-        {/* 다가오는 일정 */}
+        {/* 다가오는 일정 — 셋까지, 더보기를 누르면 공지 전체 */}
         <section>
           <h2 className="mb-3 px-1 text-lg font-bold text-ink-900">다가오는 일정</h2>
-          {events.length === 0 ? (
+
+          {showAllNotices ? (
+            allNotices.length === 0 ? (
+              <EmptyState message="올라온 공지가 없습니다." />
+            ) : (
+              <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                {allNotices.map((notice) => (
+                  <li key={notice.id} className="border-b border-ink-100 last:border-0">
+                    <Link
+                      to={ROUTES.noticeDetail(notice.id)}
+                      className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-brand-50"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[15px] font-medium text-ink-900">
+                          {notice.title}
+                        </span>
+                        {notice.body && (
+                          <span className="mt-0.5 block truncate text-xs text-ink-500">
+                            {notice.body}
+                          </span>
+                        )}
+                      </span>
+                      {notice.dueAt && (
+                        <span
+                          className={cn(
+                            'shrink-0 text-sm font-medium tabular-nums',
+                            notice.dueAt.slice(0, 10) === todayIso ? 'text-danger' : 'text-ink-900',
+                          )}
+                        >
+                          {relativeDayLabel(notice.dueAt)}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )
+          ) : events.length === 0 ? (
             <EmptyState message="예정된 일정이 없습니다." />
           ) : (
             <ul className="overflow-hidden rounded-card bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
@@ -128,6 +170,16 @@ export function TodoPage() {
                 </li>
               ))}
             </ul>
+          )}
+
+          {(allNotices.length > events.length || showAllNotices) && (
+            <button
+              type="button"
+              onClick={() => setShowAllNotices((prev) => !prev)}
+              className="mt-2 w-full text-center text-sm font-medium text-brand-500 hover:underline"
+            >
+              {showAllNotices ? '접기' : `더보기 (공지 ${allNotices.length}개)`}
+            </button>
           )}
         </section>
 

@@ -194,7 +194,7 @@ export async function fetchDashboard(
     timetable: neis.timetable,
     meal: neis.meal,
     cleaningDuties,
-    unreadNotices: notices.slice(0, 3),
+    unreadNotices: notices.slice(0, 30),
     upcomingAssignments: assignments,
     upcomingEvents,
   }

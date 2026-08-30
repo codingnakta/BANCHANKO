@@ -18,7 +18,6 @@ import { AttendancePage } from '@/pages/teacher/AttendancePage'
 // 학생
 import { StudentHomePage } from '@/pages/student/StudentHomePage'
 import { ClassroomBoardPage } from '@/pages/classroom/ClassroomBoardPage'
-import { NoticesSectionPage } from '@/pages/classroom/sections/NoticesSectionPage'
 import { ScheduleSectionPage } from '@/pages/classroom/sections/ScheduleSectionPage'
 import { DutiesSectionPage } from '@/pages/classroom/sections/DutiesSectionPage'
 import { RolesSectionPage } from '@/pages/classroom/sections/RolesSectionPage'
@@ -76,7 +75,6 @@ export function AppRouter() {
             <Route path={ROUTES.noticeDetail(':id')} element={<NoticeDetailPage />} />
 
             {/* 우리반 하위 화면 */}
-            <Route path={ROUTES.classroomSection.notices} element={<NoticesSectionPage />} />
             <Route path={ROUTES.classroomSection.schedule} element={<ScheduleSectionPage />} />
             <Route path={ROUTES.classroomSection.duties} element={<DutiesSectionPage />} />
             <Route path={ROUTES.classroomSection.roles} element={<RolesSectionPage />} />

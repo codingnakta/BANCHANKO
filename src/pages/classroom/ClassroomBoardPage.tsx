@@ -85,11 +85,6 @@ export function ClassroomBoardPage() {
           />
         )}
         <MenuRow
-          label="공지사항"
-          to={ROUTES.classroomSection.notices}
-          meta={count(data.notices.length, '개')}
-        />
-        <MenuRow
           label="학사일정"
           to={ROUTES.classroomSection.schedule}
           meta={
