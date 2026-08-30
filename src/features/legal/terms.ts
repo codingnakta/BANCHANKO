@@ -1,16 +1,16 @@
 /**
  * 이용약관 원문.
  *
- * 아직 정해지지 않은 값(팀 이름·담당자·이메일·시행일)은 LEGAL_INFO 한곳에 모아 두었다.
- * 확정되면 여기만 고치면 약관 본문과 로그인 화면에 함께 반영된다.
+ * 팀 이름·담당자·이메일·시행일은 LEGAL_INFO 한곳에 모아 두었다.
+ * 여기만 고치면 약관·개인정보 처리방침·서비스 소개에 함께 반영된다.
  */
 export const LEGAL_INFO = {
   serviceName: '반창고(BANCHANGKO)',
-  team: '[팀 정식 명칭]',
-  manager: '[담당자 성명]',
-  email: '[이메일 주소]',
+  team: '은관노',
+  manager: '윤다연',
+  email: 'codingnakta@gmail.com',
   /** 부칙 시행일 */
-  effectiveDate: '2026-03-02',
+  effectiveDate: '2026년 8월 30일',
   version: 'v1.0',
 } as const
 
