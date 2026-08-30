@@ -190,6 +190,10 @@ function AddAssignment() {
 
   return (
     <div className="mb-2 flex flex-col gap-2">
+      <p className="px-1 text-xs text-ink-500">
+        여기 적은 과제는 우리 반 모두가 봐요. 이름·연락처 같은 개인정보는 적지 말아주세요.
+      </p>
+
       <div className="flex gap-2">
         <Input
           value={subject}
