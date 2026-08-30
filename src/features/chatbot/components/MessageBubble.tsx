@@ -61,9 +61,11 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                   ) : (
                     <span className="text-ink-700">{source.label}</span>
                   )}
-                  <span className="ml-1.5 text-ink-400">
-                    · {formatDate(source.updatedAt, 'M월 d일')} {formatTime(source.updatedAt)} 기준
-                  </span>
+                  {source.updatedAt && (
+                    <span className="ml-1.5 text-ink-400">
+                      · {formatDate(source.updatedAt, 'M월 d일')} {formatTime(source.updatedAt)} 기준
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

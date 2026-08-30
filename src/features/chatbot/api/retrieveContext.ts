@@ -86,9 +86,9 @@ export function retrieveContext(question: string, summary: DashboardSummary): Re
         for (const a of summary.upcomingAssignments) {
           const due = a.dueAt ? ` (마감 ${formatDate(a.dueAt)}, ${relativeDayLabel(a.dueAt)})` : ''
           facts.push(`과제 "${a.title}"${due}`)
+          // 올린 날짜는 붙이지 않는다. 과제에서 중요한 것은 제출일이다.
           sources.push({
-            label: `과제: ${a.title}`,
-            updatedAt: a.publishedAt,
+            label: a.dueAt ? `과제: ${a.title} (마감 ${formatDate(a.dueAt)})` : `과제: ${a.title}`,
             href: ROUTES.noticeDetail(a.id),
           })
         }
@@ -98,11 +98,7 @@ export function retrieveContext(question: string, summary: DashboardSummary): Re
         if (!summary.unreadNotices.length) break
         for (const n of summary.unreadNotices) {
           facts.push(`공지 "${n.title}" — ${n.body}`)
-          sources.push({
-            label: `공지: ${n.title}`,
-            updatedAt: n.publishedAt,
-            href: ROUTES.noticeDetail(n.id),
-          })
+          sources.push({ label: `공지: ${n.title}`, href: ROUTES.noticeDetail(n.id) })
         }
         break
       }
@@ -113,11 +109,7 @@ export function retrieveContext(question: string, summary: DashboardSummary): Re
         for (const e of events) {
           const desc = e.description ? ` — ${e.description}` : ''
           facts.push(`일정 "${e.title}" ${formatDate(e.startAt)} (${relativeDayLabel(e.startAt)})${desc}`)
-          sources.push({
-            label: `일정: ${e.title}`,
-            updatedAt: e.startAt,
-            href: undefined,
-          })
+          sources.push({ label: `일정: ${e.title} (${formatDate(e.startAt)})` })
         }
         break
       }

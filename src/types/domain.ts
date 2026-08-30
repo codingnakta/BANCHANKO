@@ -170,8 +170,8 @@ export interface TodayTask {
 export interface ChatSource {
   /** 화면에 보여줄 출처 이름 (예: '오늘 시간표', '공지: 체육대회 반티') */
   label: string
-  /** 해당 데이터의 최종 갱신 시각 (ISO) */
-  updatedAt: string
+  /** 언제 기준인지 — 시간표·급식처럼 갱신 시각이 중요한 것에만 넣는다 */
+  updatedAt?: string
   /** 원본으로 이동할 경로. 없으면 이동 링크를 표시하지 않는다. */
   href?: string
 }

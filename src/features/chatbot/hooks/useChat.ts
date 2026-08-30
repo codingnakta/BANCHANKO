@@ -1,9 +1,11 @@
 import { useCallback, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
+import { useClassroomBoard } from '@/features/classroom'
 import { useDashboard } from '@/features/dashboard'
 import { answerQuestion } from '../api/answerQuestion'
 import { fetchTeacherFacts, teacherContextKeys } from '../api/teacherContext'
+import { scheduleFacts } from '../api/scheduleContext'
 import { DEFAULT_MASCOT } from '../constants'
 import type { ChatMessage } from '@/types'
 
@@ -21,6 +23,8 @@ export function useChat() {
   const role = user?.role ?? null
   const classroomId = user?.classroomId ?? ''
   const { data: summary } = useDashboard()
+  // 학사일정은 반에 공개된 것이라 두 역할 모두에게 근거로 넣는다
+  const { data: board } = useClassroomBoard()
 
   // 교사에게만 — 청소 구역·학생 명단·학급규칙까지 근거에 넣는다
   const { data: teacherFacts } = useQuery({
@@ -49,7 +53,7 @@ export function useChat() {
           question,
           summary,
           role,
-          teacherFacts ?? [],
+          [...scheduleFacts(board?.schedule ?? []), ...(teacherFacts ?? [])],
           messages,
         )
         setMessages((prev) => [
@@ -82,7 +86,7 @@ export function useChat() {
         setIsAnswering(false)
       }
     },
-    [isAnswering, messages, role, summary, teacherFacts],
+    [board, isAnswering, messages, role, summary, teacherFacts],
   )
 
   return { messages, isAnswering, send, isReady: !!summary }
