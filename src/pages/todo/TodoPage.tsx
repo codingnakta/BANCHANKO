@@ -272,7 +272,7 @@ function AddAssignment() {
       </div>
 
       <div className="flex items-end gap-2">
-        <Field label="마감일" htmlFor="assignmentDue" className="flex-1">
+        <Field label="마감일" htmlFor="assignmentDue" className="min-w-0 flex-1">
           <Input
             id="assignmentDue"
             type="date"

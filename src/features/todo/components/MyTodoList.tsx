@@ -36,9 +36,9 @@ export function MyTodoList() {
         <span className="text-xs text-ink-400">나만 볼 수 있어요</span>
       </div>
 
-      {/* 등록 */}
-      <div className="mb-2 flex items-end gap-2">
-        <Field label="할 일" htmlFor="todoTitle" className="min-w-0 flex-1">
+      {/* 등록 — 좁은 화면에서 한 줄에 셋을 우겨넣으면 겹치므로 두 줄로 나눈다 */}
+      <div className="mb-2 flex flex-col gap-2">
+        <Field label="할 일" htmlFor="todoTitle">
           <Input
             id="todoTitle"
             value={title}
@@ -47,24 +47,27 @@ export function MyTodoList() {
             placeholder="독후감 쓰기"
           />
         </Field>
-        <Field label="마감일" htmlFor="todoDue" className="w-36 shrink-0">
-          <Input
-            id="todoDue"
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-          />
-        </Field>
-        {/* 입력칸(h-12)과 높이를 맞춘다 */}
-        <Button
-          size="lg"
-          className="shrink-0"
-          onClick={submit}
-          disabled={!title.trim() || add.isPending}
-          aria-label="추가"
-        >
-          <Plus className="size-4" />
-        </Button>
+
+        <div className="flex items-end gap-2">
+          <Field label="마감일" htmlFor="todoDue" className="min-w-0 flex-1">
+            <Input
+              id="todoDue"
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+          </Field>
+          {/* 입력칸(h-12)과 높이를 맞춘다 */}
+          <Button
+            size="lg"
+            className="shrink-0"
+            onClick={submit}
+            disabled={!title.trim() || add.isPending}
+            aria-label="추가"
+          >
+            <Plus className="size-4" />
+          </Button>
+        </div>
       </div>
 
       {add.error && (
