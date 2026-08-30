@@ -33,6 +33,7 @@ export function toNotice(row: PostRow): Notice {
     // due_date 는 날짜만 있는 값이라 그 날 자정 기준으로 본다
     dueAt: row.due_date ? `${row.due_date}T00:00:00` : undefined,
     subject: row.subject ?? undefined,
+    authorId: row.author_id,
     // 읽음 추적은 아직 스키마에 없다. 전부 미확인으로 둔다.
     isRead: false,
   }

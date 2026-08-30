@@ -115,6 +115,8 @@ export interface Notice {
   dueAt?: string
   /** 과제의 과목 (수업 이름) */
   subject?: string
+  /** 올린 사람 — 본인과 교사만 지울 수 있다 */
+  authorId: string
   /** 열람한 학생 기준 확인 여부 */
   isRead: boolean
 }
