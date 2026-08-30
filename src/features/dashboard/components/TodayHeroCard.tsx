@@ -35,7 +35,21 @@ export function TodayHeroCard({ tasks, date = getNow() }: TodayHeroCardProps) {
                     className="mt-[9px] size-1.5 shrink-0 rounded-full bg-brand-500"
                     aria-hidden
                   />
-                  <span className="text-base text-ink-900">{task.label}</span>
+                  <span className="min-w-0">
+                    <span className="text-base text-ink-900">
+                      {task.tag && (
+                        <span className="mr-1.5 rounded-full bg-white/70 px-2 py-0.5 text-xs font-semibold text-brand-700">
+                          {task.tag}
+                        </span>
+                      )}
+                      {task.label}
+                    </span>
+                    {task.detail && (
+                      <span className="mt-0.5 block text-sm leading-relaxed text-ink-600">
+                        {task.detail}
+                      </span>
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>

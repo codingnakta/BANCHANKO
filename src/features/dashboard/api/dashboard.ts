@@ -188,7 +188,7 @@ export async function fetchDashboard(
 
   return {
     classroomName: classroom.name,
-    todayTasks: buildTodayTasks(assignments, cleaningDuties, isoDate, viewer),
+    todayTasks: buildTodayTasks(notices, assignments, cleaningDuties, isoDate, viewer),
     currentPeriod: undefined,
     timetable: neis.timetable,
     meal: neis.meal,
@@ -202,25 +202,44 @@ export async function fetchDashboard(
 /**
  * "오늘 뭐 하지?" 카드 내용.
  *
- * AI 생성(F-NXPULH)은 아직이라, 오늘 마감인 과제와 오늘 내가 맡은 청소 구역을 모은다.
+ * AI 생성(F-NXPULH)은 아직이라, 오늘 것만 모아 보여준다.
+ *   - 오늘 마감인 과제 (과목과 내용까지)
+ *   - 오늘이 일정인 공지
+ *   - 오늘 내가 맡은 청소 구역
+ *
  * 당번은 이름이 명단에 있는 학생에게만 보여준다 — 남의 당번까지 '내 할 일'로
  * 뜨면 카드의 뜻이 흐려진다. 교사는 아래 '오늘 청소 당번'에서 전체를 본다.
  */
 function buildTodayTasks(
+  notices: Notice[],
   assignments: Notice[],
   duties: CleaningDuty[],
   isoDate: string,
   viewer?: { name: string; role: UserRole | null },
 ): TodayTask[] {
-  const tasks: TodayTask[] = assignments
-    .filter((assignment) => assignment.dueAt?.slice(0, 10) === isoDate)
-    .map((assignment) => ({ id: assignment.id, label: assignment.title }))
+  const isToday = (notice: Notice) => notice.dueAt?.slice(0, 10) === isoDate
+
+  const tasks: TodayTask[] = assignments.filter(isToday).map((assignment) => ({
+    id: assignment.id,
+    label: assignment.title,
+    tag: assignment.subject || '과제',
+    detail: assignment.body || undefined,
+  }))
+
+  for (const notice of notices.filter(isToday)) {
+    tasks.push({
+      id: notice.id,
+      label: notice.title,
+      tag: '공지',
+      detail: notice.body || undefined,
+    })
+  }
 
   const name = viewer?.name?.trim()
   if (viewer?.role === 'student' && name) {
     for (const duty of duties) {
       if (duty.studentNames.some((student) => student.trim() === name)) {
-        tasks.push({ id: duty.id, label: `${duty.area} 청소 당번` })
+        tasks.push({ id: duty.id, label: duty.area, tag: '청소 당번' })
       }
     }
   }

@@ -154,6 +154,10 @@ export interface DashboardSummary {
 export interface TodayTask {
   id: string
   label: string
+  /** 앞에 붙는 작은 표 — 과제의 과목, 공지, 청소 당번 */
+  tag?: string
+  /** 제목 아래 한 줄 더 — 과제·공지의 내용 */
+  detail?: string
   /** 원본 이동 경로 */
   href?: string
 }
