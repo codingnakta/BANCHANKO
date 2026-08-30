@@ -1,4 +1,4 @@
-import { addDays, format } from 'date-fns'
+import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase'
 import { getNow } from '@/lib/date'
 import { fetchNeis, toNotice } from '@/features/dashboard/api/dashboard'
@@ -56,7 +56,8 @@ export async function fetchClassroomBoard(now: Date = getNow()): Promise<Classro
   if (!classroom) throw new Error('소속된 학급이 없어요.')
 
   const isoDate = format(now, 'yyyy-MM-dd')
-  const scheduleTo = format(addDays(now, 60), 'yyyy-MM-dd')
+  // 학사일정은 학년도가 끝날 때까지 한 번에 받아 온다 (3월 시작 ~ 이듬해 2월 말)
+  const scheduleTo = schoolYearEnd(now)
 
   const [neis, teacherResult, postsResult, dutiesResult, rolesResult, timetableResult, scheduleResult] =
     await Promise.all([
@@ -174,6 +175,13 @@ async function fetchNeisSchedule(
     // 나이스 함수도 걸러 내지만, 아직 배포 전인 환경을 위해 여기서도 뺀다
     .filter((item) => !isCalendarHoliday(item.title))
     .map((item) => ({ ...item, isClassEvent: false }))
+}
+
+/** 학년도 마지막 날 (2월 말). 3월 전이면 그해 2월, 3월부터면 이듬해 2월. */
+function schoolYearEnd(now: Date): string {
+  const year = now.getMonth() + 1 >= 3 ? now.getFullYear() + 1 : now.getFullYear()
+  // 2월 마지막 날 = 3월 0일
+  return format(new Date(year, 2, 0), 'yyyy-MM-dd')
 }
 
 /**

@@ -305,7 +305,8 @@ async function fetchSchedule(
   const query = new URLSearchParams({
     Type: 'json',
     pIndex: '1',
-    pSize: '100',
+    // 학년도 전체를 한 번에 받는다 (하루에 여러 줄인 학교가 있어 넉넉히)
+    pSize: '500',
     ATPT_OFCDC_SC_CODE: office,
     SD_SCHUL_CODE: school,
     AA_FROM_YMD: toNeisDate(from),
