@@ -223,7 +223,6 @@ function AddAssignment() {
           aria-label="과제 추가"
         >
           <Plus className="size-4" />
-          추가
         </Button>
       </div>
 
