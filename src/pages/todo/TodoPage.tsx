@@ -37,16 +37,17 @@ export function TodoPage() {
     )
   }
 
-  // 기한이 지난 것은 기본으로 감추고, 필터를 켜면 함께 보여준다
-  const allEvents = data?.upcomingEvents ?? []
   const allAssignments = data?.upcomingAssignments ?? []
-  const pastCount =
-    allEvents.filter((event) => isPast(event.startAt)).length +
-    allAssignments.filter((assignment) => isPast(assignment.dueAt)).length
+  // 지난 과제는 기본으로 감추고, 필터를 켜면 함께 보여준다
+  const pastCount = allAssignments.filter((assignment) => isPast(assignment.dueAt)).length
 
-  const upcoming = showPast ? allEvents : allEvents.filter((event) => !isPast(event.startAt))
-  // 기본은 셋까지. 더보기를 누르면 올라온 공지를 날짜 없는 것까지 모두 보여준다.
-  const events = upcoming.slice(0, 3)
+  // 다가오는 일정은 말 그대로 앞으로 올 것만. 가까운 날부터 세운다.
+  const events = (data?.upcomingEvents ?? [])
+    .filter((event) => !isPast(event.startAt))
+    .sort((a, b) => a.startAt.localeCompare(b.startAt))
+    .slice(0, 3)
+
+  // 더보기를 누르면 올라온 공지를 날짜 없는 것까지 모두 보여준다
   const allNotices = data?.unreadNotices ?? []
   // 홈에 고정한 과제는 목록에서도 맨 위에 둔다
   const assignments = (
@@ -74,7 +75,7 @@ export function TodoPage() {
                 : 'border-ink-200 bg-white text-ink-500 hover:text-ink-700',
             )}
           >
-            지난 것도 보기 ({pastCount})
+            지난 과제도 보기 ({pastCount})
           </button>
         </div>
       )}
