@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Check, Plus, Trash2 } from 'lucide-react'
-import { Button, DateDialog, Input } from '@/components/ui'
+import { Button, DateDialog, Field, Input } from '@/components/ui'
 import { TaskCard, usePinnedTodo } from '@/features/dashboard'
 import { relativeDayLabel } from '@/lib/date'
 import { usePersonalTodos } from '../hooks/usePersonalTodos'
@@ -37,21 +37,24 @@ export function MyTodoList() {
       </div>
 
       {/* 등록 */}
-      <div className="mb-2 flex gap-2">
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && submit()}
-          placeholder="할 일을 적어보세요"
-          aria-label="할 일"
-        />
-        <Input
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-          aria-label="마감일"
-          className="w-36 shrink-0"
-        />
+      <div className="mb-2 flex items-end gap-2">
+        <Field label="할 일" htmlFor="todoTitle" className="flex-[2]">
+          <Input
+            id="todoTitle"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && submit()}
+            placeholder="독후감 쓰기"
+          />
+        </Field>
+        <Field label="마감일" htmlFor="todoDue">
+          <Input
+            id="todoDue"
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+          />
+        </Field>
         <Button onClick={submit} disabled={!title.trim() || add.isPending} aria-label="추가">
           <Plus className="size-4" />
         </Button>

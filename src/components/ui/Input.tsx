@@ -51,13 +51,15 @@ interface FieldProps {
   htmlFor?: string
   hint?: string
   error?: string
+  /** 나란히 놓을 때 폭을 조절한다 */
+  className?: string
   children: ReactNode
 }
 
 /** 라벨 + 입력 + 도움말/오류를 묶는 래퍼. */
-export function Field({ label, htmlFor, hint, error, children }: FieldProps) {
+export function Field({ label, htmlFor, hint, error, className, children }: FieldProps) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
       <label htmlFor={htmlFor} className="px-1 text-sm font-medium text-ink-700">
         {label}
       </label>

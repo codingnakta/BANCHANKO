@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { AppHeader } from '@/components/layout'
-import { Button, EmptyState, Input, Spinner } from '@/components/ui'
+import { Button, EmptyState, Field, Input, Spinner } from '@/components/ui'
 import { ROUTES } from '@/constants'
 import { useCurrentUser, useIsTeacher } from '@/features/auth/hooks/useCurrentUser'
 import { createNotice, noticeKeys } from '@/features/teacher/api/notices'
@@ -247,28 +247,34 @@ function AddAssignment() {
       </p>
 
       <div className="flex gap-2">
-        <Input
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          placeholder="과목"
-          aria-label="과목"
-          className="w-24 shrink-0"
-        />
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && title.trim() && mutation.mutate()}
-          placeholder="과제를 적어보세요"
-          aria-label="과제"
-        />
+        <Field label="과목" htmlFor="assignmentSubject">
+          <Input
+            id="assignmentSubject"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="수학"
+          />
+        </Field>
+        <Field label="과제" htmlFor="assignmentTitle" className="flex-[2]">
+          <Input
+            id="assignmentTitle"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && title.trim() && mutation.mutate()}
+            placeholder="익힘책 32~35쪽"
+          />
+        </Field>
       </div>
-      <div className="flex gap-2">
-        <Input
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-          aria-label="마감일"
-        />
+
+      <div className="flex items-end gap-2">
+        <Field label="마감일" htmlFor="assignmentDue">
+          <Input
+            id="assignmentDue"
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+          />
+        </Field>
         <Button
           onClick={() => mutation.mutate()}
           disabled={!title.trim() || mutation.isPending}
