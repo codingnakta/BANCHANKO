@@ -79,14 +79,6 @@
     text-align: left;
   }
 
-  /* iOS 만: 빈 날짜 칸이 아무 글자도 보여주지 않아 자리 표시를 그려 준다.
-     크롬(데스크톱·안드로이드)은 스스로 '연도-월-일'을 그리므로 제외한다. */
-  @supports (-webkit-touch-callout: none) {
-    input[type='date'][data-empty]::before {
-      content: '연도-월-일';
-      color: var(--color-ink-400);
-    }
-  }
 }
 
 /* 하단 안전영역(iOS 홈 인디케이터)만큼 아래 여백을 '더한다'.

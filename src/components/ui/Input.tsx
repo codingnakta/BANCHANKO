@@ -11,10 +11,6 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export function Input({ className, invalid, ...props }: InputProps) {
-  // iOS 는 빈 날짜 칸에 아무 글자도 그리지 않는다. CSS 가 자리 표시를
-  // 그릴 수 있게 비었다는 표시를 남긴다. (index.css 의 date 규칙 참고)
-  const isEmptyDate = props.type === 'date' && !props.value
-
   return (
     <input
       className={cn(
@@ -24,7 +20,6 @@ export function Input({ className, invalid, ...props }: InputProps) {
         className,
       )}
       aria-invalid={invalid || undefined}
-      data-empty={isEmptyDate ? '' : undefined}
       {...props}
     />
   )
