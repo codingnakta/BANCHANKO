@@ -1,5 +1,3 @@
-import { Link } from 'react-router'
-import type { ReactNode } from 'react'
 import { AppHeader } from '@/components/layout'
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
 import { Card, Spinner } from '@/components/ui'
@@ -7,6 +5,7 @@ import { ROUTES } from '@/constants'
 import {
   PinnedTasks,
   TimetableMealTabs,
+  TodayDutyCard,
   TodayHeroCard,
   useDashboard,
 } from '@/features/dashboard'
@@ -55,73 +54,11 @@ export function TeacherHomePage() {
         {/* 꽂아 둔 우리반 과제와 내 할일 */}
         <PinnedTasks assignments={data.upcomingAssignments} />
 
-        {/* 청소 당번 */}
-        <Section title="오늘 청소 당번" action={{ to: ROUTES.teacher.settings, label: '설정' }}>
-          {data.cleaningDuties.length === 0 ? (
-            <Blank message="오늘 당번이 없어요." to={ROUTES.teacher.settings} cta="당번 정하기" />
-          ) : (
-            <div className="rounded-card bg-white px-4 py-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-              <ul className="flex flex-col gap-3">
-                {data.cleaningDuties.map((duty) => (
-                  <li key={duty.id} className="flex items-start gap-2.5">
-                    <span className="mt-2 size-1 shrink-0 rounded-full bg-ink-900" aria-hidden />
-                    <span className="text-[15px] text-ink-900">
-                      <span className="font-medium">{duty.area}</span>
-                      <span className="text-ink-600">
-                        {' — '}
-                        {duty.studentNames.join(', ') || '미지정'}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </Section>
+        <TodayDutyCard duties={data.cleaningDuties} editTo={ROUTES.teacher.settings} />
 
         {/* 시간표·급식 — 학생 홈과 같은 탭 카드 */}
         <TimetableMealTabs entries={data.timetable} meal={data.meal} />
-
       </div>
     </>
-  )
-}
-
-/** 학생 홈의 탭 제목과 같은 크기·굵기로 맞춘 묶음 제목 */
-function Section({
-  title,
-  action,
-  children,
-}: {
-  title: string
-  action?: { to: string; label: string }
-  children: ReactNode
-}) {
-  return (
-    <section>
-      <div className="mb-2 flex items-baseline gap-3 px-1">
-        <h2 className="text-xl font-semibold text-ink-900">{title}</h2>
-        {action && (
-          <Link
-            to={action.to}
-            className="ml-auto text-sm font-medium text-brand-500 hover:underline"
-          >
-            {action.label}
-          </Link>
-        )}
-      </div>
-      {children}
-    </section>
-  )
-}
-
-function Blank({ message, to, cta }: { message: string; to: string; cta: string }) {
-  return (
-    <div className="rounded-card bg-white px-4 py-6 text-center shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-      <p className="text-sm text-ink-500">{message}</p>
-      <Link to={to} className="mt-1 inline-block text-sm font-medium text-brand-500 hover:underline">
-        {cta}
-      </Link>
-    </div>
   )
 }

@@ -3,6 +3,7 @@ import { Spinner } from '@/components/ui'
 import {
   PinnedTasks,
   TimetableMealTabs,
+  TodayDutyCard,
   TodayHeroCard,
   useDashboard,
 } from '@/features/dashboard'
@@ -54,6 +55,8 @@ export function StudentHomePage() {
 
         {/* 꽂아 둔 우리반 과제와 내 할일 */}
         <PinnedTasks assignments={data.upcomingAssignments} />
+
+        <TodayDutyCard duties={data.cleaningDuties} />
 
         <TimetableMealTabs
           entries={data.timetable}
